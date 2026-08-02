@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+  <id>reinhardterp</id>
+  <name>Reinhardt ERP</name>
+  <summary>Native Handwerker-ERP-App für Nextcloud</summary>
+  <description>Kunden, Projekte, Rapporte, Zeiterfassung, Material, Teamkalender und native Nextcloud-Dateiablage.</description>
+  <version>0.15.2</version>
+  <licence>agpl</licence>
+  <author>Schreinerei Reinhardt</author>
+  <namespace>ReinhardtERP</namespace>
+  <category>organization</category>
+  <dependencies>
+    <nextcloud min-version="33" max-version="34" />
+    <php min-version="8.2" />
+  </dependencies>
+  <navigations>
+    <navigation>
+      <name>ERP</name>
+      <route>reinhardterp.page.index</route>
+      <icon>app.svg</icon>
+      <order>45</order>
+    </navigation>
+  </navigations>
+</info>
