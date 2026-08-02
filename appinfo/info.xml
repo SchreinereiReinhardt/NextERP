@@ -4,7 +4,7 @@
   <name>Reinhardt ERP</name>
   <summary>Native Handwerker-ERP-App für Nextcloud</summary>
   <description>Kunden, Projekte, Rapporte, Zeiterfassung, Material, Teamkalender und native Nextcloud-Dateiablage.</description>
-  <version>0.15.2</version>
+  <version>0.15.3</version>
   <licence>agpl</licence>
   <author>Schreinerei Reinhardt</author>
   <namespace>ReinhardtERP</namespace>
