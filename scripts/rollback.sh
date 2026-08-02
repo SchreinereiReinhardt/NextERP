@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+if [ "$(id -u)" -ne 0 ]; then
+    echo "Dieses Skript muss als root ausgeführt werden."
+    exit 1
+fi
+
 TARGET="/var/www/nextcloud/apps/reinhardterp"
 NEXTCLOUD="/var/www/nextcloud"
 
