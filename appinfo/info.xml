@@ -4,7 +4,7 @@
   <name>NextERP</name>
   <summary>Das Handwerker-ERP für Nextcloud</summary>
   <description>NextERP mit versionierter Mobile-API, Smart-DMS und geprüftem Angebotsimport, automatischer Dateinamenanalyse, Dublettenwarnung, Suche und Projektcenter: Kunden, Projekte, Angebote, Aufträge, Termine, Rapporte, Zeiten, Material, Dokumente, Kosten und Timeline in einer digitalen Projektakte.</description>
-  <version>0.66.0</version>
+  <version>0.66.1</version>
   <licence>agpl</licence>
   <author>Schreinerei Reinhardt</author>
   <namespace>ReinhardtERP</namespace>

@@ -27,6 +27,10 @@ final class MobileController extends Controller {
  #[PublicPage,NoCSRFRequired] public function scan(int $projectId=0):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->upload((string)$a['uid'],$this->request->getUploadedFile('file')??[],$projectId,'scan'));}
  #[PublicPage,NoCSRFRequired] public function sync():JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->sync((string)$a['uid'],(array)($this->jsonBody()['changes']??[])));}
  private function authRun(callable $fn):JSONResponse{return $this->run(function()use($fn){$auth=$this->mobile->authenticate((string)$this->request->getHeader('Authorization'));return $fn($auth);});}
- private function jsonBody():array{$raw='';if($raw==='')return $this->request->getParams();$data=json_decode($raw,true);return is_array($data)?$data:$this->request->getParams();}
+ private function jsonBody(): array {
+  // IRequest::getParams() is the public Nextcloud API and includes decoded JSON body parameters.
+  $params = $this->request->getParams();
+  return is_array($params) ? $params : [];
+ }
  private function run(callable $fn):JSONResponse{try{return new JSONResponse(['success'=>true,'data'=>$fn(),'errors'=>[],'message'=>'']);}catch(\InvalidArgumentException $e){return new JSONResponse(['success'=>false,'data'=>null,'errors'=>[$e->getMessage()],'message'=>$e->getMessage(),'code'=>'VALIDATION_ERROR'],400);}catch(\Throwable $e){$message=$e->getMessage()!==''?$e->getMessage():'Unbekannter Fehler.';$status=str_contains(strtolower($message),'token')||str_contains(strtolower($message),'anmeldung')?401:500;return new JSONResponse(['success'=>false,'data'=>null,'errors'=>[$message],'message'=>$message,'code'=>$status===401?'AUTHENTICATION_FAILED':'MOBILE_API_ERROR'],$status);}}
 }
