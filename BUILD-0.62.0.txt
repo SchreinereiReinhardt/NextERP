@@ -1,0 +1,25 @@
+NextERP 0.62.0 build report
+=============================
+Basis: nexterp-0.61.6-pdf-preview-hotfix.zip
+
+Geänderte/neue Dateien:
+- appinfo/info.xml
+- appinfo/routes.php
+- css/style.css
+- lib/Controller/DocumentController.php
+- lib/Migration/Version006200Date20260803130000.php
+- lib/Service/DocumentClassifierService.php
+- lib/Service/DocumentInboxService.php
+- templates/document_detail.php
+- templates/document_inbox.php
+- CHANGELOG-0.62.0.md
+
+Prüfungen:
+- PHP-Syntaxprüfung aller PHP-Dateien: bestanden
+- JavaScript-Syntaxprüfung document_detail.js: bestanden
+- Klassifizierungstest Lieferschein/Datum/Belegnummer/Lieferant: bestanden
+
+Bewusste Grenze:
+- keine OCR
+- keine PDF-Positionsanalyse
+- automatische Vorschläge basieren auf Dateinamen und vorhandenen Stammdaten

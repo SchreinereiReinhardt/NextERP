@@ -24,10 +24,10 @@ final class PermissionService {
   if(!$this->isEnabled())return false;
   $role=$this->role(); if($role===self::ADMIN)return true;
   $map=[
-   self::OFFICE=>['dashboard','customers','projects','reports','report_edit','time','time_all','time_billing','invoices','materials','calendar','users_view'],
-   self::MANAGER=>['dashboard','projects','reports','report_edit','time','time_all','materials_use','calendar'],
-   self::EMPLOYEE=>['dashboard','projects','reports','report_edit','time','materials_use'],
-   self::TIME=>['time'],
+   self::OFFICE=>['dashboard','customers','projects','reports','report_edit','time','time_all','time_billing','invoices','materials','calendar','users_view','crm','offers','orders','inventory','mobile','documents'],
+   self::MANAGER=>['dashboard','projects','reports','report_edit','time','time_all','materials_use','calendar','crm','offers','orders','inventory','mobile','documents'],
+   self::EMPLOYEE=>['dashboard','projects','reports','report_edit','time','materials_use','mobile'],
+   self::TIME=>['time','mobile'],
   ];
   return in_array($permission,$map[$role]??[],true);
  }

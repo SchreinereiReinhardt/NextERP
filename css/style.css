@@ -15,3 +15,557 @@
 .erp-status-board{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0}.erp-status-board>div{border:1px solid var(--color-border);border-radius:12px;padding:16px;background:var(--color-main-background)}.erp-status-board strong,.erp-status-board span{display:block}.erp-status-board span{color:var(--color-text-maxcontrast);margin-top:5px}.erp-status-board .active{border:2px solid #777;background:#f5f5f5}@media(max-width:800px){.erp-status-board{grid-template-columns:1fr}}
 
 .erp-project-loader{max-width:900px}.erp-project-select-row{display:flex;gap:10px}.erp-project-select-row select{flex:1}.erp-time-import-box{margin:24px 0;border:1px solid var(--color-border);border-radius:12px;overflow:hidden}.erp-time-import-head{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:16px;background:var(--color-background-dark)}.erp-time-import-head h2{font-size:19px;margin:0 0 4px}.erp-time-import-head p{margin:0}.erp-select-all{display:flex!important;align-items:center;gap:8px;margin:0!important;white-space:nowrap}.erp-select-all input{width:auto!important}.erp-time-entry-list{max-height:430px;overflow:auto}.erp-time-entry{display:grid!important;grid-template-columns:auto 100px minmax(150px,220px) 90px minmax(260px,1fr);align-items:start}.erp-time-entry-date,.erp-time-entry-person,.erp-time-entry-hours{white-space:nowrap}.erp-time-entry-activity{white-space:pre-wrap}.erp-time-total{text-align:right;padding:14px 16px;border-top:1px solid var(--color-border);font-size:17px}.erp-time-total strong{font-size:inherit;margin:0;display:inline}@media(max-width:850px){.erp-time-import-head{align-items:flex-start;flex-direction:column}.erp-time-entry{grid-template-columns:auto 1fr 90px}.erp-time-entry-date{grid-column:2}.erp-time-entry-person{grid-column:2}.erp-time-entry-hours{grid-column:3;grid-row:1/3}.erp-time-entry-activity{grid-column:2/4}.erp-project-select-row{flex-direction:column}}
+
+.erp-folder-card{margin-bottom:18px}.erp-folder-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}.erp-folder-actions .button{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}@media(max-width:700px){.erp-folder-actions{display:grid;grid-template-columns:1fr}.erp-folder-actions .button{width:100%;box-sizing:border-box}}
+
+
+/* NextERP 0.17 Dokumentencenter */
+.erp-section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:14px}
+.erp-section-head h2{margin:0 0 4px}
+.erp-upload-bar{display:grid;grid-template-columns:minmax(260px,1fr) minmax(180px,260px) auto;gap:12px;align-items:center;margin:14px 0 20px;padding:14px;background:var(--color-background-dark);border-radius:12px}
+.erp-upload-bar input,.erp-upload-bar select{width:100%;margin:0}
+.erp-document-list{display:flex;flex-direction:column;border:1px solid var(--color-border);border-radius:12px;overflow:hidden}
+.erp-document-row{display:grid;grid-template-columns:42px minmax(0,1fr) 150px auto;gap:12px;align-items:center;padding:12px 14px;color:var(--color-main-text);text-decoration:none;border-bottom:1px solid var(--color-border)}
+.erp-document-row:last-child{border-bottom:0}
+.erp-document-row:hover{background:var(--color-background-hover)}
+.erp-file-icon{font-size:24px;text-align:center}
+.erp-file-main{min-width:0;display:flex;flex-direction:column}
+.erp-file-main strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.erp-file-main small,.erp-file-meta{color:var(--color-text-maxcontrast);font-size:12px}
+.erp-file-meta{text-align:right}
+@media(max-width:850px){.erp-upload-bar{grid-template-columns:1fr}.erp-document-row{grid-template-columns:36px minmax(0,1fr) auto}.erp-file-meta{display:none}.erp-document-row .button{padding:6px 9px}}
+
+
+/* NextERP 0.18 Kunden- und Projektakten */
+.erp-record-link{display:flex;flex-direction:column;text-decoration:none;color:var(--color-main-text)}
+.erp-record-link strong{font-size:15px;margin:0}
+.erp-record-link small{color:var(--color-text-maxcontrast);font-size:11px;margin-top:3px}
+.erp-record-link:hover strong{text-decoration:underline}
+.erp-record-head{padding:18px 20px;border:1px solid var(--color-border);border-radius:14px;background:var(--color-main-background)}
+.erp-record-kicker{display:block;text-transform:uppercase;letter-spacing:.08em;font-size:11px;font-weight:700;color:var(--color-text-maxcontrast);margin-bottom:5px}
+.erp-record-head .erp-actions{justify-content:flex-end;flex-wrap:wrap}
+@media(max-width:900px){.erp-record-head .erp-actions{justify-content:flex-start}.erp-record-head .erp-actions .button{flex:1 1 180px}}
+
+/* NextERP 0.19 Projektjournal, Workflow und Dashboard */
+.erp-workflow-card{overflow-x:auto}
+.erp-workflow{display:flex;align-items:flex-start;gap:0;min-width:820px;padding:8px 4px 2px}
+.erp-workflow form{flex:1;position:relative}
+.erp-workflow form:not(:last-child)::after{content:"";position:absolute;left:56%;right:-44%;top:12px;height:2px;background:var(--color-border)}
+.erp-workflow-step{width:100%;border:0;background:transparent;color:var(--color-text-maxcontrast);font:inherit;font-size:12px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;padding:0 4px}
+.erp-workflow-step span{position:relative;z-index:1;width:24px;height:24px;border:2px solid var(--color-border);border-radius:50%;background:var(--color-main-background)}
+.erp-workflow-step:hover,.erp-workflow-step.is-active{color:var(--color-main-text)}
+.erp-workflow-step:hover span{border-color:var(--color-primary-element)}
+.erp-workflow-step.is-active span{border-color:var(--color-primary-element);background:var(--color-primary-element)}
+.erp-workflow-step.is-active span::after{content:"✓";color:var(--color-primary-element-text);position:absolute;inset:0;display:grid;place-items:center;font-size:14px}
+.erp-journal-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end;margin:8px 0 22px}
+.erp-journal-form textarea{width:100%;margin:0}
+.erp-timeline{display:flex;flex-direction:column;gap:0}
+.erp-timeline-item{display:grid;grid-template-columns:36px minmax(0,1fr);gap:12px;position:relative;padding-bottom:18px}
+.erp-timeline-item:not(:last-child)::before{content:"";position:absolute;left:17px;top:34px;bottom:0;width:2px;background:var(--color-border)}
+.erp-timeline-icon{position:relative;z-index:1;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--color-background-dark);border:1px solid var(--color-border);font-weight:700}
+.erp-timeline-content{padding:5px 0 0}
+.erp-timeline-head{display:flex;justify-content:space-between;gap:15px}
+.erp-timeline-head time,.erp-timeline-content small{color:var(--color-text-maxcontrast);font-size:12px}
+.erp-timeline-content p{margin:5px 0;white-space:normal}
+.erp-dashboard-kpis div{min-height:118px}.erp-dashboard-kpis a{font-size:12px;margin-top:4px}
+.erp-dashboard-layout{display:grid;grid-template-columns:minmax(320px,.8fr) minmax(420px,1.2fr);gap:18px}
+.erp-quick-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.erp-quick-grid a{display:flex;align-items:center;gap:12px;padding:16px;border:1px solid var(--color-border);border-radius:12px;color:var(--color-main-text);text-decoration:none;background:var(--color-main-background)}
+.erp-quick-grid a:hover{background:var(--color-background-hover)}
+.erp-quick-grid span{font-size:25px}
+@media(max-width:900px){.erp-dashboard-layout{grid-template-columns:1fr}.erp-journal-form{grid-template-columns:1fr}.erp-timeline-head{flex-direction:column;gap:2px}.erp-quick-grid{grid-template-columns:1fr}}
+
+/* NextERP 0.20 UI Refresh – kompakt, einheitlich, desktopfreundlich */
+:root{
+  --nexterp-radius:10px;
+  --nexterp-card-padding:16px;
+  --nexterp-gap:14px;
+  --nexterp-font:14px;
+  --nexterp-muted:12px;
+}
+
+.erp-main{font-size:var(--nexterp-font);line-height:1.45}
+.erp-page,.erp-main{max-width:1600px;margin:0 auto;padding:18px 20px 28px;box-sizing:border-box}
+.erp-head{gap:14px;margin-bottom:14px}
+.erp-head h1,.erp-page h1{font-size:24px;line-height:1.2;font-weight:650}
+.erp-main h2,.erp-page h2{font-size:19px;line-height:1.25;margin:0 0 10px;font-weight:650}
+.erp-main h3,.erp-page h3{font-size:16px;line-height:1.3;margin:0 0 8px}
+.erp-sub{font-size:13px;margin:4px 0 14px}
+.erp-record-kicker{font-size:10px;margin-bottom:3px}
+
+.erp-card,.erp-table,.erp-form-page form,.erp-form-card,.erp-record-head{
+  border-radius:var(--nexterp-radius);
+  padding:var(--nexterp-card-padding);
+  box-shadow:0 1px 5px rgba(0,0,0,.035)
+}
+.erp-wide{margin-top:14px}
+.erp-grid{gap:var(--nexterp-gap);margin-top:14px}
+.erp-two-col,.erp-three-col,.erp-dashboard-layout{gap:var(--nexterp-gap)}
+
+.erp-actions,.erp-row-actions{gap:8px}
+.erp-main .button,.erp-page .button,.erp-main button,.erp-page button{
+  min-height:34px;
+  padding:6px 12px;
+  border-radius:9px;
+  font-size:13px;
+  line-height:1.2;
+  box-sizing:border-box;
+}
+.erp-head .erp-actions{flex-wrap:wrap}
+
+.erp-kpis{gap:10px;margin:12px 0 14px}
+.erp-kpis>div{min-height:0!important;padding:12px 14px;border-radius:10px}
+.erp-kpis span{font-size:12px;margin:0 0 2px}
+.erp-kpis strong{font-size:22px;line-height:1.15;margin:2px 0 4px}
+.erp-dashboard-kpis a{font-size:11px;margin-top:0}
+
+.erp-dashboard-layout{grid-template-columns:minmax(300px,.78fr) minmax(420px,1.22fr)}
+.erp-quick-grid{gap:8px}
+.erp-quick-grid a{min-height:48px;padding:10px 12px;border-radius:9px;gap:9px}
+.erp-quick-grid span{font-size:19px;margin:0}
+.erp-quick-grid strong{font-size:14px!important;line-height:1.2!important;margin:0!important;display:block!important;font-weight:650}
+
+.erp-section-head{margin-bottom:10px;gap:12px}
+.erp-section-head h2{margin-bottom:2px}
+.erp-section-head p{margin:0;font-size:12px}
+
+.erp-folder-card{margin-bottom:14px}
+.erp-folder-actions{gap:7px;margin-top:11px}
+.erp-folder-actions .button{min-height:32px;padding:5px 10px;font-size:12px}
+
+.erp-upload-bar{grid-template-columns:minmax(260px,1fr) minmax(160px,230px) auto;gap:9px;margin:10px 0 14px;padding:10px;border-radius:9px}
+.erp-upload-bar input,.erp-upload-bar select{min-height:34px;font-size:13px}
+
+.erp-document-list{border-radius:9px}
+.erp-document-row{grid-template-columns:30px minmax(0,1fr) 125px auto;gap:9px;padding:8px 10px;min-height:48px}
+.erp-file-icon{font-size:18px}
+.erp-file-main strong{font-size:14px!important;line-height:1.25!important;margin:0!important;font-weight:600}
+.erp-file-main small,.erp-file-meta{font-size:11px;line-height:1.3}
+.erp-document-row .button{min-height:30px;padding:5px 9px;font-size:12px}
+
+.erp-card table,.erp-table table,.erp-mini-table{font-size:13px}
+.erp-card th,.erp-card td,.erp-table th,.erp-table td,.erp-mini-table th,.erp-mini-table td{padding:8px 9px}
+.erp-card th,.erp-table th,.erp-mini-table th{font-size:12px;font-weight:650}
+.erp-card p{margin:7px 0}
+
+.erp-workflow-card{padding-bottom:13px}
+.erp-workflow{padding:4px 2px 0;min-width:760px}
+.erp-workflow-step{font-size:11px;gap:6px}
+.erp-workflow-step span{width:20px;height:20px}
+.erp-workflow form:not(:last-child)::after{top:10px}
+
+.erp-timeline-item{grid-template-columns:30px minmax(0,1fr);gap:9px;padding-bottom:13px}
+.erp-timeline-item:not(:last-child)::before{left:14px;top:29px}
+.erp-timeline-icon{width:28px;height:28px;font-size:12px}
+.erp-timeline-content{padding-top:3px}
+.erp-timeline-head time,.erp-timeline-content small{font-size:11px}
+.erp-timeline-content p{margin:3px 0;font-size:13px}
+
+.erp-journal-form{gap:9px;margin:6px 0 14px}
+.erp-journal-form textarea{min-height:64px}
+
+.erp-form-grid{gap:12px}
+.erp-form-card{margin:14px 0 18px}
+.erp-form-card label,.erp-card label,.erp-form-page label{font-size:13px;margin:10px 0 5px}
+.erp-form-card input,.erp-form-card textarea,.erp-form-card select,.erp-card input,.erp-card textarea,.erp-card select,.erp-form-page input,.erp-form-page textarea,.erp-form-page select{font-size:13px}
+
+.erp-notice{padding:10px 12px;margin:10px 0;font-size:13px}
+.erp-badge{padding:3px 8px;font-size:12px}
+.erp-muted{font-size:12px}
+
+@media(max-width:1000px){
+  .erp-dashboard-layout{grid-template-columns:1fr}
+  .erp-page,.erp-main{padding:16px}
+}
+@media(max-width:700px){
+  .erp-page,.erp-main{padding:12px}
+  .erp-head h1,.erp-page h1{font-size:21px}
+  .erp-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .erp-document-row{grid-template-columns:28px minmax(0,1fr) auto}
+  .erp-file-meta{display:none}
+  .erp-upload-bar{grid-template-columns:1fr}
+}
+
+
+/* NextERP 0.21 Balanced UI – nutzt die Fläche, bleibt kompakt */
+.erp-main,.erp-page{max-width:none;width:100%;padding:24px 28px 36px}
+.erp-dashboard-page{max-width:1240px;margin:0 auto}
+.erp-list-page{max-width:1440px;margin:0 auto}
+.erp-dashboard-head{margin-bottom:20px}
+.erp-dashboard-head h1{font-size:30px}
+.erp-dashboard-head .erp-sub{font-size:14px}
+.erp-dashboard-head .erp-actions .button{min-height:38px;padding:8px 15px}
+.erp-dashboard-kpis{grid-template-columns:repeat(4,minmax(190px,1fr));gap:14px;margin:0 0 18px}
+.erp-kpi-card{display:block;text-decoration:none;color:var(--color-main-text);background:var(--color-main-background);border:1px solid var(--color-border);border-radius:14px;padding:18px 20px;min-height:118px;box-sizing:border-box;transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease}
+.erp-kpi-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.07);border-color:var(--color-primary-element)}
+.erp-kpi-card span{display:block;font-size:13px;color:var(--color-text-maxcontrast);margin-bottom:7px}
+.erp-kpi-card strong{display:block;font-size:31px;line-height:1;margin:0 0 9px}
+.erp-kpi-card small{font-size:12px;color:var(--color-text-maxcontrast)}
+.erp-dashboard-layout{grid-template-columns:minmax(420px,.9fr) minmax(520px,1.1fr);gap:18px}
+.erp-dashboard-layout>.erp-card{min-height:300px;padding:20px}
+.erp-dashboard-layout h2{font-size:21px}
+.erp-quick-grid{grid-template-columns:repeat(2,minmax(180px,1fr));gap:11px}
+.erp-quick-grid a{min-height:64px;padding:13px 15px;border-radius:11px}
+.erp-quick-grid span{font-size:23px}.erp-quick-grid strong{font-size:15px!important}
+
+.erp-record-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:18px}
+.erp-record-card{display:flex;flex-direction:column;background:var(--color-main-background);border:1px solid var(--color-border);border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,.04);overflow:hidden;min-height:250px}
+.erp-record-card:hover{box-shadow:0 9px 28px rgba(0,0,0,.075)}
+.erp-record-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px 20px 14px;border-bottom:1px solid var(--color-border)}
+.erp-record-card-head h2{font-size:22px;margin:2px 0 0}.erp-record-card-head h2 a{text-decoration:none;color:var(--color-main-text)}.erp-record-card-head h2 a:hover{text-decoration:underline}
+.erp-record-card-body{padding:16px 20px;flex:1}
+.erp-data-list{margin:0;display:grid;gap:12px}.erp-data-list>div{display:grid;grid-template-columns:112px minmax(0,1fr);gap:12px;align-items:start}.erp-data-list dt{font-size:12px;color:var(--color-text-maxcontrast)}.erp-data-list dd{margin:0;font-size:14px;overflow-wrap:anywhere}
+.erp-record-card-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:14px 20px 18px;background:var(--color-background-dark)}
+.erp-record-card-actions form{margin:0}.erp-record-card-actions .button{min-height:36px}
+.erp-status-pill{display:inline-flex;align-items:center;min-height:28px;padding:4px 10px;border-radius:999px;background:var(--color-background-dark);font-size:12px;font-weight:600;white-space:nowrap}
+.erp-avatar-placeholder{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:var(--color-primary-element);color:var(--color-primary-element-text);font-size:18px;font-weight:700;flex:0 0 auto}
+
+@media(max-width:1100px){.erp-dashboard-kpis{grid-template-columns:repeat(2,minmax(180px,1fr))}.erp-dashboard-layout{grid-template-columns:1fr}.erp-dashboard-page{max-width:none}}
+@media(max-width:700px){.erp-main,.erp-page{padding:16px}.erp-dashboard-kpis{grid-template-columns:1fr}.erp-record-grid{grid-template-columns:1fr}.erp-record-card-actions{align-items:stretch;flex-direction:column}.erp-record-card-actions .button,.erp-record-card-actions form,.erp-record-card-actions form button{width:100%}.erp-data-list>div{grid-template-columns:1fr;gap:3px}}
+
+/* NextERP 0.22 – kompakte Projektübersicht und Projektzentrale */
+.erp-projects-page{max-width:1480px}
+.erp-project-list{display:grid;gap:10px}
+.erp-project-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;background:var(--color-main-background);border:1px solid var(--color-border);border-radius:13px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.035);transition:box-shadow .15s ease,transform .15s ease}
+.erp-project-row:hover{box-shadow:0 8px 24px rgba(0,0,0,.07);transform:translateY(-1px)}
+.erp-project-row-main{display:grid;grid-template-columns:42px minmax(190px,1.3fr) minmax(150px,.8fr) minmax(110px,.55fr) auto;align-items:center;gap:16px;padding:15px 18px;text-decoration:none;color:var(--color-main-text);min-width:0}
+.erp-project-row-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:10px;background:var(--color-background-dark);font-size:20px}
+.erp-project-row-title{min-width:0}.erp-project-row-title span,.erp-project-row-meta span{display:block;font-size:11px;color:var(--color-text-maxcontrast);margin-bottom:2px}.erp-project-row-title strong{display:block;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.erp-project-row-meta strong{font-size:13px;font-weight:600}
+.erp-project-row-actions{display:flex;gap:7px;align-items:center;padding:0 15px 0 6px}.erp-project-row-actions form{margin:0}.erp-project-row-actions .button{min-height:34px;white-space:nowrap}
+.erp-status-pill[data-status="abgeschlossen"]{background:#e7f6eb;color:#176b2c}.erp-status-pill[data-status="montage"],.erp-status-pill[data-status="fertigung"]{background:#fff4d9;color:#805b00}.erp-status-pill[data-status="abnahme"],.erp-status-pill[data-status="abrechnung"]{background:#e8f2ff;color:#0d5aa7}
+
+.erp-project-hub{max-width:1480px;margin:0 auto}
+.erp-project-hero{display:flex;justify-content:space-between;align-items:flex-start;gap:22px;padding:22px 24px;background:linear-gradient(135deg,var(--color-main-background),var(--color-background-dark));border:1px solid var(--color-border);border-radius:15px;margin-bottom:14px}
+.erp-project-identity h1{font-size:29px;margin:3px 0 5px}.erp-project-identity p{margin:0}.erp-project-hero-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.erp-project-summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}.erp-project-summary-card{padding:15px 17px;border:1px solid var(--color-border);border-radius:12px;background:var(--color-main-background)}.erp-project-summary-card>span{display:block;font-size:12px;color:var(--color-text-maxcontrast)}.erp-project-summary-card>strong{display:block;font-size:24px;margin:4px 0}.erp-project-summary-card small{font-size:11px;color:var(--color-text-maxcontrast)}
+.erp-progress{height:5px;border-radius:999px;background:var(--color-background-dark);overflow:hidden;margin:8px 0 5px}.erp-progress i{display:block;height:100%;background:var(--color-primary-element);border-radius:999px}
+.erp-project-section{margin:0}.erp-project-shortcuts{display:flex;gap:7px;overflow-x:auto;padding:9px;margin:14px 0;background:var(--color-background-dark);border:1px solid var(--color-border);border-radius:12px}.erp-project-shortcuts a{display:inline-flex;align-items:center;min-height:34px;padding:6px 11px;border-radius:9px;text-decoration:none;color:var(--color-main-text);white-space:nowrap;background:var(--color-main-background);border:1px solid var(--color-border);font-size:12px;font-weight:600}.erp-project-shortcuts a.is-primary{background:var(--color-primary-element);color:var(--color-primary-element-text);border-color:var(--color-primary-element)}
+.erp-project-content-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(290px,.65fr);gap:14px;margin-bottom:14px}.erp-project-sidebar{display:grid;gap:14px;align-content:start}.erp-project-info{display:grid;gap:9px;margin:0}.erp-project-info>div{display:grid;grid-template-columns:90px minmax(0,1fr);gap:10px;border-bottom:1px solid var(--color-border);padding-bottom:8px}.erp-project-info dt{font-size:11px;color:var(--color-text-maxcontrast)}.erp-project-info dd{margin:0;font-size:13px;overflow-wrap:anywhere}.erp-project-description{margin-top:13px;padding-top:11px;border-top:1px solid var(--color-border)}
+.erp-compact-list{display:grid}.erp-compact-list a{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--color-border);text-decoration:none;color:var(--color-main-text)}.erp-compact-list a:last-child{border-bottom:0}.erp-compact-list span{min-width:0}.erp-compact-list strong,.erp-compact-list small{display:block}.erp-compact-list small{font-size:11px;color:var(--color-text-maxcontrast);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.erp-compact-list em{font-style:normal;font-size:11px;padding:3px 7px;border-radius:999px;background:var(--color-background-dark);white-space:nowrap}
+.erp-project-data-grid{grid-template-columns:minmax(0,1.1fr) minmax(360px,.9fr)}
+.erp-compact-table{display:grid;font-size:12px}.erp-compact-table-head,.erp-compact-table>div{display:grid;grid-template-columns:100px 150px 75px minmax(180px,1fr);gap:10px;align-items:center;padding:8px 4px;border-bottom:1px solid var(--color-border)}.erp-compact-table-head{font-size:11px;font-weight:700;color:var(--color-text-maxcontrast)}
+.erp-project-documents .erp-document-row{padding:7px 9px;min-height:44px}
+
+@media(max-width:1100px){.erp-project-row-main{grid-template-columns:40px minmax(180px,1fr) minmax(130px,.8fr) auto}.erp-project-row-meta:nth-of-type(3){display:none}.erp-project-summary-grid{grid-template-columns:repeat(2,1fr)}.erp-project-content-grid,.erp-project-data-grid{grid-template-columns:1fr}}
+@media(max-width:760px){.erp-project-row{grid-template-columns:1fr}.erp-project-row-main{grid-template-columns:38px minmax(0,1fr) auto;padding:13px}.erp-project-row-meta{display:none}.erp-project-row-actions{padding:9px 13px 13px;border-top:1px solid var(--color-border);flex-wrap:wrap}.erp-project-hero{flex-direction:column}.erp-project-hero-actions{justify-content:flex-start}.erp-project-summary-grid{grid-template-columns:1fr}.erp-compact-table-head{display:none}.erp-compact-table>div{grid-template-columns:90px 1fr 65px}.erp-compact-table>div span:last-child{grid-column:1/-1;color:var(--color-text-maxcontrast)}}
+
+
+/* NextERP 0.22.2 – aufgeräumte Projektinfo */
+.erp-project-content-grid{grid-template-columns:minmax(0,1.7fr) minmax(340px,.72fr)}
+.erp-project-info-card{padding:18px}
+.erp-project-info-card .erp-section-head{margin-bottom:12px}
+.erp-project-info-card h2{margin:2px 0 0}
+.erp-project-info-grid{display:grid;grid-template-columns:1fr;gap:0;border:1px solid var(--color-border);border-radius:11px;overflow:hidden;background:var(--color-main-background)}
+.erp-project-info-item{display:grid;grid-template-columns:110px minmax(0,1fr);gap:14px;align-items:center;padding:12px 13px;border-bottom:1px solid var(--color-border)}
+.erp-project-info-item:last-child{border-bottom:0}
+.erp-project-info-item>span{font-size:11px;letter-spacing:.02em;color:var(--color-text-maxcontrast);font-weight:600}
+.erp-project-info-item>strong,.erp-project-info-item>a{font-size:14px;line-height:1.35;min-width:0;overflow-wrap:anywhere}
+.erp-project-info-item>a{font-weight:600;text-decoration:none}.erp-project-info-item>a:hover{text-decoration:underline}
+.erp-project-info-folder{grid-template-columns:110px minmax(0,1fr)}
+.erp-project-info-folder .button{justify-self:start;max-width:100%;white-space:normal;text-align:left}
+.erp-status-value{display:inline-flex;width:max-content;max-width:100%;padding:4px 9px;border-radius:999px;background:var(--color-background-dark);font-size:12px!important}
+.erp-project-description{margin-top:12px;padding:12px 13px;border:1px solid var(--color-border);border-radius:11px;background:var(--color-background-dark)}
+.erp-project-description>span{display:block;font-size:11px;color:var(--color-text-maxcontrast);font-weight:600;margin-bottom:6px}
+.erp-project-description p{margin:0;font-size:13px;line-height:1.5}
+.erp-report-list a{padding:11px 2px}
+.erp-report-list strong{font-size:14px}.erp-report-list em{font-size:10px}
+@media(max-width:1100px){.erp-project-content-grid{grid-template-columns:1fr}.erp-project-sidebar{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.erp-project-sidebar{grid-template-columns:1fr}.erp-project-info-item,.erp-project-info-folder{grid-template-columns:1fr;gap:4px}.erp-project-info-folder .button{width:100%;justify-content:center;text-align:center}}
+
+
+/* NextERP 0.23 Stable Core */
+.erp-health-summary{display:flex;align-items:center;justify-content:space-between;gap:16px;border-left:5px solid var(--color-border-maxcontrast)}
+.erp-health-summary.is-healthy{border-left-color:#2d7d46}.erp-health-summary.has-errors{border-left-color:#c9362b}
+.erp-health-summary strong{font-size:20px}.erp-health-summary span{color:var(--color-text-maxcontrast)}
+.erp-check-list{display:grid;gap:8px}.erp-check-item{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start;padding:12px;border:1px solid var(--color-border);border-radius:8px;background:var(--color-main-background)}
+.erp-check-state{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;font-weight:700;background:var(--color-background-dark)}
+.erp-check-item.is-ok .erp-check-state{background:#dff3e5;color:#176b34}.erp-check-item.is-warning .erp-check-state{background:#fff2cc;color:#775b00}.erp-check-item.is-error .erp-check-state{background:#fde2df;color:#a82920}
+.erp-check-item p{margin:3px 0 0;color:var(--color-text-maxcontrast);overflow-wrap:anywhere}.erp-stable-rules{margin:0;padding-left:20px}.erp-stable-rules li{margin:8px 0}
+@media(max-width:700px){.erp-health-summary{align-items:flex-start;flex-direction:column}}
+
+/* NextERP 0.24 – Kundenakte Pro */
+.erp-customer-pro{max-width:1560px;margin:0 auto}
+.erp-customer-hero{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;padding:22px 24px;border:1px solid var(--color-border);border-radius:16px;background:linear-gradient(135deg,var(--color-main-background),var(--color-background-dark));margin-bottom:16px}
+.erp-customer-hero h1{margin:3px 0 6px;font-size:28px}.erp-customer-hero p{margin:0;color:var(--color-text-maxcontrast)}
+.erp-customer-kpis{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:12px;margin-bottom:16px}.erp-customer-kpis>div{padding:16px 18px;border:1px solid var(--color-border);border-radius:13px;background:var(--color-main-background)}.erp-customer-kpis span,.erp-customer-kpis small{display:block;color:var(--color-text-maxcontrast);font-size:12px}.erp-customer-kpis strong{display:block;font-size:27px;line-height:1.1;margin:5px 0}
+.erp-customer-layout{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;align-items:start}.erp-customer-main,.erp-customer-sidebar{display:grid;gap:16px}.erp-customer-main .erp-wide{margin-top:0}.erp-customer-sidebar .erp-card{margin:0}
+.erp-customer-project-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.erp-customer-project-card{display:grid;gap:12px;padding:15px;border:1px solid var(--color-border);border-radius:12px;text-decoration:none;color:var(--color-main-text);background:var(--color-main-background)}.erp-customer-project-card:hover{border-color:var(--color-primary-element);box-shadow:0 6px 18px rgba(0,0,0,.07)}.erp-customer-project-card h3{margin:2px 0 0}.erp-customer-project-card small{color:var(--color-text-maxcontrast)}.erp-customer-project-card footer{display:flex;justify-content:space-between;font-size:12px;color:var(--color-text-maxcontrast)}.erp-progress{height:7px;border-radius:99px;background:var(--color-background-dark);overflow:hidden}.erp-progress i{display:block;height:100%;background:var(--color-primary-element);border-radius:99px}
+.erp-info-list{display:grid;gap:11px;margin:0}.erp-info-list>div{display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px}.erp-info-list dt{font-size:12px;color:var(--color-text-maxcontrast)}.erp-info-list dd{margin:0;overflow-wrap:anywhere}.erp-note-box{padding:10px 12px;background:var(--color-background-dark);border-radius:9px;margin-top:14px!important}
+.erp-contact-list{display:grid;gap:9px}.erp-contact-list article{padding:11px;border:1px solid var(--color-border);border-radius:10px}.erp-contact-list article>div{display:flex;flex-wrap:wrap;align-items:center;gap:7px}.erp-contact-list small{display:block;width:100%;color:var(--color-text-maxcontrast)}.erp-contact-list p{font-size:12px}.erp-contact-list form{text-align:right}.erp-primary-chip{font-size:10px;padding:2px 6px;border-radius:99px;background:var(--color-primary-element);color:var(--color-primary-element-text)}
+.erp-inline-create{margin-top:12px;border-top:1px solid var(--color-border);padding-top:10px}.erp-inline-create summary{cursor:pointer;font-weight:600}.erp-inline-create form{display:grid;gap:8px;margin-top:10px}.erp-inline-create input,.erp-inline-create textarea{width:100%;box-sizing:border-box}
+.erp-reminder-list{display:grid;gap:7px}.erp-reminder-row{display:grid;grid-template-columns:30px minmax(0,1fr);gap:8px;align-items:center;padding:8px;border:1px solid var(--color-border);border-radius:9px}.erp-reminder-row button{width:28px;height:28px;min-height:28px;padding:0;border-radius:50%}.erp-reminder-row span{display:grid}.erp-reminder-row small{color:var(--color-text-maxcontrast)}.erp-reminder-row.is-done{opacity:.58}.erp-reminder-row.is-done strong{text-decoration:line-through}.erp-reminder-row.is-overdue{border-color:#d83c3e;background:rgba(216,60,62,.06)}
+.erp-compact-links{display:grid;gap:7px}.erp-compact-links a{display:flex;justify-content:space-between;gap:10px;padding:9px 10px;border:1px solid var(--color-border);border-radius:9px;text-decoration:none;color:var(--color-main-text)}.erp-compact-links a:hover{background:var(--color-background-hover)}.erp-compact-links span{display:grid}.erp-compact-links small{color:var(--color-text-maxcontrast)}.erp-compact-links b{font-size:11px;white-space:nowrap}
+@media(max-width:1100px){.erp-customer-layout{grid-template-columns:1fr}.erp-customer-sidebar{grid-template-columns:repeat(2,minmax(0,1fr))}.erp-customer-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.erp-customer-hero{flex-direction:column}.erp-customer-sidebar{grid-template-columns:1fr}.erp-customer-kpis{grid-template-columns:1fr}.erp-info-list>div{grid-template-columns:1fr;gap:2px}}
+
+/* NextERP 0.25 – Projekt-Cockpit */
+.erp-project-cockpit{display:grid;grid-template-columns:repeat(6,minmax(150px,1fr));gap:12px;margin:0 0 16px}
+.erp-cockpit-card{display:flex;flex-direction:column;min-height:142px;padding:15px 16px;border:1px solid var(--color-border);border-radius:13px;background:var(--color-main-background);box-shadow:0 3px 12px rgba(0,0,0,.035)}
+.erp-cockpit-card>span{font-size:11px;font-weight:700;letter-spacing:.035em;text-transform:uppercase;color:var(--color-text-maxcontrast)}
+.erp-cockpit-card>strong{margin:7px 0 3px;font-size:24px;line-height:1.08}.erp-cockpit-card>small{font-size:11px;line-height:1.4;color:var(--color-text-maxcontrast)}
+.erp-cockpit-card>a{margin-top:auto;padding-top:11px;font-size:12px;font-weight:600;text-decoration:none}.erp-cockpit-card>a:hover{text-decoration:underline}
+.erp-cockpit-card.is-today{border-top:3px solid var(--color-primary-element)}.erp-cockpit-card.is-alert{border-top:3px solid #d83c3e;background:rgba(216,60,62,.045)}
+.erp-cockpit-chips{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}.erp-cockpit-chips em{max-width:100%;padding:3px 7px;border-radius:99px;background:var(--color-background-dark);font-size:10px;font-style:normal;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.erp-project-cockpit-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,.72fr);gap:16px;margin-bottom:16px}.erp-project-cockpit-grid>.erp-card{margin:0}
+.erp-material-stream{display:grid;gap:0}.erp-material-stream article{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:9px 2px;border-bottom:1px solid var(--color-border)}.erp-material-stream article:last-child{border-bottom:0}.erp-material-stream span{min-width:0}.erp-material-stream strong,.erp-material-stream small{display:block}.erp-material-stream strong{font-size:13px}.erp-material-stream small{margin-top:2px;font-size:10px;color:var(--color-text-maxcontrast)}.erp-material-stream em{font-size:12px;font-style:normal;white-space:nowrap;font-weight:600}
+.erp-photo-strip{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.erp-photo-strip a{display:grid;grid-template-columns:30px minmax(0,1fr);column-gap:8px;align-items:center;padding:9px;border:1px solid var(--color-border);border-radius:9px;color:var(--color-main-text);text-decoration:none}.erp-photo-strip a:hover{background:var(--color-background-hover)}.erp-photo-strip a>span{grid-row:1/3;font-size:21px}.erp-photo-strip strong{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.erp-photo-strip small{font-size:9px;color:var(--color-text-maxcontrast)}
+@media(max-width:1400px){.erp-project-cockpit{grid-template-columns:repeat(3,minmax(170px,1fr))}}
+@media(max-width:1100px){.erp-project-cockpit-grid{grid-template-columns:1fr}}
+@media(max-width:760px){.erp-project-cockpit{grid-template-columns:repeat(2,minmax(0,1fr))}.erp-cockpit-card{min-height:128px}.erp-photo-strip{grid-template-columns:1fr}}
+@media(max-width:480px){.erp-project-cockpit{grid-template-columns:1fr}.erp-cockpit-card{min-height:112px}}
+
+/* NextERP 0.26 – native Contacts & Calendar integration */
+.erp-nextcloud-link-card .erp-actions form { margin: 0; }
+.erp-integration-state {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 14px;
+    margin: 10px 0 14px;
+    border: 1px solid var(--color-border, #d8d8d8);
+    border-radius: 10px;
+    background: var(--color-background-hover, #f7f7f7);
+}
+.erp-integration-state.is-connected {
+    border-left: 4px solid var(--color-success, #2d7d46);
+}
+.erp-integration-state span {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+.erp-integration-state strong { font-size: 15px; }
+.erp-integration-state small { color: var(--color-text-maxcontrast, #666); }
+.erp-settings-form select { width: 100%; max-width: 680px; }
+
+.erp-field-inline{display:flex;flex-direction:column;gap:4px;font-size:12px;color:#667085}.erp-field-inline input{min-width:190px}.erp-form-error{grid-column:1/-1;padding:10px 12px;border:1px solid #d92d20;background:#fff4f2;color:#b42318;border-radius:8px;font-weight:600}.erp-block-muted{display:block;margin-top:3px;color:#667085;font-weight:400}
+
+/* NextERP 0.27 – Nextcloud Contacts customer workflow */
+.erp-sync-chip{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:3px 8px;background:var(--color-success-hover,#e8f5e9);font-size:12px;font-weight:700;white-space:nowrap}
+.erp-contact-save-box{margin:20px 0;padding:18px}.erp-contact-save-box h2{margin-top:0}
+.erp-import-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 14px}.erp-import-toolbar input[type=search]{min-width:280px;flex:1}
+.erp-import-list{display:grid;gap:8px}.erp-import-contact{display:grid;grid-template-columns:auto 42px minmax(0,1fr) auto;align-items:center;gap:12px;padding:11px 13px;border:1px solid var(--color-border,#d8d8d8);border-radius:10px;background:var(--color-main-background,#fff);cursor:pointer}.erp-import-contact:hover{background:var(--color-background-hover,#f5f5f5)}.erp-import-contact.is-linked{opacity:.72;cursor:default}.erp-import-contact-main{display:flex;min-width:0;flex-direction:column;gap:2px}.erp-import-contact-main strong,.erp-import-contact-main small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.erp-import-contact-main small{color:var(--color-text-maxcontrast,#6b6b6b)}
+@media(max-width:700px){.erp-import-contact{grid-template-columns:auto 38px minmax(0,1fr)}.erp-import-contact>span:last-child{grid-column:2/4}.erp-import-toolbar input[type=search]{min-width:100%;width:100%}}
+
+/* NextERP 0.28 native integration */
+.erp-integration-page{max-width:1380px}
+.erp-integration-stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+.erp-integration-value{font-size:16px!important;line-height:1.35!important}
+.erp-integration-grid{grid-template-columns:1fr 1fr}
+.erp-simple-list{display:grid;gap:8px;margin-top:12px}
+.erp-simple-list>div{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:11px 12px;border:1px solid var(--color-border,#ddd);border-radius:10px}
+.erp-simple-list small{color:var(--color-text-maxcontrast,#666)}
+@media(max-width:800px){.erp-integration-stats,.erp-integration-grid{grid-template-columns:1fr}}
+
+/* NextERP 0.35 business modules */
+.erp-grid-2{display:grid;grid-template-columns:minmax(0,2fr) minmax(280px,1fr);gap:16px;margin:16px 0}.erp-record-head{display:flex;justify-content:space-between;align-items:flex-start;padding:20px;border:1px solid var(--color-border);border-radius:14px;background:var(--color-main-background);margin-bottom:16px}.erp-eyebrow{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--color-text-maxcontrast)}.erp-kpi-line{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--color-border)}.erp-kpi-line.erp-total{font-size:18px;border-top:2px solid var(--color-border);border-bottom:0;margin-top:10px}.erp-list-row{display:flex;flex-direction:column;gap:3px;padding:10px 0;border-bottom:1px solid var(--color-border)}.erp-list-row span{font-size:13px;color:var(--color-text-maxcontrast)}.erp-card-warning{border-color:#d98e00;background:#fff8e6}.erp-mobile-page{max-width:920px}.erp-mobile-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.erp-live-timer strong{font-size:34px;font-variant-numeric:tabular-nums}.erp-mobile-actions{display:flex;gap:10px;margin:16px 0}.erp-mobile-actions form{flex:1}.erp-mobile-actions button{width:100%;min-height:52px}.erp-big-button{width:100%;min-height:56px;font-size:18px}.erp-mobile-shortcuts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:18px 0}.erp-shortcut{display:flex;align-items:center;justify-content:center;min-height:68px;padding:12px;border:1px solid var(--color-border);border-radius:12px;font-weight:700;background:var(--color-main-background)}
+@media(max-width:800px){.erp-grid-2,.erp-mobile-kpis{grid-template-columns:1fr}.erp-mobile-shortcuts{grid-template-columns:1fr 1fr}.erp-record-head{flex-direction:column;gap:10px}}
+
+/* NextERP 0.40 – Professional navigation */
+.erp-app-navigation{padding:12px 10px 16px!important;overflow:visible!important}
+.erp-nav-brand{display:grid;gap:8px;padding:0 2px 12px;border-bottom:1px solid var(--color-border);margin-bottom:10px}
+.erp-nav-home{display:flex;align-items:center;gap:10px;min-height:42px;padding:8px 10px;border-radius:10px;color:var(--color-main-text);font-weight:700;text-decoration:none}
+.erp-nav-home:hover,.erp-nav-home.is-active{background:var(--color-primary-element-light);color:var(--color-primary-element)}
+.erp-nav-home-icon{font-size:18px}
+.erp-create-menu{position:relative}
+.erp-create-menu>summary{display:flex;align-items:center;justify-content:center;min-height:38px;padding:7px 12px;border-radius:10px;background:var(--color-primary-element);color:var(--color-primary-element-text);font-weight:700;cursor:pointer;list-style:none}
+.erp-create-menu>summary::-webkit-details-marker{display:none}
+.erp-create-popover{position:absolute;z-index:1200;top:44px;left:0;width:220px;padding:7px;background:var(--color-main-background);border:1px solid var(--color-border);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.16)}
+.erp-create-popover a{display:block;padding:9px 10px;border-radius:8px;color:var(--color-main-text);text-decoration:none;font-size:13px;font-weight:600}
+.erp-create-popover a:hover{background:var(--color-background-hover)}
+.erp-nav-groups{display:grid;gap:4px}
+.erp-nav-group{border-radius:10px}
+.erp-nav-group>summary{display:grid;grid-template-columns:24px minmax(0,1fr) 18px;align-items:center;gap:7px;min-height:42px;padding:8px 10px;border-radius:10px;cursor:pointer;list-style:none;font-size:14px;font-weight:700;color:var(--color-main-text)}
+.erp-nav-group>summary::-webkit-details-marker{display:none}
+.erp-nav-group>summary:hover,.erp-nav-group[open]>summary{background:var(--color-background-hover)}
+.erp-nav-icon{font-size:17px;text-align:center}
+.erp-nav-chevron{font-size:22px;line-height:1;transform:rotate(0);transition:transform .15s ease;color:var(--color-text-maxcontrast)}
+.erp-nav-group[open] .erp-nav-chevron{transform:rotate(90deg)}
+.erp-nav-group ul{display:grid;gap:2px;margin:2px 0 6px;padding:0 0 0 31px;list-style:none}
+.erp-nav-group li{margin:0!important}
+.erp-nav-group li a{display:block;min-height:34px;padding:7px 10px;border-radius:8px;color:var(--color-main-text);text-decoration:none;font-size:13px;line-height:20px}
+.erp-nav-group li a:hover{background:var(--color-background-hover)}
+.erp-nav-group li a.is-active{background:var(--color-primary-element-light);color:var(--color-primary-element);font-weight:700}
+.erp-role-note{margin-top:auto!important;padding:14px 10px 4px!important;border-top:1px solid var(--color-border);font-size:11px!important;color:var(--color-text-maxcontrast)}
+@media(max-width:700px){.erp-create-popover{position:fixed;left:14px;right:14px;top:104px;width:auto}.erp-nav-group>summary{min-height:46px}.erp-nav-group li a{min-height:40px;padding:10px}}
+
+/* NextERP 0.50 – Professional Workspace and command palette */
+.erp-command-trigger{display:grid;grid-template-columns:20px minmax(0,1fr) auto;align-items:center;gap:8px;min-height:38px;padding:7px 10px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-main-background);color:var(--color-main-text);font-weight:650;text-align:left;cursor:pointer}
+.erp-command-trigger:hover{background:var(--color-background-hover)}.erp-command-trigger>span:first-child{font-size:15px}.erp-command-trigger kbd{padding:2px 6px;border:1px solid var(--color-border);border-radius:6px;background:var(--color-background-dark);font-size:10px;color:var(--color-text-maxcontrast)}
+.erp-command-overlay{position:fixed;z-index:100000;inset:0;display:grid;place-items:start center;padding:10vh 18px 18px;background:rgba(16,24,40,.42);backdrop-filter:blur(4px)}.erp-command-overlay[hidden]{display:none}.erp-command-open{overflow:hidden}
+.erp-command-dialog{width:min(720px,100%);max-height:72vh;display:grid;grid-template-rows:auto minmax(120px,1fr) auto;overflow:hidden;border:1px solid rgba(255,255,255,.55);border-radius:16px;background:var(--color-main-background);box-shadow:0 28px 80px rgba(0,0,0,.28)}
+.erp-command-dialog>header{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:10px;padding:13px 15px;border-bottom:1px solid var(--color-border)}.erp-command-dialog>header input{width:100%;height:40px;margin:0;border:0!important;background:transparent!important;box-shadow:none!important;font-size:16px}.erp-command-dialog>header kbd{padding:3px 7px;border:1px solid var(--color-border);border-radius:6px;background:var(--color-background-dark);font-size:11px}.erp-command-search-icon{font-size:24px;color:var(--color-text-maxcontrast)}
+.erp-command-results{overflow:auto;padding:8px}.erp-command-group-title{padding:8px 10px 5px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--color-text-maxcontrast)}.erp-command-result{display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;color:var(--color-main-text);text-decoration:none}.erp-command-result:hover,.erp-command-result.is-active{background:var(--color-primary-element-light);color:var(--color-primary-element)}.erp-command-result-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:9px;background:var(--color-background-dark);font-size:18px}.erp-command-result-main{min-width:0}.erp-command-result-main strong,.erp-command-result-main small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.erp-command-result-main strong{font-size:14px}.erp-command-result-main small{margin-top:2px;font-size:11px;color:var(--color-text-maxcontrast)}.erp-command-result-type{font-size:11px;font-weight:700;color:var(--color-text-maxcontrast)}
+.erp-command-hint,.erp-command-empty{margin:18px;padding:18px;text-align:center;color:var(--color-text-maxcontrast)}.erp-command-dialog>footer{display:flex;justify-content:space-between;gap:12px;padding:9px 15px;border-top:1px solid var(--color-border);font-size:10px;color:var(--color-text-maxcontrast)}
+@media(max-width:700px){.erp-command-trigger kbd{display:none}.erp-command-overlay{padding:72px 8px 8px}.erp-command-dialog{max-height:calc(100vh - 88px);border-radius:12px}.erp-command-result-type{display:none}}
+
+/* NextERP 0.50.2 – Kundenindex mit A–Z und Suche */
+.erp-customer-filter{display:grid;gap:12px;margin:0 0 18px;padding:16px;border:1px solid var(--color-border);border-radius:14px;background:var(--color-main-background);box-shadow:0 2px 12px rgba(0,0,0,.035)}
+.erp-customer-search-wrap{display:grid;grid-template-columns:24px minmax(0,1fr) 34px;align-items:center;gap:8px;padding:0 8px;border:1px solid var(--color-border);border-radius:11px;background:var(--color-main-background)}
+.erp-customer-search-wrap>span{font-size:22px;color:var(--color-text-maxcontrast);text-align:center}.erp-customer-search-wrap input{width:100%;height:44px;margin:0!important;border:0!important;background:transparent!important;box-shadow:none!important;font-size:15px}.erp-search-clear{width:30px;height:30px;padding:0;border:0;border-radius:50%;background:var(--color-background-hover);font-size:20px;line-height:1;cursor:pointer}.erp-search-clear:hover{background:var(--color-background-dark)}
+.erp-alpha-filter{display:flex;align-items:center;gap:5px;overflow-x:auto;padding:2px 0 5px;scrollbar-width:thin}.erp-alpha-filter button{flex:0 0 auto;min-width:34px;height:34px;padding:0 8px;border:1px solid var(--color-border);border-radius:9px;background:var(--color-main-background);color:var(--color-main-text);font-size:12px;font-weight:700;cursor:pointer}.erp-alpha-filter button:first-child{min-width:52px}.erp-alpha-filter button:hover{background:var(--color-background-hover)}.erp-alpha-filter button.is-active{border-color:var(--color-primary-element);background:var(--color-primary-element);color:var(--color-primary-element-text)}
+.erp-filter-summary{font-size:12px;color:var(--color-text-maxcontrast)}.erp-filter-summary strong{color:var(--color-main-text)}.erp-customer-card[hidden]{display:none!important}.erp-mail-link{display:inline-flex;align-items:center;gap:5px;overflow-wrap:anywhere}
+@media(max-width:700px){.erp-customer-filter{padding:12px}.erp-alpha-filter{margin-right:-12px;padding-right:12px}.erp-customer-search-wrap input{font-size:14px}}
+
+/* NextERP 0.50.3 – Fällige Termine im Dashboard */
+.erp-dashboard-events{margin:0 0 16px;padding:18px}
+.erp-dashboard-events .erp-section-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:12px}
+.erp-dashboard-events .erp-section-head h2{margin:0;font-size:20px}
+.erp-dashboard-events .erp-section-head p{margin:3px 0 0}
+.erp-upcoming-events{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.erp-upcoming-event{display:grid;grid-template-columns:92px minmax(0,1fr) auto;align-items:center;gap:12px;min-height:64px;padding:10px 12px;border:1px solid var(--color-border);border-radius:11px;color:var(--color-main-text);text-decoration:none;background:var(--color-main-background)}
+.erp-upcoming-event:hover{background:var(--color-background-hover);border-color:var(--color-primary-element)}
+.erp-event-date{display:grid;gap:2px}.erp-event-date strong{font-size:13px}.erp-event-date small,.erp-event-main small{font-size:11px;color:var(--color-text-maxcontrast)}
+.erp-event-main{min-width:0;display:grid;gap:3px}.erp-event-main strong,.erp-event-main small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.erp-event-main strong{font-size:14px}.erp-event-source{padding:4px 8px;border-radius:999px;background:var(--color-background-dark);font-size:10px;font-weight:700;color:var(--color-text-maxcontrast)}
+.erp-dashboard-empty{padding:18px!important}
+@media(max-width:900px){.erp-upcoming-events{grid-template-columns:1fr}.erp-dashboard-events .erp-section-head{align-items:flex-start;flex-direction:column}.erp-upcoming-event{grid-template-columns:78px minmax(0,1fr)}}
+
+
+/* 0.50.5: Material gemeinsam mit Zeit und Rapport erfassen */
+.erp-material-entry-list{display:flex;flex-direction:column;gap:10px;margin:10px 0 16px}.erp-material-entry-row{display:grid;grid-template-columns:minmax(180px,1.4fr) minmax(180px,1.5fr) 110px 90px 110px 42px;gap:10px;align-items:end;padding:12px;border:1px solid var(--color-border,#d8dde5);border-radius:12px;background:var(--color-main-background,#fff)}.erp-material-entry-row label{display:block;font-size:12px;font-weight:700;margin-bottom:5px;color:var(--color-text-maxcontrast,#666)}.erp-material-entry-row input{width:100%;min-width:0}.erp-material-remove{height:36px;min-width:36px;padding:0;font-size:20px}.erp-material-summary{margin:0;padding-left:17px}.erp-material-summary li{margin:2px 0}.erp-material-entry-list-compact .erp-material-entry-row{grid-template-columns:minmax(150px,1.2fr) minmax(160px,1.3fr) 85px 75px 90px 38px;padding:9px;gap:7px}.erp-material-entry-list-compact .erp-material-entry-row label{font-size:11px}@media(max-width:1100px){.erp-material-entry-row,.erp-material-entry-list-compact .erp-material-entry-row{grid-template-columns:1fr 1fr 100px 90px}.erp-material-remove{grid-column:auto}.erp-material-search-cell{grid-column:span 2}}@media(max-width:700px){.erp-material-entry-row,.erp-material-entry-list-compact .erp-material-entry-row{grid-template-columns:1fr}.erp-material-search-cell{grid-column:auto}.erp-material-remove{width:100%}}
+
+.erp-address-fields{border:1px solid var(--color-border);border-radius:12px;padding:16px;margin:18px 0}.erp-address-fields legend{font-weight:700;padding:0 8px}
+
+/* 0.52 Material & Lager */
+.erp-page-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:18px}.erp-material-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}.erp-stat{appearance:none;text-align:left;background:#fff;border:1px solid var(--color-border,#ddd);border-radius:14px;padding:16px;min-height:86px}.erp-stat span{display:block;color:var(--color-text-maxcontrast,#666);font-size:13px;margin-bottom:6px}.erp-stat strong{display:block;font-size:24px}.erp-stat.inventory-filter{cursor:pointer}.erp-stat.inventory-filter.active{border-color:var(--color-primary-element,#0b84d8);box-shadow:0 0 0 2px color-mix(in srgb,var(--color-primary-element,#0b84d8) 18%,transparent)}.erp-masterdata-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.erp-form-card summary{cursor:pointer;padding:4px 0 12px}.erp-form-card form label{display:block;margin-top:8px;margin-bottom:4px}.erp-chip-list{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}.erp-chip{background:var(--color-background-dark,#eef3f7);border-radius:999px;padding:6px 10px;font-size:13px}.erp-toolbar{display:flex;gap:10px;align-items:center;margin:18px 0 10px}.erp-toolbar input[type=search]{flex:1;min-width:240px}.erp-toolbar select{min-width:160px}.erp-toolbar span{white-space:nowrap;color:var(--color-text-maxcontrast,#666)}.erp-material-table td small{display:block;color:var(--color-text-maxcontrast,#777);font-size:11px;margin-top:3px}.erp-stock-badge{display:inline-flex;border-radius:999px;padding:5px 9px;font-weight:600;white-space:nowrap}.erp-stock-ok{background:#e5f6ea;color:#18703a}.erp-stock-low{background:#fff1cc;color:#805500}.erp-stock-out{background:#fde5e5;color:#a42323}.erp-empty{text-align:center;padding:28px;color:var(--color-text-maxcontrast,#777)}.erp-inventory-page .erp-table{margin-bottom:18px}@media(max-width:900px){.erp-material-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.erp-masterdata-grid{grid-template-columns:1fr}.erp-page-head,.erp-toolbar{flex-direction:column;align-items:stretch}.erp-toolbar select{width:100%}}
+
+/* NextERP 0.60 Projektcenter */
+.erp-project-center{max-width:1500px;margin:0 auto;scroll-behavior:smooth}.erp-project-progress{height:7px;max-width:520px;margin-top:12px;border-radius:99px;background:var(--color-background-dark);overflow:hidden}.erp-project-progress i{display:block;height:100%;background:var(--color-primary-element)}
+.erp-project-center-nav{position:sticky;top:0;z-index:20;display:flex;gap:6px;overflow-x:auto;margin:0 0 14px;padding:8px;background:color-mix(in srgb,var(--color-main-background) 92%,transparent);backdrop-filter:blur(10px);border:1px solid var(--color-border);border-radius:12px}.erp-project-center-nav a{padding:7px 10px;border-radius:8px;white-space:nowrap;text-decoration:none;color:var(--color-main-text);font-size:12px;font-weight:650}.erp-project-center-nav a:hover{background:var(--color-background-dark)}
+.erp-project-center-metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:14px}.erp-project-center-metrics article{padding:14px 16px;border:1px solid var(--color-border);border-radius:12px;background:var(--color-main-background)}.erp-project-center-metrics span,.erp-cost-grid span{display:block;font-size:11px;color:var(--color-text-maxcontrast);font-weight:700;text-transform:uppercase;letter-spacing:.03em}.erp-project-center-metrics strong,.erp-cost-grid strong{display:block;margin:5px 0 2px;font-size:22px}.erp-project-center-metrics small,.erp-cost-grid small{font-size:11px;color:var(--color-text-maxcontrast)}
+.erp-project-center-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:14px 0}.erp-commercial-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.erp-commercial-columns h3{font-size:14px;margin:0 0 8px}.erp-business-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--color-border);text-decoration:none;color:var(--color-main-text)}.erp-business-row span{min-width:0}.erp-business-row strong,.erp-business-row small{display:block}.erp-business-row small{color:var(--color-text-maxcontrast);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.erp-business-row em{font-style:normal;font-weight:700;white-space:nowrap}
+.erp-event-list{display:grid;gap:8px}.erp-event-list article{display:grid;grid-template-columns:120px minmax(0,1fr);gap:12px;padding:10px 12px;border:1px solid var(--color-border);border-radius:10px}.erp-event-list time{font-size:12px;font-weight:700}.erp-event-list strong,.erp-event-list small{display:block}.erp-event-list small{color:var(--color-text-maxcontrast)}
+.erp-document-intake{display:grid;grid-template-columns:minmax(240px,1fr) minmax(170px,240px) auto;gap:10px;align-items:center;margin-bottom:14px;padding:14px;border:1px dashed var(--color-border);border-radius:12px;background:var(--color-background-dark)}
+.erp-cost-center{margin:14px 0}.erp-cost-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.erp-cost-grid article{padding:16px;border:1px solid var(--color-border);border-radius:12px}.erp-cost-grid .is-positive{border-top:3px solid #2d9d57}.erp-cost-grid .is-negative{border-top:3px solid #d83c3e;background:rgba(216,60,62,.04)}
+.erp-project-center section[id]{scroll-margin-top:70px}
+@media(max-width:1100px){.erp-project-center-metrics{grid-template-columns:repeat(3,1fr)}.erp-project-center-grid{grid-template-columns:1fr}.erp-cost-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.erp-project-center-metrics{grid-template-columns:repeat(2,1fr)}.erp-commercial-columns{grid-template-columns:1fr}.erp-document-intake{grid-template-columns:1fr}.erp-cost-grid{grid-template-columns:1fr}.erp-event-list article{grid-template-columns:1fr}}
+/* NextERP 0.61.1 Dokumenteneingang */
+.erp-dms-page{max-width:1500px}.erp-dms-kpis{margin-bottom:16px}.erp-inline-upload{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.erp-inline-upload input[type=file]{flex:1;min-width:280px}.erp-dms-filter{display:flex;gap:8px;margin:16px 0}.erp-dms-item{display:grid;grid-template-columns:minmax(280px,360px) 1fr;gap:24px;align-items:start}.erp-dms-file{display:flex;gap:14px;align-items:flex-start}.erp-dms-file h2{font-size:18px;margin:0 0 5px}.erp-dms-file p{margin:3px 0}.erp-dms-icon{font-size:34px}.erp-status-pill{display:inline-block;padding:3px 8px;border-radius:999px;background:var(--color-background-dark);font-size:12px;font-weight:700}.erp-dms-assign{border-left:1px solid var(--color-border);padding-left:24px}.erp-dms-meta{display:grid;grid-template-columns:repeat(3,minmax(120px,1fr));gap:12px}.erp-dms-meta div{padding:10px;background:var(--color-background-dark);border-radius:8px}.erp-dms-meta span{display:block;font-size:12px;color:var(--color-text-maxcontrast);margin-bottom:4px}.erp-dms-meta strong{font-size:14px}@media(max-width:900px){.erp-dms-item{grid-template-columns:1fr}.erp-dms-assign{border-left:0;border-top:1px solid var(--color-border);padding-left:0;padding-top:18px}.erp-dms-meta{grid-template-columns:1fr 1fr}}
+
+/* NextERP 0.61.2 Dokumenten-Prüfarbeitsplatz */
+.erp-dms-list-card{padding:0;overflow:hidden}.erp-dms-list{display:flex;flex-direction:column}.erp-dms-row{display:grid;grid-template-columns:42px minmax(220px,1fr) minmax(130px,190px) auto 20px;gap:14px;align-items:center;padding:13px 16px;border-bottom:1px solid var(--color-border);text-decoration:none;color:var(--color-main-text)}.erp-dms-row:last-child{border-bottom:0}.erp-dms-row:hover{background:var(--color-background-hover)}.erp-dms-row-icon{font-size:22px;text-align:center}.erp-dms-row-main{min-width:0}.erp-dms-row-main strong,.erp-dms-row-main small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.erp-dms-row-main small{margin-top:3px;color:var(--color-text-maxcontrast)}.erp-dms-row-type{color:var(--color-text-maxcontrast)}
+.erp-document-workspace-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(360px,.75fr);gap:18px;align-items:start}.erp-document-preview-card{padding:0;overflow:hidden;min-height:720px;position:sticky;top:62px}.erp-document-preview-head{display:flex;justify-content:space-between;padding:12px 15px;border-bottom:1px solid var(--color-border);background:var(--color-background-hover)}.erp-document-pdf-preview{display:block;width:100%;height:calc(100vh - 190px);min-height:660px;border:0;background:#777}.erp-document-image-preview{display:block;max-width:100%;max-height:calc(100vh - 190px);margin:auto;object-fit:contain}.erp-document-no-preview{min-height:620px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px}.erp-document-no-preview>span{font-size:64px}.erp-document-form-card{position:sticky;top:62px}.erp-document-form-card .erp-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:1100px){.erp-document-workspace-grid{grid-template-columns:1fr}.erp-document-preview-card,.erp-document-form-card{position:static}.erp-document-pdf-preview{height:640px}.erp-dms-row{grid-template-columns:36px minmax(0,1fr) auto}.erp-dms-row-type{display:none}}
+@media(max-width:650px){.erp-document-pdf-preview{height:520px;min-height:0}.erp-document-preview-card{min-height:0}.erp-document-form-card .erp-form-grid{grid-template-columns:1fr}.erp-document-form-card .erp-span-2{grid-column:auto}.erp-dms-row{padding:11px 10px;gap:8px}.erp-dms-row .erp-status-pill{display:none}}
+
+
+/* NextERP 0.61.4 stabile Dokumentvorschau und kompakte Inbox */
+.erp-document-pdf-image-wrap{min-height:660px;display:flex;align-items:flex-start;justify-content:center;background:#d9dde3;overflow:auto;padding:18px}
+.erp-document-pdf-image{display:block;max-width:100%;height:auto;max-height:none;background:#fff;box-shadow:0 3px 16px rgba(0,0,0,.18)}
+.is-hidden{display:none!important}
+.erp-dms-row{min-height:68px;padding:10px 14px;grid-template-columns:34px minmax(220px,1fr) minmax(120px,170px) auto 16px}
+.erp-dms-row-icon{font-size:18px}
+.erp-dms-row-main strong{font-size:15px;line-height:1.25;font-weight:700}
+.erp-dms-row-main small{font-size:11px;line-height:1.3}
+.erp-dms-row-type{font-size:13px}
+.erp-status-pill{font-size:11px;padding:3px 7px}
+@media(max-width:650px){.erp-document-pdf-image-wrap{min-height:420px;padding:8px}.erp-dms-row-main strong{font-size:14px}}
+
+
+
+
+/* 0.61.6: CSP-feste PDF-Vorschau als serverseitig gerenderte Bildseite */
+.erp-document-pdf-image-wrap {
+ min-height: 68vh;
+ display: flex;
+ align-items: flex-start;
+ justify-content: center;
+ overflow: auto;
+ padding: 18px;
+ background: #d9dde3;
+}
+.erp-document-pdf-image {
+ display: block;
+ width: auto;
+ max-width: 100%;
+ height: auto;
+ background: #fff;
+ box-shadow: 0 3px 16px rgba(0,0,0,.18);
+}
+.erp-document-preview-actions {
+ display: flex;
+ justify-content: flex-end;
+ gap: 10px;
+ padding: 12px 16px;
+ border-top: 1px solid var(--color-border, #ddd);
+}
+@media (max-width: 900px) {
+ .erp-document-pdf-image-wrap { min-height: 54vh; padding: 8px; }
+}
+
+/* NextERP 0.62.0 – Smart DMS */
+.erp-dms-toolbar-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.erp-dms-search-form {
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) minmax(190px, 260px) auto auto;
+    gap: 10px;
+    align-items: center;
+}
+.erp-dms-search-form input[type="search"],
+.erp-dms-search-form select {
+    width: 100%;
+    min-height: 40px;
+}
+.erp-dms-row-type {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 150px;
+}
+.erp-dms-row-type small {
+    color: var(--color-text-maxcontrast);
+    font-size: 11px;
+    font-weight: 500;
+}
+.erp-status-warning {
+    background: var(--color-warning-light, #fff3cd) !important;
+    color: var(--color-warning-text, #7a4b00) !important;
+}
+.erp-notice-warning {
+    border-left: 4px solid var(--color-warning, #e6a700);
+}
+.erp-dms-row-main strong {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+@media (max-width: 900px) {
+    .erp-dms-search-form {
+        grid-template-columns: 1fr;
+    }
+    .erp-dms-row-type {
+        min-width: 0;
+    }
+}
+
+/* NextERP 0.63.0 Document Automation */
+.erp-dms-scan-status{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:10px 14px;margin-bottom:14px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-background-hover);font-size:13px}.erp-dms-scan-status strong{color:#2d7d32}.erp-dms-state-new{background:#e8f1ff}.erp-dms-state-review{background:#fff4d6}.erp-dms-state-assigned{background:#e7f7ea}.erp-dms-state-error{background:#fde8e8}.erp-rule-form{display:grid;grid-template-columns:1.1fr 1.4fr 1.2fr 90px auto;gap:10px;margin:16px 0}.erp-rule-list>div{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid var(--color-border)}.erp-rule-list span{display:flex;flex-direction:column;gap:2px}.erp-rule-list small{font-size:12px;color:var(--color-text-maxcontrast)}@media(max-width:900px){.erp-rule-form{grid-template-columns:1fr}}
+
+
+/* NextERP 0.64 Document Center */
+.erp-document-categories{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0 16px}.erp-document-categories a{display:flex;align-items:center;gap:10px;min-height:48px;padding:10px 12px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-main-background);text-decoration:none}.erp-document-categories a:hover{background:var(--color-background-hover)}.erp-document-categories span{font-size:20px}.erp-document-categories strong{font-size:14px;line-height:1.2}.erp-dms-row-main strong{font-size:14px!important;line-height:1.25!important}.erp-dms-row-type{font-size:13px}.erp-dms-row-type small{font-size:11px}
+
+/* 0.65.0 Angebotsimport aus Dokumenten */
+.erp-dms-import-box{margin-top:18px;padding-top:18px;border-top:1px solid var(--color-border,#d8d8d8)}
+.erp-dms-import-box h3{margin:0 0 8px;font-size:18px}
+.erp-checkbox-line label{display:flex;align-items:center;gap:8px;font-weight:600}
+.erp-checkbox-line input[type="checkbox"]{width:auto;margin:0}
+
+/* NextERP 0.65.2 PDF offer extraction */
+.erp-pdf-extraction-summary { margin-bottom: 14px; }
+.erp-kpis-compact { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.erp-offer-import-items input { min-width: 90px; width: 100%; }
+.erp-offer-import-items td:first-child input { min-width: 260px; }
+@media (max-width: 900px) {
+  .erp-offer-import-items { overflow-x: auto; }
+  .erp-offer-import-items table { min-width: 820px; }
+}

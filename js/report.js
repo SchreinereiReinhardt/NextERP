@@ -1,15 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('signatureCanvas')
-    const form = document.getElementById('reportMainForm')
-    const hiddenInput = document.getElementById('signatureData')
+    const form = document.getElementById('reportSignatureForm')
+    const hiddenInput = form?.querySelector('input[name="signatureData"]')
     const status = document.getElementById('signatureStatus')
     const clearButton = document.getElementById('clearSignature')
 
-    if (!canvas || !form || !hiddenInput) {
-        return
-    }
+    if (!canvas || !form || !hiddenInput) return
 
-    const context = canvas.getContext('2d', { willReadFrequently: true })
+    const context = canvas.getContext('2d')
     if (!context) {
         if (status) status.textContent = 'Unterschriftsfeld konnte nicht geladen werden.'
         return
@@ -18,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     context.lineWidth = 3
     context.lineCap = 'round'
     context.lineJoin = 'round'
-    context.strokeStyle = '#111111'
+    context.strokeStyle = '#111'
 
     let drawing = false
     let hasSignature = false
@@ -31,75 +29,72 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    const syncSignature = () => {
+    const sync = () => {
         hiddenInput.value = hasSignature ? canvas.toDataURL('image/png') : ''
     }
 
-    const startDrawing = event => {
+    const start = event => {
         event.preventDefault()
-        const point = getPoint(event)
         drawing = true
         hasSignature = true
-        canvas.setPointerCapture?.(event.pointerId)
+        const point = getPoint(event)
         context.beginPath()
         context.moveTo(point.x, point.y)
-        // A single tap must also count as a signature mark.
         context.lineTo(point.x + 0.1, point.y + 0.1)
         context.stroke()
-        syncSignature()
-        if (status) status.textContent = 'Unterschrift erfasst. Name eintragen und speichern.'
+        canvas.setPointerCapture?.(event.pointerId)
+        sync()
+        if (status) status.textContent = 'Unterschrift erfasst. Jetzt speichern und abschließen.'
     }
 
-    const continueDrawing = event => {
+    const move = event => {
         if (!drawing) return
         event.preventDefault()
         const point = getPoint(event)
         context.lineTo(point.x, point.y)
         context.stroke()
-        syncSignature()
+        sync()
     }
 
-    const stopDrawing = event => {
+    const stop = event => {
         if (!drawing) return
         event.preventDefault()
         drawing = false
         context.closePath()
         canvas.releasePointerCapture?.(event.pointerId)
-        syncSignature()
+        sync()
     }
 
     canvas.style.touchAction = 'none'
     canvas.tabIndex = 0
-    canvas.addEventListener('pointerdown', startDrawing)
-    canvas.addEventListener('pointermove', continueDrawing)
-    canvas.addEventListener('pointerup', stopDrawing)
-    canvas.addEventListener('pointercancel', stopDrawing)
-    canvas.addEventListener('pointerleave', stopDrawing)
+    canvas.addEventListener('pointerdown', start)
+    canvas.addEventListener('pointermove', move)
+    canvas.addEventListener('pointerup', stop)
+    canvas.addEventListener('pointercancel', stop)
+    canvas.addEventListener('pointerleave', stop)
 
     clearButton?.addEventListener('click', () => {
         context.clearRect(0, 0, canvas.width, canvas.height)
         drawing = false
         hasSignature = false
         hiddenInput.value = ''
-        if (status) status.textContent = 'Unterschrift wurde gelöscht.'
+        if (status) status.textContent = 'Unterschrift gelöscht.'
     })
 
     form.addEventListener('submit', event => {
-        syncSignature()
-        const submitter = event.submitter
-        if (submitter?.value === 'sign') {
-            const signedBy = form.querySelector('[name="signedBy"]')
-            if (!hasSignature || hiddenInput.value === '') {
-                event.preventDefault()
-                if (status) status.textContent = 'Bitte zuerst eine Unterschrift zeichnen.'
-                canvas.focus()
-                return
-            }
-            if (signedBy && signedBy.value.trim() === '') {
-                event.preventDefault()
-                if (status) status.textContent = 'Bitte den Namen der unterschreibenden Person eintragen.'
-                signedBy.focus()
-            }
+        hasSignature = hasSignature || canvas.toDataURL('image/png').length > 200
+        sync()
+        const signedBy = form.querySelector('[name="signedBy"]')
+        if (!signedBy || signedBy.value.trim() === '') {
+            event.preventDefault()
+            if (status) status.textContent = 'Bitte den Namen der unterschreibenden Person eintragen.'
+            signedBy?.focus()
+            return
+        }
+        if (!hasSignature || hiddenInput.value === '') {
+            event.preventDefault()
+            if (status) status.textContent = 'Bitte zuerst eine Unterschrift zeichnen.'
+            canvas.focus()
         }
     })
 })

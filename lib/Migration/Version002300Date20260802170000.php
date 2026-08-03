@@ -12,7 +12,7 @@ final class Version002300Date20260802170000 extends SimpleMigrationStep {
         $schema = $schemaClosure();
         $indexes = [
             're_erp_projects' => [
-                ['columns' => ['customer_id', 'archived'], 'name' => 're_erp_project_customer_active'],
+                ['columns' => ['customer_id', 'is_archived'], 'name' => 're_erp_project_customer_active'],
                 ['columns' => ['status'], 'name' => 're_erp_project_status'],
             ],
             're_erp_reports' => [

@@ -9,6 +9,7 @@ require __DIR__ . '/_nav.php';
 					<h1>Einstellungen</h1>
 					<p class="erp-sub">Firmenangaben, Logo und Ausgabe der Rapporte</p>
 				</div>
+                <div class="erp-actions"><a class="button" href="<?php p($url->linkToRoute('reinhardterp.systemCheck.index')); ?>">Systemprüfung</a></div>
 			</div>
 
 			<section class="erp-card erp-wide">
@@ -25,7 +26,7 @@ require __DIR__ . '/_nav.php';
 				<?php endif; ?>
 
 				<form class="erp-settings-form" method="post" action="<?php p($url->linkToRoute('reinhardterp.module.saveSettings')); ?>" enctype="multipart/form-data">
-					<input type="hidden" name="requesttoken" value="<?php p($requestToken); ?>">
+					<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
 					<label for="companyLogo">Logo auswählen</label>
 					<input id="companyLogo" type="file" name="companyLogo" accept="image/png,image/jpeg" required>
 					<p class="erp-muted">PNG oder JPG, maximal 5 MB.</p>
@@ -35,10 +36,28 @@ require __DIR__ . '/_nav.php';
 
 
 			<section class="erp-card erp-wide">
+				<h2>Nextcloud-Kalender</h2>
+				<p>Wähle den führenden Kalender für NextERP. Neue ERP-Termine werden dort gespeichert; Termine und Änderungen vom Handy werden zurück in den Teamkalender eingelesen.</p>
+				<form class="erp-settings-form" method="post" action="<?php p($url->linkToRoute('reinhardterp.integration.saveCalendarSettings')); ?>">
+					<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
+					<label for="calendarKey">Kalender für ERP-Termine</label>
+					<select id="calendarKey" name="calendarKey">
+						<option value="">Keine automatische Kalenderübernahme</option>
+						<?php foreach ($_['calendars'] as $calendar): ?>
+						<option value="<?php p($calendar['key']); ?>" <?php if ($calendar['selected']): ?>selected<?php endif; ?> <?php if (!$calendar['writable']): ?>disabled<?php endif; ?>><?php p($calendar['name']); ?><?php if (!$calendar['writable']): ?> (schreibgeschützt)<?php endif; ?></option>
+						<?php endforeach; ?>
+					</select>
+					<?php if (!empty($_['selectedCalendarName'])): ?><div class="erp-integration-state is-connected"><span>✓ Aktiv</span><strong><?php p($_['selectedCalendarName']); ?></strong><small>Bidirektionaler Abgleich: NextERP schreibt Termine, NextERP liest Handy- und Nextcloud-Änderungen zurück.</small></div><?php endif; ?>
+					<?php if (empty($_['calendars'])): ?><div class="erp-notice">Es wurden keine Nextcloud-Kalender gefunden. Prüfe, ob die Kalender-App und der DAV-Hintergrunddienst aktiv sind.</div><?php endif; ?>
+					<button class="button primary" type="submit">Kalenderauswahl speichern</button>
+				</form>
+			</section>
+
+			<section class="erp-card erp-wide">
 				<h2>Stundensätze</h2>
 				<p>Diese Sätze werden automatisch in der Zeitauswertung verwendet. Bereits vorgemerkte oder abgerechnete Zeiten behalten ihren festgeschriebenen Satz.</p>
 				<form class="erp-settings-form" method="post" action="<?php p($url->linkToRoute('reinhardterp.module.saveHourlyRate')); ?>">
-					<input type="hidden" name="requesttoken" value="<?php p($requestToken); ?>">
+					<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
 					<div class="erp-form-grid">
 						<div><label>Bezeichnung</label><input name="name" required placeholder="z. B. Monteur"></div>
 						<div><label>Kürzel</label><input name="code" required placeholder="MONTEUR"></div>

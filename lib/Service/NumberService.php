@@ -13,6 +13,8 @@ final class NumberService {
    'report'=>['prefix'=>'R','yearly'=>true,'start'=>0,'width'=>4],
    'material'=>['prefix'=>'M','yearly'=>false,'start'=>0,'width'=>5],
    'invoice'=>['prefix'=>'RE','yearly'=>true,'start'=>0,'width'=>4],
+   'offer'=>['prefix'=>'AN','yearly'=>true,'start'=>0,'width'=>4],
+   'order'=>['prefix'=>'AU','yearly'=>true,'start'=>0,'width'=>4],
   ];
   if(!isset($defs[$type])) throw new \InvalidArgumentException('Unbekannter Nummernkreis.');
   $d=$defs[$type]; $key=$type.($d['yearly']?'-'.date('Y'):'');

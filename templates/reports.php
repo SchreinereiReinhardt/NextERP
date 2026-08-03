@@ -23,7 +23,7 @@ $availableEntries=$_['availableEntries']??[];
 
 <?php if($selectedProjectId>0): ?>
 <form class="erp-form-card" method="post" action="<?php p($url->linkToRoute('reinhardterp.module.saveReport')); ?>" id="new-report-form">
- <input type="hidden" name="requesttoken" value="<?php p($requestToken); ?>">
+ <input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
  <input type="hidden" name="projectId" value="<?php p($selectedProjectId); ?>">
  <div class="erp-form-grid">
   <div><label>Datum</label><input type="date" name="reportDate" value="<?php p(date('Y-m-d')); ?>" required></div>

@@ -1,0 +1,2 @@
+Base: NextERP 0.62.0 Smart DMS Real
+Build: 0.63.0 Document Automation
