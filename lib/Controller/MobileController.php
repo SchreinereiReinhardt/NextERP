@@ -19,11 +19,12 @@ final class MobileController extends Controller {
  #[PublicPage,NoCSRFRequired] public function projects(int $limit=100):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->projects((string)$a['uid'],$limit));}
  #[PublicPage,NoCSRFRequired] public function project(int $id):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->project((string)$a['uid'],$id));}
  #[PublicPage,NoCSRFRequired] public function projectDocuments(int $id):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->projectDocuments((string)$a['uid'],$id));}
+ #[PublicPage,NoCSRFRequired] public function projectTimes(int $id):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->projectTimes((string)$a['uid'],$id));}
  #[PublicPage,NoCSRFRequired] public function projectPhotos(int $id):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->projectPhotos((string)$a['uid'],$id));}
  #[PublicPage,NoCSRFRequired] public function material(string $q=''):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->materials($q));}
  #[PublicPage,NoCSRFRequired] public function report():JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->createReport((string)$a['uid'],$this->jsonBody()));}
  #[PublicPage,NoCSRFRequired] public function time():JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->createTime((string)$a['uid'],$this->jsonBody()));}
- #[PublicPage,NoCSRFRequired] public function upload(int $projectId=0,string $type='document'):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->upload((string)$a['uid'],$this->request->getUploadedFile('file')??[],$projectId,$type));}
+ #[PublicPage,NoCSRFRequired] public function upload(int $projectId=0,string $type='document',string $category='Sonstige'):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->upload((string)$a['uid'],$this->request->getUploadedFile('file')??[],$projectId,$type,$category));}
  #[PublicPage,NoCSRFRequired] public function scan(int $projectId=0):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->upload((string)$a['uid'],$this->request->getUploadedFile('file')??[],$projectId,'scan'));}
  #[PublicPage,NoCSRFRequired] public function sync():JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->sync((string)$a['uid'],(array)($this->jsonBody()['changes']??[])));}
  private function authRun(callable $fn):JSONResponse{return $this->run(function()use($fn){$auth=$this->mobile->authenticate((string)$this->request->getHeader('Authorization'));return $fn($auth);});}

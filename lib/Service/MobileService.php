@@ -63,10 +63,140 @@ final class MobileService {
   $this->assertProjectAccess($uid,$id);$qb=$this->db->getQueryBuilder();$qb->select('p.*','c.name AS customer_name','c.contact_name','c.phone','c.mobile','c.email','c.street','c.postal_code','c.city','c.country')->from('re_erp_projects','p')->leftJoin('p','re_erp_customers','c',$qb->expr()->eq('c.id','p.customer_id'))->where($qb->expr()->eq('p.id',$qb->createNamedParameter($id)));$p=$qb->executeQuery()->fetchAssociative();if(!$p)throw new \RuntimeException('Projekt nicht gefunden.');
   $out=$this->projectSummary($p);$out['description']=$p['description']??null;$out['documents']=$this->projectDocuments($uid,$id);$out['photos']=$this->projectPhotos($uid,$id);$out['material']=$this->projectMaterial($id);$out['appointments']=$this->projectEvents($id);$out['reports']=$this->projectReports($id);return $out;
  }
- public function projectDocuments(string $uid,int $id):array{$this->assertProjectAccess($uid,$id);$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_project_documents')->where($qb->expr()->eq('project_id',$qb->createNamedParameter($id)))->orderBy('created_at','DESC')->setMaxResults(100);return $qb->executeQuery()->fetchAllAssociative();}
+ public function projectDocuments(string $uid,int $id):array{
+  $this->assertProjectAccess($uid,$id);
+  $project=$this->projectRow($id);
+  $documents=[];
+  $knownPaths=[];
+
+  $qb=$this->db->getQueryBuilder();
+  $qb->select('*')->from('re_erp_project_documents')
+   ->where($qb->expr()->eq('project_id',$qb->createNamedParameter($id)))
+   ->orderBy('created_at','DESC')->setMaxResults(200);
+  foreach($qb->executeQuery()->fetchAllAssociative() as $row){
+   $path=trim((string)($row['file_path']??''),'/');
+   if($path!=='')$knownPaths[$path]=true;
+   $documents[]=$this->mobileDocumentRow($row,$id);
+  }
+
+  $base=trim((string)($project['folder_path']??''),'/');
+  if($base!==''){
+   try{
+    $folder=$this->existingFolder($uid,$base);
+    $files=[];
+    $this->collectProjectFiles($folder,$base,0,5,$files,250);
+    foreach($files as $file){
+     $path=trim((string)$file['file_path'],'/');
+     if(isset($knownPaths[$path]))continue;
+     $documents[]=$this->mobileDocumentRow($file,$id);
+     $knownPaths[$path]=true;
+    }
+   }catch(\OCP\Files\NotFoundException|\RuntimeException){
+    // Ein fehlender Projektordner darf die API nicht vollständig blockieren.
+   }
+  }
+
+  usort($documents,static function(array $a,array $b):int{
+   $aTime=strtotime((string)($a['created_at']??''))?:0;
+   $bTime=strtotime((string)($b['created_at']??''))?:0;
+   return $bTime<=>$aTime;
+  });
+  return array_slice($documents,0,200);
+ }
  public function projectPhotos(string $uid,int $id):array{return array_values(array_filter($this->projectDocuments($uid,$id),static fn(array $d):bool=>str_starts_with((string)($d['mime_type']??''),'image/')||(string)($d['document_type']??'')==='photo'));}
  public function materials(?string $query=null):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_materials')->where($qb->expr()->eq('active',$qb->createNamedParameter(1)));if(trim((string)$query)!==''){$q='%'.strtolower(trim((string)$query)).'%';$qb->andWhere($qb->expr()->orX($qb->expr()->like($qb->func()->lower('name'),$qb->createNamedParameter($q)),$qb->expr()->like($qb->func()->lower('article_no'),$qb->createNamedParameter($q)),$qb->expr()->like($qb->func()->lower('barcode'),$qb->createNamedParameter($q))));}$qb->orderBy('name','ASC')->setMaxResults(200);return $qb->executeQuery()->fetchAllAssociative();}
- public function createReport(string $uid,array $data):array{$projectId=(int)($data['projectId']??0);$this->assertProjectAccess($uid,$projectId);$title=trim((string)($data['title']??'Rapport'));$now=date('Y-m-d H:i:s');$no=$this->numbers->next('report');$qb=$this->db->getQueryBuilder();$qb->insert('re_erp_reports')->values(['project_id'=>$qb->createNamedParameter($projectId),'report_no'=>$qb->createNamedParameter($no),'report_date'=>$qb->createNamedParameter((string)($data['reportDate']??date('Y-m-d'))),'title'=>$qb->createNamedParameter($title),'description'=>$qb->createNamedParameter((string)($data['description']??'')),'status'=>$qb->createNamedParameter('Entwurf'),'created_by'=>$qb->createNamedParameter($uid),'created_at'=>$qb->createNamedParameter($now),'updated_at'=>$qb->createNamedParameter($now)])->executeStatement();return ['id'=>(int)$this->db->lastInsertId('*PREFIX*re_erp_reports'),'reportNo'=>$no,'status'=>'Entwurf'];}
+ public function projectTimes(string $uid,int $projectId):array{
+  $this->assertProjectAccess($uid,$projectId);
+  $q=$this->db->getQueryBuilder();
+  $q->select('e.id','e.activity','e.hours','e.imported_to_report_id','w.work_date','w.user_id')
+   ->from('re_erp_workday_entries','e')
+   ->innerJoin('e','re_erp_workdays','w',$q->expr()->eq('w.id','e.workday_id'))
+   ->where($q->expr()->eq('e.project_id',$q->createNamedParameter($projectId)))
+   ->andWhere($q->expr()->isNull('e.imported_to_report_id'))
+   ->orderBy('w.work_date','DESC')->addOrderBy('e.id','DESC')->setMaxResults(100);
+  $rows=$q->executeQuery()->fetchAllAssociative();
+  return array_map(function(array $row):array{
+   $mq=$this->db->getQueryBuilder();$mq->select($mq->func()->count('*','c'),$mq->func()->sum('total_price','s'))->from('re_erp_workday_materials')->where($mq->expr()->eq('workday_entry_id',$mq->createNamedParameter((int)$row['id'])))->andWhere($mq->expr()->isNull('imported_to_report_id'));
+   $material=$mq->executeQuery()->fetchNumeric();
+   $user=$this->users->get((string)$row['user_id']);
+   return ['id'=>(int)$row['id'],'workDate'=>(string)$row['work_date'],'userId'=>(string)$row['user_id'],'displayName'=>$user instanceof IUser?$user->getDisplayName():(string)$row['user_id'],'hours'=>(float)$row['hours'],'activity'=>(string)$row['activity'],'materialCount'=>(int)($material[0]??0),'materialTotal'=>(float)($material[1]??0)];
+  },$rows);
+ }
+ public function createReport(string $uid,array $data):array{
+  $projectId=(int)($data['projectId']??0);$this->assertProjectAccess($uid,$projectId);$project=$this->projectRow($projectId);
+  $title=trim((string)($data['title']??'Arbeitsrapport'));if($title==='')throw new \InvalidArgumentException('Titel fehlt.');
+  $reportDate=(string)($data['reportDate']??date('Y-m-d'));$now=date('Y-m-d H:i:s');$no=$this->numbers->next('report');$invoiceReady=(bool)($data['invoiceReady']??false);
+  $customerSignature=$this->mobileSignature((string)($data['customerSignatureData']??''),'Kundenunterschrift');
+  $technicianSignature=$this->mobileSignature((string)($data['technicianSignatureData']??''),'Monteurunterschrift');
+  $customerSignedBy=trim((string)($data['customerSignedBy']??''));
+  $technicianSignedBy=trim((string)($data['technicianSignedBy']??''));
+  if($customerSignature!==null&&$customerSignedBy==='')throw new \InvalidArgumentException('Name des unterschreibenden Kunden fehlt.');
+  if($technicianSignature!==null&&$technicianSignedBy==='')throw new \InvalidArgumentException('Name des Monteurs fehlt.');
+  $signed=$customerSignature!==null;
+  $status=$invoiceReady?'Für Rechnung':($signed?'Unterschrieben':'Entwurf');
+  $qb=$this->db->getQueryBuilder();$qb->insert('re_erp_reports')->values([
+   'customer_id'=>$qb->createNamedParameter((int)$project['customer_id']),
+   'project_id'=>$qb->createNamedParameter($projectId),
+   'report_no'=>$qb->createNamedParameter($no),
+   'report_date'=>$qb->createNamedParameter($reportDate),
+   'title'=>$qb->createNamedParameter($title),
+   'description'=>$qb->createNamedParameter((string)($data['description']??'')),
+   'customer_note'=>$qb->createNamedParameter((string)($data['customerNote']??'')),
+   'status'=>$qb->createNamedParameter($status),
+   'locked'=>$qb->createNamedParameter($signed?1:0),
+   'signature_data'=>$qb->createNamedParameter($customerSignature),
+   'signature_mime'=>$qb->createNamedParameter($customerSignature!==null?'image/png':null),
+   'signed_by'=>$qb->createNamedParameter($customerSignature!==null?$customerSignedBy:null),
+   'signed_at'=>$qb->createNamedParameter($customerSignature!==null?$now:null),
+   'finalized_at'=>$qb->createNamedParameter($customerSignature!==null?$now:null),
+   'technician_signature_data'=>$qb->createNamedParameter($technicianSignature),
+   'technician_signature_mime'=>$qb->createNamedParameter($technicianSignature!==null?'image/png':null),
+   'technician_signed_by'=>$qb->createNamedParameter($technicianSignature!==null?$technicianSignedBy:null),
+   'technician_signed_at'=>$qb->createNamedParameter($technicianSignature!==null?$now:null),
+   'created_by'=>$qb->createNamedParameter($uid),
+   'created_at'=>$qb->createNamedParameter($now),
+   'updated_at'=>$qb->createNamedParameter($now)
+  ])->executeStatement();$reportId=(int)$this->db->lastInsertId('*PREFIX*re_erp_reports');
+  $hourCount=0;$itemCount=0;$importCount=0;
+  foreach((array)($data['hours']??[]) as $hour){if(!is_array($hour))continue;$hours=(float)($hour['hours']??0);if($hours<=0)continue;$h=$this->db->getQueryBuilder();$h->insert('re_erp_report_hours')->values(['report_id'=>$h->createNamedParameter($reportId),'user_id'=>$h->createNamedParameter($uid),'hours'=>$h->createNamedParameter($hours),'activity'=>$h->createNamedParameter(trim((string)($hour['activity']??'Arbeit'))?:'Arbeit'),'work_date'=>$h->createNamedParameter((string)($hour['workDate']??$reportDate)),'source_entry_id'=>$h->createNamedParameter(null)])->executeStatement();$hourCount++;}
+  foreach((array)($data['materials']??[]) as $position){if(!is_array($position))continue;$materialId=(int)($position['materialId']??0);$quantity=(float)($position['quantity']??0);if($quantity<=0)continue;$material=null;if($materialId>0){$mq=$this->db->getQueryBuilder();$mq->select('*')->from('re_erp_materials')->where($mq->expr()->eq('id',$mq->createNamedParameter($materialId)));$material=$mq->executeQuery()->fetchAssociative()?:null;}$description=trim((string)($position['description']??($material['name']??'Material')));$unit=trim((string)($position['unit']??($material['unit']??'Stk.')));$price=array_key_exists('unitPrice',$position)?(float)$position['unitPrice']:(float)($material['sale_price']??$material['price']??0);$i=$this->db->getQueryBuilder();$i->insert('re_erp_report_items')->values(['report_id'=>$i->createNamedParameter($reportId),'material_id'=>$i->createNamedParameter($materialId>0?$materialId:null),'description'=>$i->createNamedParameter($description?:'Material'),'quantity'=>$i->createNamedParameter($quantity),'unit'=>$i->createNamedParameter($unit?:'Stk.'),'notes'=>$i->createNamedParameter('Direkt im mobilen Rapport erfasst'),'unit_price'=>$i->createNamedParameter($price),'total_price'=>$i->createNamedParameter(round($quantity*$price,2)),'source_workday_material_id'=>$i->createNamedParameter(null)])->executeStatement();$itemCount++;}
+  foreach((array)($data['importEntryIds']??[]) as $raw){$entryId=(int)$raw;if($entryId<=0)continue;$eq=$this->db->getQueryBuilder();$eq->select('e.*','w.user_id','w.work_date')->from('re_erp_workday_entries','e')->innerJoin('e','re_erp_workdays','w',$eq->expr()->eq('w.id','e.workday_id'))->where($eq->expr()->eq('e.id',$eq->createNamedParameter($entryId)))->andWhere($eq->expr()->eq('e.project_id',$eq->createNamedParameter($projectId)))->andWhere($eq->expr()->isNull('e.imported_to_report_id'));$entry=$eq->executeQuery()->fetchAssociative();if(!$entry)continue;$h=$this->db->getQueryBuilder();$h->insert('re_erp_report_hours')->values(['report_id'=>$h->createNamedParameter($reportId),'user_id'=>$h->createNamedParameter((string)$entry['user_id']),'hours'=>$h->createNamedParameter((float)$entry['hours']),'activity'=>$h->createNamedParameter((string)$entry['activity']),'work_date'=>$h->createNamedParameter((string)$entry['work_date']),'source_entry_id'=>$h->createNamedParameter($entryId)])->executeStatement();$hourCount++;$importCount++;
+   $mq=$this->db->getQueryBuilder();$mq->select('*')->from('re_erp_workday_materials')->where($mq->expr()->eq('workday_entry_id',$mq->createNamedParameter($entryId)))->andWhere($mq->expr()->isNull('imported_to_report_id'));foreach($mq->executeQuery()->fetchAllAssociative() as $mat){$i=$this->db->getQueryBuilder();$i->insert('re_erp_report_items')->values(['report_id'=>$i->createNamedParameter($reportId),'material_id'=>$i->createNamedParameter($mat['material_id']?:null),'description'=>$i->createNamedParameter((string)$mat['description']),'quantity'=>$i->createNamedParameter((float)$mat['quantity']),'unit'=>$i->createNamedParameter((string)$mat['unit']),'notes'=>$i->createNamedParameter('Aus Zeiterfassung übernommen'),'unit_price'=>$i->createNamedParameter((float)$mat['unit_price']),'total_price'=>$i->createNamedParameter((float)$mat['total_price']),'source_workday_material_id'=>$i->createNamedParameter((int)$mat['id'])])->executeStatement();$upm=$this->db->getQueryBuilder();$upm->update('re_erp_workday_materials')->set('imported_to_report_id',$upm->createNamedParameter($reportId))->where($upm->expr()->eq('id',$upm->createNamedParameter((int)$mat['id'])))->executeStatement();$itemCount++;}
+   $up=$this->db->getQueryBuilder();$up->update('re_erp_workday_entries')->set('imported_to_report_id',$up->createNamedParameter($reportId));if($invoiceReady)$up->set('billing_status',$up->createNamedParameter('reserved'));$up->where($up->expr()->eq('id',$up->createNamedParameter($entryId)))->executeStatement();
+  }
+  if($hourCount===0){$d=$this->db->getQueryBuilder();$d->delete('re_erp_reports')->where($d->expr()->eq('id',$d->createNamedParameter($reportId)))->executeStatement();throw new \InvalidArgumentException('Mindestens eine Zeit ist erforderlich.');}
+  $photoCount=0;
+  foreach((array)($data['photoDocumentIds']??[]) as $rawPhotoId){
+   $photoId=(int)$rawPhotoId;if($photoId<=0)continue;
+   $pq=$this->db->getQueryBuilder();
+   $pq->select('file_path','mime_type','document_type')->from('re_erp_project_documents')
+    ->where($pq->expr()->eq('id',$pq->createNamedParameter($photoId)))
+    ->andWhere($pq->expr()->eq('project_id',$pq->createNamedParameter($projectId)));
+   $photo=$pq->executeQuery()->fetchAssociative();
+   if(!$photo)continue;
+   $mime=(string)($photo['mime_type']??'');
+   $documentType=(string)($photo['document_type']??'');
+   if(!str_starts_with($mime,'image/')&&$documentType!=='photo')continue;
+   $rf=$this->db->getQueryBuilder();
+   $rf->insert('re_erp_report_files')->values([
+    'report_id'=>$rf->createNamedParameter($reportId),
+    'path'=>$rf->createNamedParameter((string)$photo['file_path']),
+    'created_at'=>$rf->createNamedParameter($now),
+   ])->executeStatement();
+   $photoCount++;
+  }
+  return ['id'=>$reportId,'reportNo'=>$no,'status'=>$status,'hourCount'=>$hourCount,'materialCount'=>$itemCount,'photoCount'=>$photoCount,'importedTimeCount'=>$importCount,'invoiceReady'=>$invoiceReady,'customerSigned'=>$customerSignature!==null,'technicianSigned'=>$technicianSignature!==null];
+ }
+ private function mobileSignature(string $data,string $label):?string{
+  $data=trim($data);
+  if($data==='')return null;
+  if(!str_starts_with($data,'data:image/png;base64,'))throw new \InvalidArgumentException($label.' ist ungültig.');
+  $encoded=substr($data,strpos($data,',')+1);
+  if(strlen($encoded)>4000000)throw new \InvalidArgumentException($label.' ist zu groß.');
+  $raw=base64_decode($encoded,true);
+  if($raw===false||strlen($raw)<100||substr($raw,0,8)!=="\x89PNG\r\n\x1a\n")throw new \InvalidArgumentException($label.' konnte nicht verarbeitet werden.');
+  return $data;
+ }
  public function createTime(string $uid,array $data):array{
   $projectId=(int)($data['projectId']??0);
   $this->assertProjectAccess($uid,$projectId);
@@ -162,7 +292,51 @@ final class MobileService {
    'materialTotal'=>round($materialTotal,2),
   ];
  }
- public function upload(string $uid,array $file,int $projectId,string $type='document'):array{$this->assertProjectAccess($uid,$projectId);if(($file['error']??UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_OK)throw new \InvalidArgumentException('Keine gültige Datei empfangen.');if((int)($file['size']??0)>100*1024*1024)throw new \InvalidArgumentException('Datei ist größer als 100 MB.');$project=$this->projectRow($projectId);$base=trim((string)($project['folder_path']??''),'/');if($base==='')throw new \RuntimeException('Projektordner fehlt.');$folderMap=['photo'=>'07_Fotos','scan'=>'00_Eingang','pdf'=>'12_Sonstiges','document'=>'12_Sonstiges'];$sub=$folderMap[$type]??'12_Sonstiges';$target=$this->ensureFolder($uid,$base.'/'.$sub);$name=$this->safeFile((string)($file['name']??'Datei'));$content=file_get_contents((string)$file['tmp_name']);if($content===false)throw new \RuntimeException('Upload konnte nicht gelesen werden.');$node=$target->newFile($name,$content);$path=$base.'/'.$sub.'/'.$name;$q=$this->db->getQueryBuilder();$q->insert('re_erp_project_documents')->values(['project_id'=>$q->createNamedParameter($projectId),'customer_id'=>$q->createNamedParameter((int)$project['customer_id']),'document_type'=>$q->createNamedParameter($type==='photo'?'photo':'other'),'file_name'=>$q->createNamedParameter($name),'file_path'=>$q->createNamedParameter($path),'mime_type'=>$q->createNamedParameter($node->getMimeType()),'status'=>$q->createNamedParameter('uploaded'),'source'=>$q->createNamedParameter('mobile'),'created_by'=>$q->createNamedParameter($uid),'created_at'=>$q->createNamedParameter(date('Y-m-d H:i:s'))])->executeStatement();return ['id'=>(int)$this->db->lastInsertId('*PREFIX*re_erp_project_documents'),'fileId'=>$node->getId(),'name'=>$name,'path'=>$path,'mime'=>$node->getMimeType()];}
+ public function upload(string $uid,array $file,int $projectId,string $type='document',string $category='Sonstige'):array{
+  $this->assertProjectAccess($uid,$projectId);
+  if(($file['error']??UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_OK)throw new \InvalidArgumentException('Keine gültige Datei empfangen.');
+  if((int)($file['size']??0)>100*1024*1024)throw new \InvalidArgumentException('Datei ist größer als 100 MB.');
+  $project=$this->projectRow($projectId);
+  $base=trim((string)($project['folder_path']??''),'/');
+  if($base==='')throw new \RuntimeException('Projektordner fehlt.');
+  $allowedCategories=['Vorher','Nachher','Montage','Schaden','Abnahme','Sonstige'];
+  $category=trim($category);
+  if(!in_array($category,$allowedCategories,true))$category='Sonstige';
+  $folderMap=['photo'=>'07_Fotos/'.$category,'scan'=>'00_Eingang','pdf'=>'12_Sonstiges','document'=>'12_Sonstiges'];
+  $sub=$folderMap[$type]??'12_Sonstiges';
+  $target=$this->ensureFolder($uid,$base.'/'.$sub);
+  $name=$this->safeFile((string)($file['name']??'Datei'));
+  if($type==='photo'){
+   $extension=pathinfo($name,PATHINFO_EXTENSION);
+   $stem=pathinfo($name,PATHINFO_FILENAME);
+   $name=$this->safeFile(date('Y-m-d_H-i-s').'_'.$category.'_'.$stem.($extension!==''?'.'.$extension:''));
+  }
+  $content=file_get_contents((string)$file['tmp_name']);
+  if($content===false)throw new \RuntimeException('Upload konnte nicht gelesen werden.');
+  $node=$target->newFile($name,$content);
+  $path=$base.'/'.$sub.'/'.$name;
+  $q=$this->db->getQueryBuilder();
+  $q->insert('re_erp_project_documents')->values([
+   'project_id'=>$q->createNamedParameter($projectId),
+   'customer_id'=>$q->createNamedParameter((int)$project['customer_id']),
+   'document_type'=>$q->createNamedParameter($type==='photo'?'photo':'other'),
+   'file_name'=>$q->createNamedParameter($name),
+   'file_path'=>$q->createNamedParameter($path),
+   'mime_type'=>$q->createNamedParameter($node->getMimeType()),
+   'status'=>$q->createNamedParameter($type==='photo'?'photo_'.$category:'uploaded'),
+   'source'=>$q->createNamedParameter('mobile'),
+   'created_by'=>$q->createNamedParameter($uid),
+   'created_at'=>$q->createNamedParameter(date('Y-m-d H:i:s')),
+  ])->executeStatement();
+  return [
+   'id'=>(int)$this->db->lastInsertId('*PREFIX*re_erp_project_documents'),
+   'fileId'=>$node->getId(),
+   'name'=>$name,
+   'path'=>$path,
+   'mime'=>$node->getMimeType(),
+   'category'=>$type==='photo'?$category:null,
+  ];
+ }
  public function sync(string $uid,array $changes):array{$results=[];foreach($changes as $change){try{$uuid=(string)($change['uuid']??'');$type=(string)($change['type']??'');$payload=(array)($change['payload']??[]);$data=match($type){'time'=>$this->createTime($uid,$payload),'report'=>$this->createReport($uid,$payload),default=>throw new \InvalidArgumentException('Unbekannter Sync-Typ: '.$type)};$results[]=['uuid'=>$uuid,'success'=>true,'data'=>$data];}catch(\Throwable $e){$results[]=['uuid'=>(string)($change['uuid']??''),'success'=>false,'error'=>$e->getMessage()];}}return ['results'=>$results,'serverTime'=>date(DATE_ATOM)];}
  private function issueTokens(IUser $user,?string $deviceName):array{$access=bin2hex(random_bytes(32));$refresh=bin2hex(random_bytes(48));$now=time();$qb=$this->db->getQueryBuilder();$qb->insert('re_erp_mobile_tokens')->values(['user_id'=>$qb->createNamedParameter($user->getUID()),'token_hash'=>$qb->createNamedParameter(hash('sha256',$access)),'refresh_hash'=>$qb->createNamedParameter(hash('sha256',$refresh)),'device_name'=>$qb->createNamedParameter($deviceName),'expires_at'=>$qb->createNamedParameter(date('Y-m-d H:i:s',$now+self::ACCESS_TTL)),'refresh_expires_at'=>$qb->createNamedParameter(date('Y-m-d H:i:s',$now+self::REFRESH_TTL)),'created_at'=>$qb->createNamedParameter(date('Y-m-d H:i:s',$now))])->executeStatement();return ['user'=>$this->userPayload($user),'role'=>$this->role($user->getUID()),'permissions'=>$this->permissions($user->getUID()),'accessToken'=>$access,'refreshToken'=>$refresh,'expiresIn'=>self::ACCESS_TTL,'serverVersion'=>$this->version(),'apiVersion'=>1];}
  private function revokeById(int $id):void{$q=$this->db->getQueryBuilder();$q->update('re_erp_mobile_tokens')->set('revoked_at',$q->createNamedParameter(date('Y-m-d H:i:s')))->where($q->expr()->eq('id',$q->createNamedParameter($id)))->executeStatement();}
@@ -182,6 +356,78 @@ final class MobileService {
  private function statusProgress(string $s):int{return match(strtolower($s)){'anfrage'=>10,'angebot'=>20,'auftrag'=>35,'fertigung'=>55,'montage'=>75,'abnahme'=>85,'abrechnung'=>95,'abgeschlossen'=>100,default=>5};}
  private function assertProjectAccess(string $uid,int $id):void{if($id<=0)throw new \InvalidArgumentException('Projekt fehlt.');$role=$this->role($uid);if(in_array($role,['administrator','admin','office','manager'],true)){if(!$this->projectRow($id))throw new \RuntimeException('Projekt nicht gefunden.');return;}$q=$this->db->getQueryBuilder();$q->select('id')->from('re_erp_project_users')->where($q->expr()->eq('project_id',$q->createNamedParameter($id)))->andWhere($q->expr()->eq('user_id',$q->createNamedParameter($uid)));if(!$q->executeQuery()->fetchOne())throw new \RuntimeException('Keine Berechtigung für dieses Projekt.');}
  private function projectRow(int $id):array{$q=$this->db->getQueryBuilder();$q->select('*')->from('re_erp_projects')->where($q->expr()->eq('id',$q->createNamedParameter($id)));$r=$q->executeQuery()->fetchAssociative();if(!$r)throw new \RuntimeException('Projekt nicht gefunden.');return $r;}
+ private function mobileDocumentRow(array $row,int $projectId):array{
+  $path=trim((string)($row['file_path']??$row['path']??''),'/');
+  $name=(string)($row['file_name']??$row['name']??basename($path));
+  $mime=(string)($row['mime_type']??$row['mime']??'application/octet-stream');
+  $mtime=(int)($row['mtime']??0);
+  $created=(string)($row['created_at']??'');
+  if($created===''&&$mtime>0)$created=date('Y-m-d H:i:s',$mtime);
+  return [
+   'id'=>(int)($row['id']??0),
+   'project_id'=>$projectId,
+   'document_type'=>(string)($row['document_type']??$this->documentTypeFromPath($path,$mime)),
+   'file_name'=>$name,
+   'file_path'=>$path,
+   'mime_type'=>$mime,
+   'status'=>(string)($row['status']??'available'),
+   'source'=>(string)($row['source']??'nextcloud'),
+   'created_by'=>(string)($row['created_by']??''),
+   'created_at'=>$created,
+   'size'=>(int)($row['size']??0),
+   'mtime'=>$mtime,
+  ];
+ }
+ private function documentTypeFromPath(string $path,string $mime):string{
+  if(str_starts_with($mime,'image/'))return 'photo';
+  $path='/'.strtolower($path).'/';
+  return match(true){
+   str_contains($path,'/00_eingang/')=>'inbox',
+   str_contains($path,'/01_aufmass/')=>'measurement',
+   str_contains($path,'/02_planung/')=>'planning',
+   str_contains($path,'/03_zeichnungen/')=>'drawing',
+   str_contains($path,'/04_material/')=>'material',
+   str_contains($path,'/05_bestellungen/')=>'purchase',
+   str_contains($path,'/06_rapporte/')=>'report',
+   str_contains($path,'/07_fotos/')=>'photo',
+   str_contains($path,'/08_abnahme/')=>'acceptance',
+   str_contains($path,'/09_rechnung/')=>'invoice',
+   str_contains($path,'/10_angebote/')=>'offer',
+   str_contains($path,'/11_auftraege/')=>'order',
+   default=>'other',
+  };
+ }
+ private function existingFolder(string $uid,string $path):Folder{
+  $node=$this->rootFolder->getUserFolder($uid);
+  foreach(explode('/',trim($path,'/')) as $part){
+   if($part==='')continue;
+   $child=$node->get($part);
+   if(!$child instanceof Folder)throw new \RuntimeException('Projektpfad ist kein Ordner.');
+   $node=$child;
+  }
+  return $node;
+ }
+ private function collectProjectFiles(Folder $folder,string $path,int $depth,int $maxDepth,array &$rows,int $limit):void{
+  if(count($rows)>=$limit)return;
+  foreach($folder->getDirectoryListing() as $node){
+   if(count($rows)>=$limit)return;
+   $nodePath=trim($path.'/'.$node->getName(),'/');
+   if($node instanceof File){
+    $rows[]=[
+     'id'=>$node->getId(),
+     'file_name'=>$node->getName(),
+     'file_path'=>$nodePath,
+     'mime_type'=>$node->getMimeType(),
+     'size'=>$node->getSize(),
+     'mtime'=>$node->getMTime(),
+     'status'=>'available',
+     'source'=>'nextcloud',
+    ];
+   }elseif($node instanceof Folder&&$depth<$maxDepth){
+    $this->collectProjectFiles($node,$nodePath,$depth+1,$maxDepth,$rows,$limit);
+   }
+  }
+ }
  private function projectMaterial(int $id):array{$q=$this->db->getQueryBuilder();$q->select('i.description','i.quantity','i.unit','i.unit_price','r.report_no','r.report_date')->from('re_erp_report_items','i')->innerJoin('i','re_erp_reports','r',$q->expr()->eq('r.id','i.report_id'))->where($q->expr()->eq('r.project_id',$q->createNamedParameter($id)))->orderBy('r.report_date','DESC')->setMaxResults(100);return $q->executeQuery()->fetchAllAssociative();}
  private function projectEvents(int $id):array{$q=$this->db->getQueryBuilder();$q->select('*')->from('re_erp_team_events')->where($q->expr()->eq('project_id',$q->createNamedParameter($id)))->andWhere($q->expr()->eq('is_deleted',$q->createNamedParameter(0)))->orderBy('start_at','ASC')->setMaxResults(50);return $q->executeQuery()->fetchAllAssociative();}
  private function projectReports(int $id):array{$q=$this->db->getQueryBuilder();$q->select('*')->from('re_erp_reports')->where($q->expr()->eq('project_id',$q->createNamedParameter($id)))->orderBy('report_date','DESC')->setMaxResults(50);return $q->executeQuery()->fetchAllAssociative();}
