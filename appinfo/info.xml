@@ -48,7 +48,7 @@ NextERP wurde aus der täglichen Praxis eines Handwerksbetriebs entwickelt.
 
   <navigations>
     <navigation>
-      <name>ERP</name>
+      <name>NextERP</name>
       <route>reinhardterp.page.index</route>
       <icon>app.svg</icon>
       <order>45</order>
