@@ -1,19 +1,56 @@
 <?xml version="1.0"?>
-<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+
   <id>reinhardterp</id>
   <name>NextERP</name>
   <summary>Das Handwerker-ERP für Nextcloud</summary>
-  <description>NextERP mit versionierter Mobile-API, Smart-DMS und geprüftem Angebotsimport, automatischer Dateinamenanalyse, Dublettenwarnung, Suche und Projektcenter: Kunden, Projekte, Angebote, Aufträge, Termine, Rapporte, Zeiten, Material, Dokumente, Kosten und Timeline in einer digitalen Projektakte.</description>
-  <version>0.67.5</version>
-  <licence>agpl</licence>
-  <author>Schreinerei Reinhardt</author>
+
+  <description><![CDATA[
+NextERP ist ein ERP-System für Handwerksbetriebe direkt in Nextcloud.
+
+Funktionen:
+
+- Kundenverwaltung
+- Projektverwaltung
+- Angebote und Aufträge
+- Rapporte mit Unterschrift und PDF
+- Zeiterfassung
+- Materialverwaltung
+- Dokumente und Projektakten
+- Fotos
+- Termine
+- Kosten und Projekt-Timeline
+- Mobile API für die NextERP Android-App
+
+NextERP wurde aus der täglichen Praxis eines Handwerksbetriebs entwickelt.
+  ]]></description>
+
+  <version>1.0.0</version>
+  <licence>AGPL-3.0-or-later</licence>
+
+  <author homepage="https://www.schreinerei-reinhardt.de">André Reinhardt</author>
+
   <namespace>ReinhardtERP</namespace>
+
   <category>organization</category>
+
+  <website>https://www.schreinerei-reinhardt.de</website>
+  <bugs>https://github.com/SchreinereiReinhardt/NextERP/issues</bugs>
+  <repository>https://github.com/SchreinereiReinhardt/NextERP</repository>
+
+  <documentation>
+    <user>https://github.com/SchreinereiReinhardt/NextERP#readme</user>
+    <admin>https://github.com/SchreinereiReinhardt/NextERP#installation</admin>
+    <developer>https://github.com/SchreinereiReinhardt/NextERP</developer>
+  </documentation>
+
   <dependencies>
     <php min-version="8.2" />
     <nextcloud min-version="33" max-version="34" />
     <backend>caldav</backend>
   </dependencies>
+
   <navigations>
     <navigation>
       <name>ERP</name>
@@ -22,4 +59,5 @@
       <order>45</order>
     </navigation>
   </navigations>
+
 </info>
