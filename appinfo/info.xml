@@ -39,11 +39,6 @@ NextERP wurde aus der täglichen Praxis eines Handwerksbetriebs entwickelt.
   <bugs>https://github.com/SchreinereiReinhardt/NextERP/issues</bugs>
   <repository>https://github.com/SchreinereiReinhardt/NextERP</repository>
 
-  <documentation>
-    <user>https://github.com/SchreinereiReinhardt/NextERP#readme</user>
-    <admin>https://github.com/SchreinereiReinhardt/NextERP#installation</admin>
-    <developer>https://github.com/SchreinereiReinhardt/NextERP</developer>
-  </documentation>
 
   <dependencies>
     <php min-version="8.2" />
