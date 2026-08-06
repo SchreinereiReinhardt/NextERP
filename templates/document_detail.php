@@ -72,9 +72,11 @@ $prefillGross = $document['gross_amount'] ?? $extracted['gross_amount'] ?? '';
             <div><span>Titel / Bauvorhaben</span><strong><?php p($extracted['title'] ?: '–'); ?></strong></div>
             <div><span>Angebotsnummer</span><strong><?php p($extracted['document_no'] ?: '–'); ?></strong></div>
             <div><span>Netto</span><strong><?php p($extracted['net_amount'] !== null ? number_format((float)$extracted['net_amount'], 2, ',', '.').' €' : '–'); ?></strong></div>
+            <div><span>USt.-Betrag</span><strong><?php p($extracted['vat_amount'] !== null ? number_format((float)$extracted['vat_amount'], 2, ',', '.').' €' : '–'); ?></strong></div>
             <div><span>Brutto</span><strong><?php p($extracted['gross_amount'] !== null ? number_format((float)$extracted['gross_amount'], 2, ',', '.').' €' : '–'); ?></strong></div>
             <div><span>Positionen</span><strong><?php p(count($extracted['positions'] ?? [])); ?></strong></div>
         </div>
+        <?php if (!empty($extracted['amount_warning'])): ?><div class="erp-notice erp-notice-warning"><?php p($extracted['amount_warning']); ?></div><?php endif; ?>
         <?php if (empty($extracted['positions'])): ?><p class="erp-muted">Kopf- und Summendaten wurden gelesen; eine eindeutig strukturierte Positionstabelle wurde nicht erkannt.</p><?php endif; ?>
     <?php endif; ?>
 </section>
@@ -143,9 +145,11 @@ $prefillGross = $document['gross_amount'] ?? $extracted['gross_amount'] ?? '';
                 <div class="erp-span-2"><label>Leistungsbeschreibung</label><textarea name="description" rows="4"><?php p((string)($extracted['description'] ?? '') ?: 'Importiert aus '.$document['original_name']); ?></textarea></div>
                 <div><label>Angebotsdatum</label><input type="date" name="offerDate" value="<?php p($document['document_date'] ?? $extracted['offer_date'] ?? date('Y-m-d')); ?>"></div>
                 <div><label>Gültig bis</label><input type="date" name="validUntil" value="<?php p($extracted['valid_until'] ?? ''); ?>"></div>
-                <div><label>Netto</label><input type="number" step="0.01" name="netAmount" value="<?php p($document['net_amount'] ?? $extracted['net_amount'] ?? ''); ?>"></div>
-                <div><label>Brutto</label><input type="number" step="0.01" name="grossAmount" value="<?php p($document['gross_amount'] ?? $extracted['gross_amount'] ?? ''); ?>"></div>
-                <div><label>USt. %</label><input type="number" step="0.01" name="vatRate" value="<?php p($extracted['vat_rate'] ?? 19); ?>"></div>
+                <div><label>Netto</label><input id="offerImportNet" type="number" step="0.01" name="netAmount" value="<?php p($document['net_amount'] ?? $extracted['net_amount'] ?? ''); ?>"></div>
+                <div><label>USt.-Satz %</label><input id="offerImportVatRate" type="number" step="0.01" name="vatRate" value="<?php p($extracted['vat_rate'] ?? 19); ?>"></div>
+                <div><label>USt.-Betrag</label><input id="offerImportVatAmount" type="number" step="0.01" name="vatAmount" value="<?php p($document['vat_amount'] ?? $extracted['vat_amount'] ?? ''); ?>"></div>
+                <div><label>Brutto</label><input id="offerImportGross" type="number" step="0.01" name="grossAmount" value="<?php p($document['gross_amount'] ?? $extracted['gross_amount'] ?? ''); ?>"></div>
+                <div class="erp-span-2"><small id="offerImportAmountCheck" class="erp-muted">Prüfung: Netto + USt.-Betrag = Brutto</small></div>
                 <div><label>Kunde</label><select name="customerId" required><option value="">Bitte wählen</option><?php foreach ($_['customers'] as $customer): ?><option value="<?php p($customer['id']); ?>" <?=((int)($document['customer_id'] ?? 0) === (int)$customer['id']) ? 'selected' : ''?>><?php p(($customer['customer_no'] ?? '').' '.$customer['name']); ?></option><?php endforeach; ?></select></div>
                 <div class="erp-span-2"><label>Vorhandenes Projekt</label><select name="projectId"><option value="">– ohne Projekt –</option><?php foreach ($_['projects'] as $project): ?><option value="<?php p($project['id']); ?>" <?=((int)($document['project_id'] ?? 0) === (int)$project['id']) ? 'selected' : ''?>><?php p(($project['project_no'] ?? '').' '.$project['title']); ?></option><?php endforeach; ?></select></div>
                 <div class="erp-span-2 erp-checkbox-line"><label><input type="checkbox" name="createProject" value="1"> Neues Projekt anlegen, falls kein Projekt ausgewählt ist</label></div>

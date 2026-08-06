@@ -67,15 +67,11 @@ final class DocumentOfferImportService {
             $description = 'Importiert aus Dokument: '.(string)($document['original_name'] ?? '');
         }
 
-        $net = $this->floatOrNull($data['net_amount'] ?? $document['net_amount'] ?? null) ?? 0.0;
-        $gross = $this->floatOrNull($data['gross_amount'] ?? $document['gross_amount'] ?? null) ?? 0.0;
-        $vatRate = $this->inferVatRate($net, $gross, $this->floatOrNull($data['vat_rate'] ?? null));
-        if ($gross <= 0 && $net > 0) {
-            $gross = round($net * (1 + ($vatRate / 100)), 2);
-        }
-        if ($net <= 0 && $gross > 0) {
-            $net = round($gross / (1 + ($vatRate / 100)), 2);
-        }
+        $net = $this->floatOrNull($data['net_amount'] ?? $document['net_amount'] ?? null);
+        $vatAmount = $this->floatOrNull($data['vat_amount'] ?? $document['vat_amount'] ?? null);
+        $gross = $this->floatOrNull($data['gross_amount'] ?? $document['gross_amount'] ?? null);
+        $vatRate = $this->inferVatRate((float)($net ?? 0), (float)($gross ?? 0), $this->floatOrNull($data['vat_rate'] ?? null));
+        [$net, $vatAmount, $gross] = $this->validateAmounts($net, $vatAmount, $gross, $vatRate);
 
         $offerDate = $this->normaliseDate((string)($data['offer_date'] ?? $document['document_date'] ?? '')) ?? date('Y-m-d');
         $validUntil = $this->normaliseDate((string)($data['valid_until'] ?? ''));
@@ -211,14 +207,58 @@ final class DocumentOfferImportService {
         return $time === false ? null : date('Y-m-d', $time);
     }
 
+    /** @return array{0:float,1:float,2:float} */
+    private function validateAmounts(?float $net, ?float $vat, ?float $gross, float $rate): array {
+        if ($net === null && $gross === null) {
+            throw new \InvalidArgumentException('Bitte mindestens Netto oder Brutto angeben.');
+        }
+        if ($net === null && $gross !== null) {
+            $net = round($gross / (1 + $rate / 100), 2);
+        }
+        if ($gross === null && $net !== null) {
+            $gross = round($net * (1 + $rate / 100), 2);
+        }
+        $net = round((float)$net, 2);
+        $gross = round((float)$gross, 2);
+        $vat = $vat === null ? round($gross - $net, 2) : round($vat, 2);
+        if ($net < 0 || $vat < 0 || $gross < 0) {
+            throw new \InvalidArgumentException('Netto, USt. und Brutto dürfen nicht negativ sein.');
+        }
+        if (abs(round($net + $vat - $gross, 2)) > 0.02) {
+            throw new \InvalidArgumentException('Die Summen sind nicht plausibel: Netto + USt.-Betrag muss Brutto ergeben.');
+        }
+        $expectedVat = round($net * $rate / 100, 2);
+        if ($net > 0 && abs($expectedVat - $vat) > 0.05) {
+            throw new \InvalidArgumentException('Der USt.-Betrag passt nicht zum angegebenen USt.-Satz. Bitte die Werte kontrollieren.');
+        }
+        return [$net, $vat, $gross];
+    }
+
     private function floatOrNull(mixed $value): ?float {
-        if ($value === null || $value === '') {
+        if ($value === null || trim((string)$value) === '') {
             return null;
         }
-        if (is_string($value)) {
-            $value = str_replace(['.', ','], ['', '.'], trim($value));
+        if (is_int($value) || is_float($value)) {
+            return round((float)$value, 2);
         }
-        return is_numeric($value) ? (float)$value : null;
+        $value = preg_replace('/[^0-9,.-]/u', '', trim((string)$value)) ?? '';
+        if ($value === '') {
+            return null;
+        }
+        $lastComma = strrpos($value, ',');
+        $lastDot = strrpos($value, '.');
+        if ($lastComma !== false && $lastDot !== false) {
+            if ($lastComma > $lastDot) {
+                $value = str_replace('.', '', $value);
+                $value = str_replace(',', '.', $value);
+            } else {
+                $value = str_replace(',', '', $value);
+            }
+        } elseif ($lastComma !== false) {
+            $value = str_replace('.', '', $value);
+            $value = str_replace(',', '.', $value);
+        }
+        return is_numeric($value) ? round((float)$value, 2) : null;
     }
 
     private function nullableInt(mixed $value): ?int {

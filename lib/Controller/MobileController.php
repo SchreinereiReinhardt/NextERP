@@ -7,6 +7,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Http\DataDisplayResponse;
 use OCP\IRequest;
 
 final class MobileController extends Controller {
@@ -16,11 +17,34 @@ final class MobileController extends Controller {
  #[PublicPage,NoCSRFRequired] public function logout():JSONResponse{return $this->authRun(function(array $auth){$this->mobile->logout((int)$auth['tokenId']);return ['loggedOut'=>true];});}
  #[PublicPage,NoCSRFRequired] public function bootstrap():JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->bootstrap((string)$a['uid']));}
  #[PublicPage,NoCSRFRequired] public function dashboard():JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->dashboard((string)$a['uid']));}
+ #[PublicPage,NoCSRFRequired] public function customers():JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->customers((string)$a['uid']));}
+ #[PublicPage,NoCSRFRequired] public function createCustomer():JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->createCustomer((string)$a['uid'],$this->jsonBody()));}
  #[PublicPage,NoCSRFRequired] public function projects(int $limit=100):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->projects((string)$a['uid'],$limit));}
+ #[PublicPage,NoCSRFRequired] public function createProject():JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->createProject((string)$a['uid'],$this->jsonBody()));}
  #[PublicPage,NoCSRFRequired] public function project(int $id):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->project((string)$a['uid'],$id));}
  #[PublicPage,NoCSRFRequired] public function projectDocuments(int $id):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->projectDocuments((string)$a['uid'],$id));}
  #[PublicPage,NoCSRFRequired] public function projectTimes(int $id):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->projectTimes((string)$a['uid'],$id));}
+ #[PublicPage,NoCSRFRequired] public function projectReports(int $id):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->mobileProjectReports((string)$a['uid'],$id));}
+ #[PublicPage,NoCSRFRequired] public function reportDetail(int $id):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->mobileReportDetail((string)$a['uid'],$id));}
+ #[PublicPage,NoCSRFRequired] public function signExistingReport(int $id):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->signExistingReport((string)$a['uid'],$id,$this->jsonBody()));}
  #[PublicPage,NoCSRFRequired] public function projectPhotos(int $id):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->projectPhotos((string)$a['uid'],$id));}
+ #[PublicPage,NoCSRFRequired] public function projectPhotoContent(int $id,int $photoId):DataDisplayResponse|JSONResponse{
+  try{
+   $auth=$this->mobile->authenticate((string)$this->request->getHeader('Authorization'));
+   $photo=$this->mobile->projectPhotoContent((string)$auth['uid'],$id,$photoId);
+   return new DataDisplayResponse((string)$photo['content'],200,[
+    'Content-Type'=>(string)$photo['mime'],
+    'Content-Length'=>(string)strlen((string)$photo['content']),
+    'Content-Disposition'=>'inline; filename="'.str_replace(['"',"\r","\n"],'',(string)$photo['name']).'"',
+    'X-Content-Type-Options'=>'nosniff',
+    'Cache-Control'=>'private, max-age=300',
+   ]);
+  }catch(\Throwable $e){
+   $message=$e->getMessage()!==''?$e->getMessage():'Foto konnte nicht geladen werden.';
+   $status=str_contains(strtolower($message),'token')||str_contains(strtolower($message),'anmeldung')?401:404;
+   return new JSONResponse(['success'=>false,'data'=>null,'errors'=>[$message],'message'=>$message],$status);
+  }
+ }
  #[PublicPage,NoCSRFRequired] public function material(string $q=''):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->materials($q));}
  #[PublicPage,NoCSRFRequired] public function report():JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->createReport((string)$a['uid'],$this->jsonBody()));}
  #[PublicPage,NoCSRFRequired] public function time():JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->createTime((string)$a['uid'],$this->jsonBody()));}

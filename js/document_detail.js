@@ -66,3 +66,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     })
 })
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    const net = document.getElementById('offerImportNet')
+    const vatRate = document.getElementById('offerImportVatRate')
+    const vatAmount = document.getElementById('offerImportVatAmount')
+    const gross = document.getElementById('offerImportGross')
+    const check = document.getElementById('offerImportAmountCheck')
+    if (!net || !vatRate || !vatAmount || !gross || !check) return
+
+    let manualVat = vatAmount.value !== ''
+    let manualGross = gross.value !== ''
+    const number = element => Number.parseFloat(element.value || '0')
+    const validate = () => {
+        const n = number(net)
+        const v = number(vatAmount)
+        const g = number(gross)
+        const ok = Math.abs((n + v) - g) <= 0.02
+        check.textContent = ok
+            ? '✓ Summen plausibel: Netto + USt.-Betrag = Brutto'
+            : '⚠ Summen stimmen nicht überein: Netto + USt.-Betrag muss Brutto ergeben'
+        check.classList.toggle('erp-text-danger', !ok)
+        return ok
+    }
+    const calculate = () => {
+        const n = number(net)
+        const rate = number(vatRate)
+        if (!manualVat) vatAmount.value = (n * rate / 100).toFixed(2)
+        if (!manualGross) gross.value = (n + number(vatAmount)).toFixed(2)
+        validate()
+    }
+    net.addEventListener('input', calculate)
+    vatRate.addEventListener('input', () => { manualVat = false; manualGross = false; calculate() })
+    vatAmount.addEventListener('input', () => { manualVat = true; if (!manualGross) gross.value = (number(net) + number(vatAmount)).toFixed(2); validate() })
+    gross.addEventListener('input', () => { manualGross = true; validate() })
+    net.closest('form')?.addEventListener('submit', event => {
+        if (!validate()) {
+            event.preventDefault()
+            window.alert('Bitte Netto, USt.-Betrag und Brutto kontrollieren. Die Summen stimmen nicht überein.')
+        }
+    })
+    validate()
+})

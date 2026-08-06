@@ -30,6 +30,7 @@ final class DocumentPdfOfferExtractorService {
             'vat_amount' => null,
             'gross_amount' => null,
             'vat_rate' => 19.0,
+            'amount_warning' => '',
             'customer_id' => null,
             'project_id' => null,
             'positions' => [],
@@ -135,9 +136,16 @@ final class DocumentPdfOfferExtractorService {
             if ($result['gross_amount'] === null && $result['net_amount'] !== null) {
                 $result['gross_amount'] = round($result['net_amount'] * (1 + $result['vat_rate'] / 100), 2);
             }
-            if ($result['vat_amount'] === null && $result['net_amount'] !== null && $result['gross_amount'] !== null) {
-                $result['vat_amount'] = round($result['gross_amount'] - $result['net_amount'], 2);
-            }
+            $amounts = $this->reconcileAmounts(
+                $result['net_amount'],
+                $result['vat_amount'],
+                $result['gross_amount'],
+                (float)$result['vat_rate'],
+            );
+            $result['net_amount'] = $amounts['net'];
+            $result['vat_amount'] = $amounts['vat'];
+            $result['gross_amount'] = $amounts['gross'];
+            $result['amount_warning'] = $amounts['warning'];
 
             $normalText = $this->normalise($text);
             foreach ($customers as $customer) {
@@ -284,6 +292,71 @@ final class DocumentPdfOfferExtractorService {
 
     private function cleanLine(string $value): string {
         return trim(preg_replace('/\s+/u', ' ', $value) ?? $value, " \t\n\r\0\x0B:-");
+    }
+
+    /**
+     * Makes the three totals internally consistent and fixes clearly swapped PDF values.
+     *
+     * @return array{net:?float,vat:?float,gross:?float,warning:string}
+     */
+    private function reconcileAmounts(?float $net, ?float $vat, ?float $gross, float $rate): array {
+        $rate = ($rate >= 0.0 && $rate <= 100.0) ? $rate : 19.0;
+        $warning = '';
+
+        // When all values exist, test all assignments. This catches PDFs whose columns
+        // are read in a different visual order by pdftotext.
+        if ($net !== null && $vat !== null && $gross !== null) {
+            $original = [$net, $vat, $gross];
+            $permutations = [
+                [$net, $vat, $gross], [$net, $gross, $vat],
+                [$vat, $net, $gross], [$vat, $gross, $net],
+                [$gross, $net, $vat], [$gross, $vat, $net],
+            ];
+            $best = $permutations[0];
+            $bestScore = INF;
+            foreach ($permutations as $candidate) {
+                [$n, $v, $g] = $candidate;
+                if ($n < 0 || $v < 0 || $g < 0 || $g < $n) {
+                    continue;
+                }
+                $sumError = abs(($n + $v) - $g);
+                $rateError = $n > 0 ? abs((($v / $n) * 100) - $rate) : 1000.0;
+                $score = $sumError + ($rateError * 0.03);
+                if ($score < $bestScore) {
+                    $bestScore = $score;
+                    $best = $candidate;
+                }
+            }
+            [$net, $vat, $gross] = $best;
+            if ($best !== $original) {
+                $warning = 'Netto, USt.-Betrag und Brutto wurden anhand der Summenprüfung automatisch richtig zugeordnet.';
+            }
+        }
+
+        if ($net === null && $gross !== null) {
+            $net = round($gross / (1 + $rate / 100), 2);
+        }
+        if ($gross === null && $net !== null) {
+            $gross = round($net * (1 + $rate / 100), 2);
+        }
+        if ($vat === null && $net !== null && $gross !== null) {
+            $vat = round($gross - $net, 2);
+        }
+
+        if ($net !== null && $vat !== null && $gross !== null) {
+            $difference = abs(round($net + $vat - $gross, 2));
+            if ($difference > 0.02) {
+                $calculatedVat = round($gross - $net, 2);
+                if ($calculatedVat >= 0 && abs($calculatedVat - round($net * $rate / 100, 2)) <= 0.05) {
+                    $vat = $calculatedVat;
+                    $warning = 'Der USt.-Betrag wurde aus Netto und Brutto neu berechnet.';
+                } else {
+                    $warning = 'Die erkannten Summen sind nicht plausibel. Bitte Netto, USt.-Betrag und Brutto vor der Übernahme kontrollieren.';
+                }
+            }
+        }
+
+        return ['net' => $net, 'vat' => $vat, 'gross' => $gross, 'warning' => $warning];
     }
 
     private function normalise(string $value): string {

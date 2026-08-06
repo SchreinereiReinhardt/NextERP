@@ -569,3 +569,6 @@
   .erp-offer-import-items { overflow-x: auto; }
   .erp-offer-import-items table { min-width: 820px; }
 }
+
+/* 0.67.4 Projektarchiv */
+.erp-project-tabs{display:flex;gap:8px;margin:0 0 12px;border-bottom:1px solid var(--color-border);padding:0 2px}.erp-project-tabs a{display:flex;align-items:center;gap:8px;padding:10px 14px;text-decoration:none;color:var(--color-text-maxcontrast);border-bottom:3px solid transparent;margin-bottom:-1px;font-weight:600}.erp-project-tabs a.is-active{color:var(--color-main-text);border-bottom-color:var(--color-primary-element)}.erp-project-tabs strong{display:inline-grid;place-items:center;min-width:24px;height:22px;padding:0 7px;border-radius:999px;background:var(--color-background-dark);font-size:11px}.erp-project-search{display:flex;gap:8px;margin:0 0 14px}.erp-project-search input[type=search]{flex:1;min-width:180px}.erp-project-row.is-archived{opacity:.9}.erp-project-row.is-archived .erp-project-row-icon{filter:grayscale(.35)}@media(max-width:760px){.erp-project-tabs{overflow-x:auto}.erp-project-tabs a{white-space:nowrap}.erp-project-search{flex-wrap:wrap}.erp-project-search input[type=search]{flex-basis:100%}}
