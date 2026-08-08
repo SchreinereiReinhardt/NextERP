@@ -123,6 +123,7 @@ final class DocumentInboxService {
         $customerId = (int)($data['customer_id'] ?? 0);
         $projectId = (int)($data['project_id'] ?? 0);
         $supplierId = (int)($data['supplier_id'] ?? 0);
+        $orderId = (int)($data['order_id'] ?? 0);
         if ($projectId > 0) {
             $project = $this->tableOne('re_erp_projects', $projectId);
             if (!$project) {
@@ -138,6 +139,11 @@ final class DocumentInboxService {
         }
         if ($customerId > 0 && !$this->tableOne('re_erp_customers', $customerId)) {
             throw new \InvalidArgumentException('Der ausgewählte Kunde wurde nicht gefunden.');
+        }
+        if ($orderId > 0) {
+            $order = $this->tableOne('re_erp_orders', $orderId);
+            if (!$order) { throw new \InvalidArgumentException('Der ausgewählte Auftrag wurde nicht gefunden.'); }
+            if ($projectId > 0 && (int)($order['project_id'] ?? 0) > 0 && (int)$order['project_id'] !== $projectId) { throw new \InvalidArgumentException('Der ausgewählte Auftrag gehört nicht zum ausgewählten Projekt.'); }
         }
         if ($supplierId > 0 && !$this->tableOne('re_erp_suppliers', $supplierId)) {
             throw new \InvalidArgumentException('Der ausgewählte Lieferant wurde nicht gefunden.');
@@ -175,6 +181,7 @@ final class DocumentInboxService {
             'processing_status' => 'assigned',
             'customer_id' => $this->nullableInt($customerId),
             'project_id' => $this->nullableInt($projectId),
+            'order_id' => $this->nullableInt($orderId),
             'supplier_id' => $this->nullableInt($supplierId),
             'document_no' => $this->nullableString($data['document_no'] ?? null),
             'document_date' => $date,

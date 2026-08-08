@@ -31,7 +31,7 @@ $status=trim((string)$p->getStatus()) ?: 'offen';
 ?>
 <article class="erp-project-row<?php p($isArchive?' is-archived':''); ?>">
 <a class="erp-project-row-main" href="<?php p($detail); ?>">
-<div class="erp-project-row-icon"><?php p($isArchive?'🗄️':'📁'); ?></div>
+<div class="erp-project-row-icon"><span class="erp-ui-icon <?= $isArchive ? 'erp-icon-archive' : 'erp-icon-project' ?>"></span></div>
 <div class="erp-project-row-title"><span><?php p($p->getProjectNo()); ?></span><strong><?php p($p->getTitle()); ?></strong></div>
 <div class="erp-project-row-meta"><span>Kunde</span><strong><?php p($_['customerNames'][$p->getCustomerId()]??'–'); ?></strong></div>
 <div class="erp-project-row-meta"><span><?php p($isArchive?'Archiviert/geändert':'Termin'); ?></span><strong><?php p($isArchive?($p->getUpdatedAt()?->format('d.m.Y')??'–'):($p->getDueDate()?->format('d.m.Y')??'Noch offen')); ?></strong></div>

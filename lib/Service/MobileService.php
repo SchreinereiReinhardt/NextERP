@@ -196,7 +196,7 @@ final class MobileService {
  public function mobileProjectReports(string $uid,int $projectId):array{
   $this->assertProjectAccess($uid,$projectId);
   $q=$this->db->getQueryBuilder();
-  $q->select('*')->from('re_erp_reports')->where($q->expr()->eq('project_id',$q->createNamedParameter($projectId)))->orderBy('report_date','DESC')->addOrderBy('id','DESC')->setMaxResults(100);
+  $q->select('*')->from('re_erp_reports')->where($q->expr()->eq('project_id',$q->createNamedParameter($projectId)))->andWhere($q->expr()->eq('archived',$q->createNamedParameter(0)))->orderBy('report_date','DESC')->addOrderBy('id','DESC')->setMaxResults(100);
   return array_map(static fn(array $r):array=>[
    'id'=>(int)$r['id'],'reportNo'=>(string)($r['report_no']??''),'reportDate'=>(string)($r['report_date']??''),
    'title'=>(string)($r['title']??''),'status'=>(string)($r['status']??'Entwurf'),
@@ -579,7 +579,7 @@ final class MobileService {
  }
  private function projectMaterial(int $id):array{$q=$this->db->getQueryBuilder();$q->select('i.description','i.quantity','i.unit','i.unit_price','r.report_no','r.report_date')->from('re_erp_report_items','i')->innerJoin('i','re_erp_reports','r',$q->expr()->eq('r.id','i.report_id'))->where($q->expr()->eq('r.project_id',$q->createNamedParameter($id)))->orderBy('r.report_date','DESC')->setMaxResults(100);return $q->executeQuery()->fetchAllAssociative();}
  private function projectEvents(int $id):array{$q=$this->db->getQueryBuilder();$q->select('*')->from('re_erp_team_events')->where($q->expr()->eq('project_id',$q->createNamedParameter($id)))->andWhere($q->expr()->eq('is_deleted',$q->createNamedParameter(0)))->orderBy('start_at','ASC')->setMaxResults(50);return $q->executeQuery()->fetchAllAssociative();}
- private function projectReports(int $id):array{$q=$this->db->getQueryBuilder();$q->select('*')->from('re_erp_reports')->where($q->expr()->eq('project_id',$q->createNamedParameter($id)))->orderBy('report_date','DESC')->setMaxResults(50);return $q->executeQuery()->fetchAllAssociative();}
+ private function projectReports(int $id):array{$q=$this->db->getQueryBuilder();$q->select('*')->from('re_erp_reports')->where($q->expr()->eq('project_id',$q->createNamedParameter($id)))->andWhere($q->expr()->eq('archived',$q->createNamedParameter(0)))->orderBy('report_date','DESC')->setMaxResults(50);return $q->executeQuery()->fetchAllAssociative();}
  private function ensureFolder(string $uid,string $path):Folder{$folder=$this->rootFolder->getUserFolder($uid);foreach(explode('/',trim($path,'/')) as $part){if($part==='')continue;try{$node=$folder->get($part);if(!$node instanceof Folder)throw new \RuntimeException('Pfadbestandteil ist keine Mappe.');$folder=$node;}catch(\OCP\Files\NotFoundException){$folder=$folder->newFolder($part);}}return $folder;}
  private function safeFile(string $name):string{$name=preg_replace('/[^\pL\pN._ -]+/u','_',trim($name))??'Datei';return trim($name,'. ')?:'Datei';}
 }

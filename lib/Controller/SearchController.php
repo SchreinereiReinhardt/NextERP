@@ -68,6 +68,7 @@ final class SearchController extends Controller {
                 ->setMaxResults(6)
                 ->executeQuery()->fetchAllAssociative();
             foreach ($rows as $row) {
+                if (!$this->permissions->canAccessProject((int)$row['id'])) { continue; }
                 $results[] = [
                     'type' => 'Projekt',
                     'icon' => '📁',
@@ -80,7 +81,7 @@ final class SearchController extends Controller {
 
         if ($this->permissions->can('reports')) {
             $qb = $this->db->getQueryBuilder();
-            $rows = $qb->select('r.id', 'r.report_no', 'r.title', 'r.status', 'p.project_no')
+            $rows = $qb->select('r.id', 'r.project_id', 'r.report_no', 'r.title', 'r.status', 'p.project_no')
                 ->from('re_erp_reports', 'r')
                 ->leftJoin('r', 're_erp_projects', 'p', $qb->expr()->eq('p.id', 'r.project_id'))
                 ->where($qb->expr()->orX(
@@ -88,9 +89,11 @@ final class SearchController extends Controller {
                     $qb->expr()->iLike('r.title', $qb->createNamedParameter($like)),
                     $qb->expr()->iLike('p.project_no', $qb->createNamedParameter($like))
                 ))
+                ->andWhere($qb->expr()->eq('r.archived', $qb->createNamedParameter(0)))
                 ->setMaxResults(5)
                 ->executeQuery()->fetchAllAssociative();
             foreach ($rows as $row) {
+                if (!$this->permissions->canAccessProject((int)$row['project_id'])) { continue; }
                 $results[] = [
                     'type' => 'Rapport',
                     'icon' => '📝',

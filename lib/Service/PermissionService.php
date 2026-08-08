@@ -32,6 +32,22 @@ final class PermissionService {
   return in_array($permission,$map[$role]??[],true);
  }
  public function assert(string $permission):void{if(!$this->isEnabled())throw new \OCP\AppFramework\Http\ForbiddenException('Dieser Benutzer ist für das ERP gesperrt.');if(!$this->can($permission))throw new \OCP\AppFramework\Http\ForbiddenException('Keine Berechtigung für diesen ERP-Bereich.');}
+
+ public const PROJECT_FOLDERS=['00_Eingang','01_Aufmass','02_Planung','03_Zeichnungen','04_Material','05_Bestellungen','06_Rapporte','07_Fotos','08_Abnahme','09_Rechnung','10_Angebote','11_Auftraege','12_Sonstiges'];
+ public const EMPLOYEE_DEFAULT_FOLDERS=['01_Aufmass','02_Planung','03_Zeichnungen','04_Material','05_Bestellungen','06_Rapporte','07_Fotos','08_Abnahme','12_Sonstiges'];
+ public function isProjectSupervisor(?string $uid=null):bool{return in_array($this->role($uid),[self::ADMIN,self::OFFICE,self::MANAGER],true);}
+ public function assertProjectManager():void{if(!$this->isEnabled())throw new \OCP\AppFramework\Http\ForbiddenException('Dieser Benutzer ist für das ERP gesperrt.');if(!$this->isProjectSupervisor())throw new \OCP\AppFramework\Http\ForbiddenException('Nur Administration, Büro oder Projektleitung dürfen Projektfreigaben und Projektdaten verwalten.');}
+ public function canAccessProject(int $projectId,?string $uid=null):bool{
+  $uid=$uid??$this->uid();if($uid===''||!$this->isEnabled($uid))return false;if($this->isProjectSupervisor($uid))return true;
+  $qb=$this->db->getQueryBuilder();$qb->select('id')->from('re_erp_project_users')->where($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))->andWhere($qb->expr()->eq('user_id',$qb->createNamedParameter($uid)));return (bool)$qb->executeQuery()->fetchOne();
+ }
+ public function assertProjectAccess(int $projectId):void{$this->assert('projects');if(!$this->canAccessProject($projectId))throw new \OCP\AppFramework\Http\ForbiddenException('Dieses Projekt ist für deinen Benutzer nicht freigegeben.');}
+ public function projectFolders(int $projectId,?string $uid=null):array{
+  $uid=$uid??$this->uid();if($this->isProjectSupervisor($uid))return self::PROJECT_FOLDERS;
+  $qb=$this->db->getQueryBuilder();$qb->select('folder_permissions')->from('re_erp_project_users')->where($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))->andWhere($qb->expr()->eq('user_id',$qb->createNamedParameter($uid)));$raw=$qb->executeQuery()->fetchOne();
+  if(!is_string($raw)||trim($raw)==='')return self::EMPLOYEE_DEFAULT_FOLDERS;$decoded=json_decode($raw,true);if(!is_array($decoded))return self::EMPLOYEE_DEFAULT_FOLDERS;return array_values(array_intersect(self::PROJECT_FOLDERS,array_map('strval',$decoded)));
+ }
+ public function canAccessProjectFolder(int $projectId,string $folder,?string $uid=null):bool{if(!$this->canAccessProject($projectId,$uid))return false;if($this->isProjectSupervisor($uid))return true;$folder=trim(explode('/',trim($folder,'/'))[0]??'');return $folder!==''&&in_array($folder,$this->projectFolders($projectId,$uid),true);}
  public function saveRole(string $uid,string $role,bool $enabled,string $updatedBy,?int $hourlyRateId=null,?float $individualHourlyRate=null):void{
   if(!in_array($role,[self::ADMIN,self::OFFICE,self::MANAGER,self::EMPLOYEE,self::TIME],true))throw new \InvalidArgumentException('Ungültige Rolle.');
   if($this->groups->isAdmin($uid))$enabled=true;

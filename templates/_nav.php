@@ -12,7 +12,7 @@ $currentPath = (string)($_SERVER['REQUEST_URI'] ?? '');
 
 $groups = [
     [
-        'label' => 'Kunden', 'icon' => '👥', 'key' => 'customers',
+        'label' => 'Kunden', 'icon' => 'customer', 'key' => 'customers',
         'items' => [
             ['Kundenakten', 'reinhardterp.page.customers', 'customers', '/customers'],
             ['CRM', 'reinhardterp.business.crm', 'crm', '/crm'],
@@ -20,17 +20,17 @@ $groups = [
         ],
     ],
     [
-        'label' => 'Projekte', 'icon' => '📁', 'key' => 'projects',
+        'label' => 'Projekte', 'icon' => 'project', 'key' => 'projects',
         'items' => [
             ['Projektakten', 'reinhardterp.page.projects', 'projects', '/projects'],
-            ['Angebote', 'reinhardterp.business.offers', 'offers', '/offers'],
+            ['Belege', 'reinhardterp.document.index', 'documents', '/documents'],
             ['Aufträge', 'reinhardterp.business.orders', 'orders', '/orders'],
             ['Rapporte', 'reinhardterp.module.reports', 'reports', '/reports'],
             ['Abrechnung vorbereiten', 'reinhardterp.module.invoicePreparation', 'invoices', '/invoice-preparation'],
         ],
     ],
     [
-        'label' => 'Mitarbeiter', 'icon' => '👷', 'key' => 'staff',
+        'label' => 'Mitarbeiter', 'icon' => 'employee', 'key' => 'staff',
         'items' => [
             ['Zeiterfassung', 'reinhardterp.module.workdays', 'time', '/workdays'],
             ['Teamkalender', 'reinhardterp.module.teamEvents', 'calendar', '/team-events'],
@@ -38,33 +38,35 @@ $groups = [
         ],
     ],
     [
-        'label' => 'Lager', 'icon' => '📦', 'key' => 'inventory',
+        'label' => 'Lager', 'icon' => 'inventory', 'key' => 'inventory',
         'items' => [
             ['Lagerbestand', 'reinhardterp.business.inventory', 'inventory', '/inventory'],
             ['Materialstamm', 'reinhardterp.module.materials', 'materials', '/materials'],
         ],
     ],
     [
-        'label' => 'Dokumente', 'icon' => '📄', 'key' => 'documents',
+        'label' => 'Belege', 'icon' => 'document', 'key' => 'documents',
         'items' => [
-            ['Dokumenteneingang', 'reinhardterp.document.index', 'documents', '/documents'],
+            ['Alle Belege', 'reinhardterp.document.index', 'documents', '/documents'],
             ['Ausgangsrechnungen', 'reinhardterp.document.index', 'documents', '/documents?type=outgoing_invoice'],
             ['Eingangsrechnungen', 'reinhardterp.document.index', 'documents', '/documents?type=incoming_invoice'],
             ['Lieferscheine', 'reinhardterp.document.index', 'documents', '/documents?type=delivery_note'],
             ['Angebote', 'reinhardterp.document.index', 'documents', '/documents?type=offer'],
+            ['Auftragsbestätigungen', 'reinhardterp.document.index', 'documents', '/documents?type=order'],
+            ['Gutschriften', 'reinhardterp.document.index', 'documents', '/documents?type=credit_note'],
             ['Kontoauszüge', 'reinhardterp.document.index', 'documents', '/documents?type=bank_statement'],
             ['Dokumentenarchiv', 'reinhardterp.document.index', 'documents', '/documents?processing=assigned'],
         ],
     ],
     [
-        'label' => 'Auswertung', 'icon' => '📊', 'key' => 'evaluation',
+        'label' => 'Auswertung', 'icon' => 'statistics', 'key' => 'evaluation',
         'items' => [
             ['Zeitauswertung', 'reinhardterp.module.timeEvaluation', 'time_billing', '/time-evaluation'],
             ['Abrechnung', 'reinhardterp.module.invoicePreparation', 'invoices', '/invoice-preparation'],
         ],
     ],
     [
-        'label' => 'Verwaltung', 'icon' => '⚙️', 'key' => 'admin',
+        'label' => 'Verwaltung', 'icon' => 'settings', 'key' => 'admin',
         'items' => [
             ['Integration', 'reinhardterp.integration.index', 'settings', '/integration'],
             ['Benutzer & Rechte', 'reinhardterp.module.users', 'users_view', '/users'],
@@ -78,7 +80,7 @@ $quickCreate = [
     ['Neuer Kunde', 'reinhardterp.page.customerForm', 'customers'],
     ['Neues Projekt', 'reinhardterp.page.projectForm', 'projects'],
     ['Neuer Rapport', 'reinhardterp.module.reports', 'reports'],
-    ['Neues Angebot', 'reinhardterp.business.offers', 'offers'],
+    ['Beleg importieren', 'reinhardterp.document.index', 'documents'],
     ['Neuer Termin', 'reinhardterp.module.teamEvents', 'calendar'],
     ['Zeit buchen', 'reinhardterp.module.workdays', 'time'],
 ];
@@ -86,11 +88,11 @@ $quickCreate = [
 <nav id="app-navigation" class="erp-app-navigation" aria-label="NextERP Navigation">
     <div class="erp-nav-brand">
         <a href="<?php p($url->linkToRoute('reinhardterp.page.index')); ?>" class="erp-nav-home<?php if (str_ends_with(parse_url($currentPath, PHP_URL_PATH) ?? '', '/reinhardterp/')) { p(' is-active'); } ?>">
-            <span class="erp-nav-home-icon">🏠</span><span>Dashboard</span>
+            <span class="erp-ui-icon erp-icon-dashboard erp-nav-home-icon" aria-hidden="true"></span><span>Dashboard</span>
         </a>
 
         <button type="button" class="erp-command-trigger" id="erpCommandTrigger" aria-label="Suchen und Befehle öffnen">
-            <span>⌘</span><span>Suchen</span><kbd>Strg K</kbd>
+            <span class="erp-ui-icon erp-icon-search" aria-hidden="true"></span><span>Suchen</span><kbd>Strg K</kbd>
         </button>
         <details class="erp-create-menu">
             <summary>＋ Neu</summary>
@@ -112,7 +114,7 @@ $quickCreate = [
             }
         ?>
             <details class="erp-nav-group" data-nav-key="<?php p($group['key']); ?>" <?php if ($groupActive) print_unescaped('open'); ?>>
-                <summary><span class="erp-nav-icon"><?php p($group['icon']); ?></span><span><?php p($group['label']); ?></span><span class="erp-nav-chevron">›</span></summary>
+                <summary><span class="erp-ui-icon erp-nav-icon erp-icon-<?php p($group['icon']); ?>" aria-hidden="true"></span><span><?php p($group['label']); ?></span><span class="erp-nav-chevron">›</span></summary>
                 <ul>
                     <?php foreach ($visibleItems as [$label, $route, $permission, $match]):
                         $active = str_contains($currentPath, $match);
@@ -137,7 +139,7 @@ $quickCreate = [
 <div class="erp-command-overlay" id="erpCommandOverlay" hidden>
     <section class="erp-command-dialog" role="dialog" aria-modal="true" aria-labelledby="erpCommandTitle" data-search-url="<?php p($url->linkToRoute('reinhardterp.search.index')); ?>">
         <header>
-            <span class="erp-command-search-icon">⌕</span>
+            <span class="erp-ui-icon erp-icon-search erp-command-search-icon" aria-hidden="true"></span>
             <input id="erpCommandInput" type="search" autocomplete="off" placeholder="Kunde, Projekt, Rapport oder Befehl suchen …" aria-label="NextERP durchsuchen">
             <kbd>Esc</kbd>
         </header>

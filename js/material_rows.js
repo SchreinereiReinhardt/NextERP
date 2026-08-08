@@ -49,6 +49,7 @@ function bindRow(row, container) {
    if (!description.value.trim()) description.value = item.name || '';
    if (!unit.value.trim()) unit.value = item.unit || '';
    if (!(Number(price.value) > 0)) price.value = Number(item.sale_price || item.price || 0).toFixed(2);
+   if (!(Number(quantity.value) > 0)) quantity.value = '1';
   } else id.value = '';
   ensureBlankRow(container);
  };

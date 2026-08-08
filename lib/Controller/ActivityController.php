@@ -21,7 +21,7 @@ final class ActivityController extends Controller {
 
     #[NoAdminRequired]
     public function addProjectNote(int $projectId, int $customerId, string $note): RedirectResponse {
-        $this->permissions->assert('projects');
+        $this->permissions->assertProjectAccess($projectId);
         $note = trim($note);
         if ($note === '') {
             throw new \InvalidArgumentException('Bitte eine Notiz eingeben.');

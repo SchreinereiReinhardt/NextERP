@@ -17,9 +17,9 @@
 
     const shortcuts = [
         ['Neuer Kunde', '👤', document.querySelector('a[href*="/customers/form"]')?.href],
-        ['Neues Projekt', '📁', document.querySelector('a[href*="/projects/form"]')?.href],
-        ['Zeiterfassung öffnen', '⏱', document.querySelector('a[href*="/workdays"]')?.href],
-        ['Rapporte öffnen', '📝', document.querySelector('a[href*="/reports"]')?.href],
+        ['Neues Projekt', 'Projekt', document.querySelector('a[href*="/projects/form"]')?.href],
+        ['Zeiterfassung öffnen', 'Zeit', document.querySelector('a[href*="/workdays"]')?.href],
+        ['Rapporte öffnen', 'Rapport', document.querySelector('a[href*="/reports"]')?.href],
     ].filter((entry) => entry[2]);
 
     const open = () => {

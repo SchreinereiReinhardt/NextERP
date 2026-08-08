@@ -14,10 +14,10 @@ final class FolderService {
  public function ensureInvoiceFolder(string $customerPath,string $invoiceNo):string{$customer=$this->folderByPath($customerPath);$invoices=$this->folder($customer,'06_Rechnungen');$name=$this->safe($invoiceNo);$this->folder($invoices,$name);return trim($customerPath,'/').'/06_Rechnungen/'.$name;}
  public function ensureReportFolder(string $projectPath,string $reportNo,string $title):string{$project=$this->folderByPath($projectPath);$reports=$this->folder($project,'06_Rapporte');$name=$this->safe($reportNo.'_'.$title);$folder=$this->folder($reports,$name);$this->folder($folder,'Anhaenge');return trim($projectPath,'/').'/06_Rapporte/'.$name;}
  public function write(string $folderPath,string $name,string $content):string{$folder=$this->folderByPath($folderPath);$safe=$this->safeFile($name);try{$node=$folder->get($safe);if($node instanceof File){$node->putContent($content);}else{throw new \RuntimeException('Dateiname ist bereits ein Ordner.');}}catch(\OCP\Files\NotFoundException){$folder->newFile($safe,$content);}return trim($folderPath,'/').'/'.$safe;}
- public function listFiles(string $folderPath,int $limit=20,int $maxDepth=2):array{
-  $folder=$this->folderByPath($folderPath);$rows=[];$this->collectFiles($folder,trim($folderPath,'/'),0,max(0,$maxDepth),$rows);
-  usort($rows,static fn(array $a,array $b):int=>$b['mtime']<=>$a['mtime']);
-  return array_slice($rows,0,max(1,$limit));
+ public function listFiles(string $folderPath,int $limit=20,int $maxDepth=2):array{return $this->listFilesForUser($this->currentUid(),$folderPath,$limit,$maxDepth);}
+ public function listFilesForUser(string $uid,string $folderPath,int $limit=20,int $maxDepth=2):array{
+  $folder=$this->folderByPathForUser($uid,$folderPath);$rows=[];$this->collectFiles($folder,trim($folderPath,'/'),0,max(0,$maxDepth),$rows);
+  usort($rows,static fn(array $a,array $b):int=>$b['mtime']<=>$a['mtime']);return array_slice($rows,0,max(1,$limit));
  }
  public function ensureFolderPath(string $basePath,string $relative=''):string{
   $path=trim($basePath,'/');$node=$this->folderByPath($path);
@@ -25,8 +25,12 @@ final class FolderService {
   return $path;
  }
  public function writeFromLocalFile(string $folderPath,string $name,string $tmpPath):string{$content=file_get_contents($tmpPath);if($content===false)throw new \RuntimeException('Datei konnte nicht gelesen werden.');return $this->write($folderPath,$name,$content);}
+ public function writeFromLocalFileForUser(string $uid,string $folderPath,string $name,string $tmpPath):string{$content=file_get_contents($tmpPath);if($content===false)throw new \RuntimeException('Datei konnte nicht gelesen werden.');$folder=$this->folderByPathForUser($uid,$folderPath);$safe=$this->safeFile($name);try{$node=$folder->get($safe);if($node instanceof File)$node->putContent($content);else throw new \RuntimeException('Dateiname ist bereits ein Ordner.');}catch(\OCP\Files\NotFoundException){$folder->newFile($safe,$content);}return trim($folderPath,'/').'/'.$safe;}
+ public function ensureFolderPathForUser(string $uid,string $basePath,string $relative=''):string{$path=trim($basePath,'/');$node=$this->folderByPathForUser($uid,$path);foreach(explode('/',trim($relative,'/')) as $part){if($part!==''){$part=$this->safe($part);$node=$this->folder($node,$part);$path.='/'.$part;}}return $path;}
+ public function readFileForUser(string $uid,string $path):array{$node=$this->rootFolder->getUserFolder($uid)->get(trim($path,'/'));if(!$node instanceof File)throw new \RuntimeException('Datei nicht gefunden.');return ['content'=>$node->getContent(),'mime'=>$node->getMimeType(),'name'=>$node->getName(),'size'=>$node->getSize(),'id'=>$node->getId()];}
  public function exists(string $path):bool{try{$this->userRoot()->get(trim($path,'/'));return true;}catch(\Throwable){return false;}}
  public function deleteFile(string $path):void{$node=$this->userRoot()->get(trim($path,'/'));if(!$node instanceof File)throw new \RuntimeException('Datei nicht gefunden.');$node->delete();}
+ public function deletePath(string $path):void{$clean=trim($path,'/');if($clean==='')throw new \InvalidArgumentException('Leerer Pfad darf nicht gelöscht werden.');$this->userRoot()->get($clean)->delete();}
  public function fileInfo(string $path):array{$node=$this->userRoot()->get(trim($path,'/'));if(!$node instanceof File)throw new \RuntimeException('Datei nicht gefunden.');return ['id'=>$node->getId(),'name'=>$node->getName(),'path'=>trim($path,'/'),'mime'=>$node->getMimeType(),'size'=>$node->getSize(),'mtime'=>$node->getMTime(),'checksum'=>$this->checksum($node)];}
  public function moveFile(string $sourcePath,string $targetFolder,string $newName):string{$source=$this->userRoot()->get(trim($sourcePath,'/'));if(!$source instanceof File)throw new \RuntimeException('Quelldatei nicht gefunden.');$target=$this->folderByPath($targetFolder);$safe=$this->safeFile($newName);$source->move(rtrim($target->getPath(),'/').'/'.$safe);return trim($targetFolder,'/').'/'.$safe;}
  public function readFile(string $path):array{$node=$this->userRoot()->get(trim($path,'/'));if(!$node instanceof File)throw new \RuntimeException('Datei nicht gefunden.');return ['content'=>$node->getContent(),'mime'=>$node->getMimeType(),'name'=>$node->getName(),'size'=>$node->getSize(),'id'=>$node->getId()];}
@@ -40,8 +44,10 @@ final class FolderService {
   }
  }
  private function checksum(File $file):?string{try{return hash('sha256',$file->getContent());}catch(\Throwable){return null;}}
- private function folderByPath(string $path):Folder{$node=$this->userRoot();foreach(explode('/',trim($path,'/')) as $part){if($part!=='')$node=$this->folder($node,$part);}if(!$node instanceof Folder)throw new \RuntimeException('Pfad ist kein Ordner.');return $node;}
- private function userRoot():Folder{$uid=$this->userSession->getUser()?->getUID();if($uid===null)throw new \RuntimeException('Kein angemeldeter Benutzer.');return $this->rootFolder->getUserFolder($uid);}
+ private function folderByPath(string $path):Folder{return $this->folderByPathForUser($this->currentUid(),$path);}
+ private function folderByPathForUser(string $uid,string $path):Folder{$node=$this->rootFolder->getUserFolder($uid);foreach(explode('/',trim($path,'/')) as $part){if($part!=='')$node=$this->folder($node,$part);}if(!$node instanceof Folder)throw new \RuntimeException('Pfad ist kein Ordner.');return $node;}
+ private function currentUid():string{$uid=$this->userSession->getUser()?->getUID();if($uid===null)throw new \RuntimeException('Kein angemeldeter Benutzer.');return $uid;}
+ private function userRoot():Folder{return $this->rootFolder->getUserFolder($this->currentUid());}
  private function folder($parent,string $name):Folder{try{$node=$parent->get($name);if(!$node instanceof Folder)throw new \RuntimeException('Ordnername ist bereits als Datei vorhanden: '.$name);return $node;}catch(\OCP\Files\NotFoundException){return $parent->newFolder($name);}}
  private function safe(string $value):string{$value=preg_replace('/[^\pL\pN._-]+/u','_',trim($value))??'Ordner';return trim($value,'._-')?:'Ordner';}
  private function safeFile(string $value):string{$value=preg_replace('/[^\pL\pN._ -]+/u','_',trim($value))??'Datei';return trim($value,'. ')?:'Datei';}

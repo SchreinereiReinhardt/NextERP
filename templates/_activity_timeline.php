@@ -1,14 +1,14 @@
 <?php
 $activityIcons = [
-    'created' => '＋',
-    'updated' => '✎',
-    'archived' => '▣',
-    'status_changed' => '↻',
-    'document_uploaded' => '📎',
-    'signed' => '✓',
-    'finalized' => '🔒',
-    'reopened' => '↺',
-    'note' => '💬',
+    'created' => 'plus',
+    'updated' => 'edit',
+    'archived' => 'archive',
+    'status_changed' => 'activity',
+    'document_uploaded' => 'attachment',
+    'signed' => 'document',
+    'finalized' => 'lock',
+    'reopened' => 'activity',
+    'note' => 'note',
 ];
 ?>
 <?php if (empty($activities)): ?>
@@ -17,7 +17,7 @@ $activityIcons = [
     <div class="erp-timeline">
         <?php foreach ($activities as $activity): ?>
             <article class="erp-timeline-item">
-                <div class="erp-timeline-icon"><?= p($activityIcons[$activity['action']] ?? '•') ?></div>
+                <div class="erp-timeline-icon"><span class="erp-ui-icon erp-icon-<?= p($activityIcons[$activity['action']] ?? 'activity') ?>" aria-hidden="true"></span></div>
                 <div class="erp-timeline-content">
                     <div class="erp-timeline-head">
                         <strong><?= p($activity['title']) ?></strong>

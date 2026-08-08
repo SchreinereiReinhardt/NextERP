@@ -12,7 +12,7 @@ $types = [
     'cash' => 'Kassenbeleg',
     'tax' => 'Steuerunterlage',
     'offer' => 'Angebot',
-    'order' => 'Auftrag',
+    'order' => 'Auftragsbestätigung',
     'report' => 'Rapport',
     'drawing' => 'Zeichnung / Plan',
     'other' => 'Sonstiges',
@@ -62,9 +62,9 @@ $prefillGross = $document['gross_amount'] ?? $extracted['gross_amount'] ?? '';
     <div class="erp-notice"><strong>Automatischer Vorschlag:</strong> <?php p($types[$suggestedType] ?? $suggestedType); ?> mit <?php p((int)($document['suggestion_confidence'] ?? 0)); ?> % Sicherheit.<br><small><?php p($document['suggestion_reason'] ?? 'Bitte vor dem Speichern kontrollieren.'); ?></small></div>
 <?php endif; ?>
 
-<?php if (($selectedType === 'offer' || ($document['document_type'] ?? '') === 'offer') && !empty($extracted)): ?>
+<?php if (in_array($selectedType, ['offer','order','incoming_invoice','outgoing_invoice','delivery_note','credit_note'], true) && !empty($extracted)): ?>
 <section class="erp-card erp-wide erp-pdf-extraction-summary">
-    <div class="erp-section-head"><div><h2>PDF-Auslesung</h2><p class="erp-muted">Digitale PDF-Texte werden automatisch ausgewertet. Bitte alle Werte vor der Übernahme kontrollieren.</p></div></div>
+    <div class="erp-section-head"><div><h2>PDF-Auslesung</h2><p class="erp-muted">Der Beleg wurde automatisch ausgelesen. Erkannte Werte können vor der Zuordnung jederzeit manuell korrigiert werden.</p></div></div>
     <?php if (!empty($extracted['error'])): ?>
         <div class="erp-notice erp-notice-warning"><?php p($extracted['error']); ?></div>
     <?php elseif (!empty($extracted['has_text'])): ?>
@@ -116,6 +116,7 @@ $prefillGross = $document['gross_amount'] ?? $extracted['gross_amount'] ?? '';
         <div class="erp-span-2"><label>Belegnummer</label><input name="documentNo" value="<?php p($prefillDocumentNo); ?>" autocomplete="off"></div>
         <div class="erp-span-2"><label>Kunde</label><select id="documentCustomer" name="customerId"><option value="">– kein Kunde –</option><?php foreach ($_['customers'] as $customer): ?><option value="<?php p($customer['id']); ?>" <?=$selectedCustomer === (int)$customer['id'] ? 'selected' : ''?>><?php p(($customer['customer_no'] ?? '').' '.$customer['name']); ?></option><?php endforeach; ?></select></div>
         <div class="erp-span-2"><label>Projekt</label><select id="documentProject" name="projectId"><option value="">– kein Projekt –</option><?php foreach ($_['projects'] as $project): ?><option value="<?php p($project['id']); ?>" data-customer-id="<?php p($project['customer_id'] ?? ''); ?>" <?=$selectedProject === (int)$project['id'] ? 'selected' : ''?>><?php p(($project['project_no'] ?? '').' '.$project['title']); ?></option><?php endforeach; ?></select><small class="erp-muted">Nach Auswahl eines Kunden werden passende Projekte bevorzugt angezeigt.</small></div>
+        <div class="erp-span-2"><label>Auftrag</label><select name="orderId"><option value="">– keinem Auftrag zuordnen –</option><?php foreach ($_['orders'] as $order): ?><option value="<?php p($order['id']); ?>" <?=((int)($document['order_id'] ?? 0) === (int)$order['id']) ? 'selected' : ''?>><?php p(($order['order_no'] ?? '').' · '.($order['title'] ?? '')); ?></option><?php endforeach; ?></select><small class="erp-muted">Optional: Beleg direkt einem vorhandenen Auftrag zuordnen.</small></div>
         <div class="erp-span-2"><label>Lieferant</label><select name="supplierId"><option value="">– kein Lieferant –</option><?php foreach ($_['suppliers'] as $supplier): ?><option value="<?php p($supplier['id']); ?>" <?=$selectedSupplier === (int)$supplier['id'] ? 'selected' : ''?>><?php p($supplier['name']); ?></option><?php endforeach; ?></select></div>
         <div><label>Netto</label><input id="documentNet" type="number" step="0.01" name="netAmount" value="<?php p($prefillNet); ?>"></div>
         <div><label>USt.</label><input id="documentVat" type="number" step="0.01" name="vatAmount" value="<?php p($prefillVat); ?>"></div>
@@ -124,53 +125,8 @@ $prefillGross = $document['gross_amount'] ?? $extracted['gross_amount'] ?? '';
         <div class="erp-span-2"><label>Bemerkung</label><textarea name="notes" rows="4"></textarea></div>
     </div>
     <div class="erp-actions"><button class="button primary">Zuordnen, umbenennen und ablegen</button><a class="button" href="<?php p($url->linkToRoute('reinhardterp.document.index')); ?>">Später bearbeiten</a></div>
-    <?php if ($selectedType === 'offer'): ?>
-        <div class="erp-notice"><strong>Nächster Schritt:</strong> Nach dem Zuordnen erscheint hier automatisch der Bereich <em>ERP-Angebot</em> mit dem Button <strong>„Als ERP-Angebot übernehmen“</strong>.</div>
-    <?php endif; ?>
 </form>
 <?php endif; ?>
 
-<?php if ($isAssigned && ($document['document_type'] === 'offer' || $selectedType === 'offer')): ?>
-<div class="erp-dms-import-box">
-    <h3>ERP-Angebot</h3>
-    <?php if (!empty($document['offer_id'])): ?>
-        <p>Dieses Dokument wurde bereits als Angebot übernommen.</p>
-        <a class="button primary" href="<?php p($url->linkToRoute('reinhardterp.business.offerDetail', ['id' => $document['offer_id']])); ?>">Angebot öffnen</a>
-    <?php else: ?>
-        <p class="erp-muted">Übernimmt die geprüften Dokumentdaten in das Angebotsmodul. Positionen können anschließend im Angebot ergänzt werden.</p>
-        <form method="post" action="<?php p($url->linkToRoute('reinhardterp.document.importOffer', ['id' => $document['id']])); ?>">
-            <input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
-            <div class="erp-form-grid">
-                <div class="erp-span-2"><label>Titel</label><input name="title" required value="<?php p((string)($extracted['title'] ?? '') ?: pathinfo((string)$document['original_name'], PATHINFO_FILENAME)); ?>"></div>
-                <div class="erp-span-2"><label>Leistungsbeschreibung</label><textarea name="description" rows="4"><?php p((string)($extracted['description'] ?? '') ?: 'Importiert aus '.$document['original_name']); ?></textarea></div>
-                <div><label>Angebotsdatum</label><input type="date" name="offerDate" value="<?php p($document['document_date'] ?? $extracted['offer_date'] ?? date('Y-m-d')); ?>"></div>
-                <div><label>Gültig bis</label><input type="date" name="validUntil" value="<?php p($extracted['valid_until'] ?? ''); ?>"></div>
-                <div><label>Netto</label><input id="offerImportNet" type="number" step="0.01" name="netAmount" value="<?php p($document['net_amount'] ?? $extracted['net_amount'] ?? ''); ?>"></div>
-                <div><label>USt.-Satz %</label><input id="offerImportVatRate" type="number" step="0.01" name="vatRate" value="<?php p($extracted['vat_rate'] ?? 19); ?>"></div>
-                <div><label>USt.-Betrag</label><input id="offerImportVatAmount" type="number" step="0.01" name="vatAmount" value="<?php p($document['vat_amount'] ?? $extracted['vat_amount'] ?? ''); ?>"></div>
-                <div><label>Brutto</label><input id="offerImportGross" type="number" step="0.01" name="grossAmount" value="<?php p($document['gross_amount'] ?? $extracted['gross_amount'] ?? ''); ?>"></div>
-                <div class="erp-span-2"><small id="offerImportAmountCheck" class="erp-muted">Prüfung: Netto + USt.-Betrag = Brutto</small></div>
-                <div><label>Kunde</label><select name="customerId" required><option value="">Bitte wählen</option><?php foreach ($_['customers'] as $customer): ?><option value="<?php p($customer['id']); ?>" <?=((int)($document['customer_id'] ?? 0) === (int)$customer['id']) ? 'selected' : ''?>><?php p(($customer['customer_no'] ?? '').' '.$customer['name']); ?></option><?php endforeach; ?></select></div>
-                <div class="erp-span-2"><label>Vorhandenes Projekt</label><select name="projectId"><option value="">– ohne Projekt –</option><?php foreach ($_['projects'] as $project): ?><option value="<?php p($project['id']); ?>" <?=((int)($document['project_id'] ?? 0) === (int)$project['id']) ? 'selected' : ''?>><?php p(($project['project_no'] ?? '').' '.$project['title']); ?></option><?php endforeach; ?></select></div>
-                <div class="erp-span-2 erp-checkbox-line"><label><input type="checkbox" name="createProject" value="1"> Neues Projekt anlegen, falls kein Projekt ausgewählt ist</label></div>
-                <div class="erp-span-2"><label>Name des neuen Projekts</label><input name="projectTitle" placeholder="z. B. Küche Familie Müller" value="<?php p($extracted['title'] ?? ''); ?>"></div>
-                <?php if (!empty($extracted['positions'])): ?>
-                <div class="erp-span-2"><h4>Erkannte Angebotspositionen</h4><div class="erp-table erp-offer-import-items"><table><thead><tr><th>Beschreibung</th><th>Menge</th><th>Einheit</th><th>Einzelpreis</th><th>Gesamt</th></tr></thead><tbody>
-                <?php foreach ($extracted['positions'] as $position): ?><tr>
-                    <td><input name="positionDescription[]" value="<?php p($position['description']); ?>"></td>
-                    <td><input type="number" step="0.01" name="positionQuantity[]" value="<?php p($position['quantity']); ?>"></td>
-                    <td><input name="positionUnit[]" value="<?php p($position['unit']); ?>"></td>
-                    <td><input type="number" step="0.01" name="positionUnitPrice[]" value="<?php p($position['unit_price']); ?>"></td>
-                    <td><input type="number" step="0.01" name="positionTotal[]" value="<?php p($position['total_price']); ?>"></td>
-                </tr><?php endforeach; ?>
-                </tbody></table></div></div>
-                <?php endif; ?>
-                <div class="erp-span-2"><label>Notizen</label><textarea name="notes" rows="3"><?php if (!empty($extracted['text_excerpt'])): ?>PDF automatisch ausgelesen. Werte vor Übernahme geprüft.<?php endif; ?></textarea></div>
-            </div>
-            <button class="button primary">Als ERP-Angebot übernehmen</button>
-        </form>
-    <?php endif; ?>
-</div>
-<?php endif; ?>
 </section>
 </div></div></div>
