@@ -1,5 +1,5 @@
 <?php
-$pwaUrl=\OC::$server->getURLGenerator();
+$pwaUrl=\OC::$server->get(\OCP\IURLGenerator::class);
 $sw=$pwaUrl->linkToRoute('reinhardterp.page.pwaServiceWorker');
 ?>
 <script>

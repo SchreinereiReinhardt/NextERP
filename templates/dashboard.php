@@ -1,6 +1,6 @@
 <?php
 style('reinhardterp','style');
-$url=\OC::$server->getURLGenerator();
+$url=\OC::$server->get(\OCP\IURLGenerator::class);
 ?>
 <div id="app-content"><div id="app-content-wrapper"><?php print_unescaped($this->inc('_nav')); ?><main class="erp-main erp-dashboard-page">
 <div class="erp-head erp-dashboard-head"><div><span class="erp-record-kicker">NextERP</span><h1>Guten Tag, <?=p($displayName)?></h1><p class="erp-sub"><?=p(date('d.m.Y'))?> · Ihr aktueller Betriebsüberblick</p></div><div class="erp-actions"><a class="button primary" href="<?=p($url->linkToRoute('reinhardterp.page.customerForm'))?>">+ Kunde</a><a class="button" href="<?=p($url->linkToRoute('reinhardterp.page.projectForm'))?>">+ Projekt</a><a class="button" href="<?=p($url->linkToRoute('reinhardterp.module.reports'))?>">+ Rapport</a></div></div>

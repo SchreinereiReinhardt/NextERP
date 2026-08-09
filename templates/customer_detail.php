@@ -1,6 +1,6 @@
 <?php
 style('reinhardterp','style');
-$url = \OC::$server->getURLGenerator();
+$url = \OC::$server->get(\OCP\IURLGenerator::class);
 $customerPath = trim((string)($customer->getFolderPath() ?? ''), '/');
 $filesBase = $url->linkToRoute('files.view.index');
 $folderUrl = static fn(string $path): string => $filesBase.'?dir='.rawurlencode('/'.trim($path, '/'));

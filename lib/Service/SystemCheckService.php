@@ -6,12 +6,41 @@ use OCP\IDBConnection;
 
 final class SystemCheckService {
     private const TABLES = [
-        're_erp_customers', 're_erp_projects', 're_erp_reports',
-        're_erp_report_hours', 're_erp_report_items', 're_erp_report_files',
-        're_erp_workdays', 're_erp_workday_entries', 're_erp_materials',
-        're_erp_sequences', 're_erp_user_roles', 're_erp_hourly_rates',
-        're_erp_activities', 're_erp_team_events', 're_erp_time_timers',
-        're_erp_billing_batches', 're_erp_billing_batch_items',
+        're_erp_activities',
+        're_erp_billing_batch_items',
+        're_erp_billing_batches',
+        're_erp_communications',
+        're_erp_customer_contacts',
+        're_erp_customer_reminders',
+        're_erp_customers',
+        're_erp_document_rules',
+        're_erp_documents',
+        're_erp_hourly_rates',
+        're_erp_invoice_items',
+        're_erp_invoices',
+        're_erp_material_groups',
+        're_erp_materials',
+        're_erp_mobile_tokens',
+        're_erp_offer_items',
+        're_erp_offers',
+        're_erp_order_items',
+        're_erp_orders',
+        're_erp_project_documents',
+        're_erp_project_users',
+        're_erp_projects',
+        're_erp_report_files',
+        're_erp_report_hours',
+        're_erp_report_items',
+        're_erp_reports',
+        're_erp_sequences',
+        're_erp_stock_movements',
+        're_erp_suppliers',
+        're_erp_team_events',
+        're_erp_time_timers',
+        're_erp_user_roles',
+        're_erp_workday_entries',
+        're_erp_workday_materials',
+        're_erp_workdays',
     ];
 
     public function __construct(
@@ -72,9 +101,22 @@ final class SystemCheckService {
         $checks[] = ['name'=>'PHP Memory Limit','status'=>'ok','message'=>$memory !== '' ? $memory : 'nicht gesetzt'];
 
 
-        $ncVersion = defined('OC_VersionString') ? (string)constant('OC_VersionString') : 'unbekannt';
-        $ncOk = $ncVersion !== 'unbekannt' && version_compare($ncVersion, '33.0.0', '>=') && version_compare($ncVersion, '35.0.0', '<');
-        $checks[] = $this->check('Nextcloud-Version', $ncOk, $ncVersion.' (unterstützt: 33–34)');
+        $ncVersion = 'unbekannt';
+        try {
+            if (class_exists('\OC_Util') && method_exists('\OC_Util', 'getVersion')) {
+                $v = \OC_Util::getVersion();
+                if (is_array($v) && $v !== []) {
+                    $ncVersion = implode('.', array_map('strval', $v));
+                }
+            }
+        } catch (\Throwable) {
+        }
+        if ($ncVersion === 'unbekannt') {
+            $checks[] = ['name' => 'Nextcloud-Version', 'status' => 'warning', 'message' => 'Version konnte nicht automatisch ermittelt werden'];
+        } else {
+            $ncOk = version_compare($ncVersion, '33.0.0', '>=') && version_compare($ncVersion, '35.0.0', '<');
+            $checks[] = $this->check('Nextcloud-Version', $ncOk, $ncVersion.' (unterstützt: 33–34)');
+        }
 
         foreach (['mbstring', 'gd', 'curl', 'dom', 'xml', 'zip', 'openssl', 'iconv'] as $extension) {
             $checks[] = $this->check('PHP-Erweiterung '.$extension, extension_loaded($extension), extension_loaded($extension) ? 'geladen' : 'nicht geladen');
@@ -143,7 +185,7 @@ final class SystemCheckService {
     private function detectCronMode(): ?string {
         try {
             if (class_exists('\\OC')) {
-                $config = \OC::$server->getConfig();
+                $config = \OC::$server->get(\OCP\IConfig::class);
                 $mode = (string)$config->getAppValue('core', 'backgroundjobs_mode', '');
                 return $mode !== '' ? $mode : null;
             }

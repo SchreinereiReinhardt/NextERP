@@ -363,7 +363,26 @@
 @media(max-width:800px){.erp-grid-2,.erp-mobile-kpis{grid-template-columns:1fr}.erp-mobile-shortcuts{grid-template-columns:1fr 1fr}.erp-record-head{flex-direction:column;gap:10px}}
 
 /* NextERP 0.40 – Professional navigation */
-.erp-app-navigation{padding:12px 10px 16px!important;overflow:visible!important}
+.erp-app-navigation{
+    padding:12px 10px 16px!important;
+    box-sizing:border-box!important;
+    height:100%!important;
+    max-height:calc(100vh - 50px)!important;
+    max-height:calc(100dvh - 50px)!important;
+    min-height:0!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    overscroll-behavior:contain;
+    scrollbar-gutter:stable;
+    -webkit-overflow-scrolling:touch
+}
+
+.erp-app-navigation{scrollbar-width:thin;scrollbar-color:var(--color-border-maxcontrast,var(--color-border)) transparent}
+.erp-app-navigation::-webkit-scrollbar{width:7px}
+.erp-app-navigation::-webkit-scrollbar-track{background:transparent}
+.erp-app-navigation::-webkit-scrollbar-thumb{background:var(--color-border-maxcontrast,var(--color-border));border-radius:999px}
+.erp-app-navigation::-webkit-scrollbar-thumb:hover{background:var(--color-text-maxcontrast)}
+
 .erp-nav-brand{display:grid;gap:8px;padding:0 2px 12px;border-bottom:1px solid var(--color-border);margin-bottom:10px}
 .erp-nav-home{display:flex;align-items:center;gap:10px;min-height:42px;padding:8px 10px;border-radius:10px;color:var(--color-main-text);font-weight:700;text-decoration:none}
 .erp-nav-home:hover,.erp-nav-home.is-active{background:var(--color-primary-element-light);color:var(--color-primary-element)}
@@ -389,6 +408,21 @@
 .erp-nav-group li a.is-active{background:var(--color-primary-element-light);color:var(--color-primary-element);font-weight:700}
 .erp-role-note{margin-top:auto!important;padding:14px 10px 4px!important;border-top:1px solid var(--color-border);font-size:11px!important;color:var(--color-text-maxcontrast)}
 @media(max-width:700px){.erp-create-popover{position:fixed;left:14px;right:14px;top:104px;width:auto}.erp-nav-group>summary{min-height:46px}.erp-nav-group li a{min-height:40px;padding:10px}}
+
+
+/* NextERP 1.4.3 – Nextcloud theme-aware icons */
+.erp-app-navigation .erp-ui-icon,
+.erp-nav-icon,
+.erp-nav-home-icon,
+.erp-command-search-icon{
+    color:var(--color-primary-element,#1265d8)!important;
+}
+.erp-nav-group>summary:hover .erp-ui-icon,
+.erp-nav-group[open]>summary .erp-ui-icon,
+.erp-nav-home:hover .erp-ui-icon,
+.erp-nav-home.is-active .erp-ui-icon{
+    color:var(--color-primary-element,#1265d8)!important;
+}
 
 /* NextERP 0.50 – Professional Workspace and command palette */
 .erp-command-trigger{display:grid;grid-template-columns:20px minmax(0,1fr) auto;align-items:center;gap:8px;min-height:38px;padding:7px 10px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-main-background);color:var(--color-main-text);font-weight:650;text-align:left;cursor:pointer}
@@ -581,7 +615,7 @@
 .erp-permissions-compact{padding:14px 16px}.erp-permission-summary{display:flex;align-items:center;justify-content:space-between;gap:16px}.erp-permission-summary h2{margin:0 0 3px;font-size:17px}.erp-permission-summary p{margin:0;font-size:12px}.erp-permission-editor{margin-top:14px;padding-top:14px;border-top:1px solid var(--color-border)}.erp-permission-editor[hidden]{display:none!important}.erp-permission-editor>.erp-muted{margin:0 0 10px}.erp-permission-editor .erp-permission-list{gap:8px;margin:8px 0 12px}.erp-permission-editor .erp-permission-user{padding:10px 12px}.erp-permission-editor .erp-permission-user>label{margin-bottom:7px}.erp-permission-editor .erp-folder-permissions{gap:6px 12px}.erp-permission-editor .erp-folder-permissions label{font-size:12px}@media(max-width:700px){.erp-permission-summary{align-items:flex-start}.erp-permission-summary .button{flex:0 0 auto}}
 
 /* NextERP unified blue icon system */
-.erp-ui-icon{display:inline-block;width:22px;height:22px;flex:0 0 auto;background-color:currentColor;vertical-align:-4px;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;-webkit-mask-size:contain;mask-size:contain;-webkit-mask-mode:alpha;mask-mode:alpha;color:#1265d8}
+.erp-ui-icon{display:inline-block;width:22px;height:22px;flex:0 0 auto;background-color:currentColor;vertical-align:-4px;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;-webkit-mask-size:contain;mask-size:contain;-webkit-mask-mode:alpha;mask-mode:alpha;color:var(--color-primary-element,#1265d8)}
 .erp-icon-dashboard{-webkit-mask-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M3%2010.5%2012%203l9%207.5%22%2F%3E%3Cpath%20d%3D%22M5.5%209.5V21h13V9.5%22%2F%3E%3Cpath%20d%3D%22M9.5%2021v-7h5v7%22%2F%3E%3C%2Fsvg%3E");mask-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M3%2010.5%2012%203l9%207.5%22%2F%3E%3Cpath%20d%3D%22M5.5%209.5V21h13V9.5%22%2F%3E%3Cpath%20d%3D%22M9.5%2021v-7h5v7%22%2F%3E%3C%2Fsvg%3E")}
 .erp-icon-search{-webkit-mask-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2211%22%20cy%3D%2211%22%20r%3D%226%22%2F%3E%3Cpath%20d%3D%22m16%2016%204%204%22%2F%3E%3C%2Fsvg%3E");mask-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2211%22%20cy%3D%2211%22%20r%3D%226%22%2F%3E%3Cpath%20d%3D%22m16%2016%204%204%22%2F%3E%3C%2Fsvg%3E")}
 .erp-icon-customer{-webkit-mask-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%229%22%20cy%3D%228%22%20r%3D%223%22%2F%3E%3Ccircle%20cx%3D%2217%22%20cy%3D%2210%22%20r%3D%222.5%22%2F%3E%3Cpath%20d%3D%22M3.5%2020c.7-4%202.8-6%205.5-6s4.8%202%205.5%206%22%2F%3E%3Cpath%20d%3D%22M14%2015c3.2-.5%205.5%201.1%206.5%204%22%2F%3E%3C%2Fsvg%3E");mask-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%229%22%20cy%3D%228%22%20r%3D%223%22%2F%3E%3Ccircle%20cx%3D%2217%22%20cy%3D%2210%22%20r%3D%222.5%22%2F%3E%3Cpath%20d%3D%22M3.5%2020c.7-4%202.8-6%205.5-6s4.8%202%205.5%206%22%2F%3E%3Cpath%20d%3D%22M14%2015c3.2-.5%205.5%201.1%206.5%204%22%2F%3E%3C%2Fsvg%3E")}

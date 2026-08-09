@@ -1,6 +1,6 @@
 <?php
 style('reinhardterp','style'); script('reinhardterp','project'); script('reinhardterp','project_permissions');
-$url=\OC::$server->getURLGenerator(); $projectPath=trim((string)($project['folder_path']??''),'/'); $filesBase=$url->linkToRoute('files.view.index');
+$url=\OC::$server->get(\OCP\IURLGenerator::class); $projectPath=trim((string)($project['folder_path']??''),'/'); $filesBase=$url->linkToRoute('files.view.index');
 $folderUrl=static fn(string $path):string=>$filesBase.'?dir='.rawurlencode('/'.trim($path,'/'));
 $fileUrl=static function(string $path)use($filesBase):string{$path=trim($path,'/');return $filesBase.'?dir='.rawurlencode(dirname('/'.$path)).'&scrollto='.rawurlencode(basename($path));};
 $formatSize=static function(int $b):string{if($b<1024)return $b.' B';if($b<1048576)return number_format($b/1024,1,',','.').' KB';return number_format($b/1048576,1,',','.').' MB';};

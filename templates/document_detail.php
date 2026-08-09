@@ -1,6 +1,6 @@
 <?php
 require __DIR__.'/_nav.php';
-$url = \OC::$server->getURLGenerator();
+$url = \OC::$server->get(\OCP\IURLGenerator::class);
 \OCP\Util::addScript('reinhardterp', 'document_detail');
 $types = [
     'unassigned' => 'Bitte auswählen',
