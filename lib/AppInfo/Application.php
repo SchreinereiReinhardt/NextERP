@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace OCA\ReinhardtERP\AppInfo;
 
+use OCP\Util;
 use OCA\ReinhardtERP\BackgroundJob\DocumentInboxScanJob;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
@@ -21,6 +22,7 @@ final class Application extends App implements IBootstrap {
     }
 
     public function boot(IBootContext $context): void {
+  Util::addScript('reinhardterp','pwa-guard');
         $context->injectFn(static function (IJobList $jobs): void {
             $jobs->add(DocumentInboxScanJob::class);
         });

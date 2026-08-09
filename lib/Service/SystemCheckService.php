@@ -65,7 +65,51 @@ final class SystemCheckService {
             $checks[] = $this->check('Firmenlogo', false, $e->getMessage());
         }
 
-        $checks[] = $this->check('PHP-Version', version_compare(PHP_VERSION, '8.2.0', '>='), PHP_VERSION);
+        $checks[] = $this->check('PHP-Version', version_compare(PHP_VERSION, '8.2.0', '>='), PHP_VERSION.' (benötigt: >= 8.2)');
+        $checks[] = $this->check('HTTPS', (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (string)($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https', 'Für Mobile/PWA und sichere Anmeldung wird HTTPS empfohlen');
+        $checks[] = $this->check('JSON', extension_loaded('json'), extension_loaded('json') ? 'geladen' : 'nicht geladen');
+        $memory = (string)ini_get('memory_limit');
+        $checks[] = ['name'=>'PHP Memory Limit','status'=>'ok','message'=>$memory !== '' ? $memory : 'nicht gesetzt'];
+
+
+        $ncVersion = defined('OC_VersionString') ? (string)constant('OC_VersionString') : 'unbekannt';
+        $ncOk = $ncVersion !== 'unbekannt' && version_compare($ncVersion, '33.0.0', '>=') && version_compare($ncVersion, '35.0.0', '<');
+        $checks[] = $this->check('Nextcloud-Version', $ncOk, $ncVersion.' (unterstützt: 33–34)');
+
+        foreach (['mbstring', 'gd', 'curl', 'dom', 'xml', 'zip', 'openssl', 'iconv'] as $extension) {
+            $checks[] = $this->check('PHP-Erweiterung '.$extension, extension_loaded($extension), extension_loaded($extension) ? 'geladen' : 'nicht geladen');
+        }
+
+        $disabledFunctions = array_filter(array_map('trim', explode(',', (string)ini_get('disable_functions'))));
+        $procOpenAvailable = function_exists('proc_open') && !in_array('proc_open', $disabledFunctions, true);
+        $checks[] = $this->check(
+            'proc_open()',
+            $procOpenAvailable,
+            $procOpenAvailable ? 'verfügbar – externe PDF-Werkzeuge können gestartet werden' : 'nicht verfügbar oder in disable_functions gesperrt'
+        );
+
+        $pdftotext = $this->findExecutable('pdftotext');
+        $checks[] = $this->check(
+            'PDF-Texterkennung (pdftotext)',
+            $pdftotext !== null,
+            $pdftotext ?? 'nicht gefunden – unter Debian/Ubuntu: apt install poppler-utils'
+        );
+
+        $pdftoppm = $this->findExecutable('pdftoppm');
+        $checks[] = $this->check(
+            'PDF-Vorschau (pdftoppm)',
+            $pdftoppm !== null,
+            $pdftoppm ?? 'nicht gefunden – unter Debian/Ubuntu: apt install poppler-utils'
+        );
+
+        $cronMode = $this->detectCronMode();
+        $checks[] = [
+            'name' => 'Nextcloud-Hintergrundjobs',
+            'status' => $cronMode === 'cron' ? 'ok' : 'warning',
+            'message' => $cronMode === 'cron'
+                ? 'System-Cron ist konfiguriert'
+                : ($cronMode === null ? 'Modus konnte nicht ermittelt werden – System-Cron alle 5 Minuten empfohlen' : 'Aktueller Modus: '.$cronMode.' – System-Cron alle 5 Minuten empfohlen'),
+        ];
         $checks[] = $this->check('ERP-Zugriff', $this->permissions->isEnabled(), 'Rolle: '.$this->permissions->role());
 
         $failed = count(array_filter($checks, static fn(array $c): bool => $c['status'] === 'error'));
@@ -77,6 +121,35 @@ final class SystemCheckService {
             'healthy' => $failed === 0,
             'checkedAt' => date('Y-m-d H:i:s'),
         ];
+    }
+
+    private function findExecutable(string $name): ?string {
+        if (!function_exists('proc_open')) {
+            return null;
+        }
+        $disabled = array_filter(array_map('trim', explode(',', (string)ini_get('disable_functions'))));
+        if (in_array('proc_open', $disabled, true)) {
+            return null;
+        }
+        $paths = ['/usr/bin/'.$name, '/usr/local/bin/'.$name, '/bin/'.$name];
+        foreach ($paths as $path) {
+            if (is_file($path) && is_executable($path)) {
+                return $path;
+            }
+        }
+        return null;
+    }
+
+    private function detectCronMode(): ?string {
+        try {
+            if (class_exists('\\OC')) {
+                $config = \OC::$server->getConfig();
+                $mode = (string)$config->getAppValue('core', 'backgroundjobs_mode', '');
+                return $mode !== '' ? $mode : null;
+            }
+        } catch (\Throwable) {
+        }
+        return null;
     }
 
     private function check(string $name, bool $ok, string $message): array {

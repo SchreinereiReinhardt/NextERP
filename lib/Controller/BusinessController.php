@@ -12,6 +12,7 @@ use OCP\IDBConnection;
 use OCP\IRequest;
 use OCP\IURLGenerator;
 use OCP\IUserSession;
+use OCP\Util;
 final class BusinessController extends Controller {
  public function __construct(string $appName,IRequest $request,private IDBConnection $db,private IURLGenerator $url,private IUserSession $session,private PermissionService $permissions,private NumberService $numbers){parent::__construct($appName,$request);}
  #[NoAdminRequired,NoCSRFRequired] public function crm():TemplateResponse{$this->permissions->assert('crm');return $this->page('crm',['communications'=>$this->communications(),'customers'=>$this->rows('re_erp_customers','name'),'projects'=>$this->rows('re_erp_projects','project_no'),'dueFollowUps'=>$this->dueFollowUps()]);}
@@ -25,8 +26,110 @@ final class BusinessController extends Controller {
  #[NoAdminRequired,NoCSRFRequired] public function orderDetail(int $id):TemplateResponse{$this->permissions->assert('orders');$order=$this->order($id);return $this->page('order_detail',['order'=>$order,'items'=>$this->where('re_erp_order_items','order_id',$id,'position_no')]);}
  #[NoAdminRequired] public function updateOrderStatus(int $id,string $status):RedirectResponse{$this->permissions->assert('orders');if(!in_array($status,['open','confirmed','production','installation','completed','cancelled'],true))throw new \InvalidArgumentException('Ungültiger Status.');$this->update('re_erp_orders',$id,['status'=>$status,'updated_at'=>date('Y-m-d H:i:s')]);return $this->go('reinhardterp.business.orderDetail',['id'=>$id]);}
  #[NoAdminRequired,NoCSRFRequired] public function inventory():TemplateResponse{$this->permissions->assert('inventory');return $this->page('inventory',['materials'=>$this->materialsWithMeta(),'movements'=>$this->stockRows(),'projects'=>$this->rows('re_erp_projects','project_no')]);}
- #[NoAdminRequired] public function saveStockMovement(int $materialId,string $movementType,float $quantity,?int $projectId=null,?string $note=null):RedirectResponse{$this->permissions->assert('inventory');if(!in_array($movementType,['in','out','adjustment'],true))throw new \InvalidArgumentException('Ungültige Lagerbewegung.');$m=$this->one('re_erp_materials',$materialId);if(!$m)throw new \InvalidArgumentException('Material nicht gefunden.');$qty=abs($quantity);$current=(float)($m['stock_quantity']??0);$new=$movementType==='in'?$current+$qty:($movementType==='out'?$current-$qty:$quantity);if($new<0)throw new \InvalidArgumentException('Lagerbestand darf nicht negativ werden.');$this->db->beginTransaction();try{$this->insert('re_erp_stock_movements',['material_id'=>$materialId,'project_id'=>$projectId&&$projectId>0?$projectId:null,'movement_type'=>$movementType,'quantity'=>$movementType==='out'?-1*$qty:($movementType==='in'?$qty:$quantity),'note'=>$note,'created_by'=>$this->uid(),'created_at'=>date('Y-m-d H:i:s')]);$this->update('re_erp_materials',$materialId,['stock_quantity'=>$new]);$this->db->commit();}catch(\Throwable $e){$this->db->rollBack();throw $e;}return $this->go('reinhardterp.business.inventory');}
- #[NoAdminRequired,NoCSRFRequired] public function mobile():TemplateResponse{$this->permissions->assert('mobile');$uid=$this->uid();$timer=$this->activeTimer($uid);return $this->page('mobile',['timer'=>$timer,'projects'=>$this->rows('re_erp_projects','project_no'),'todayHours'=>$this->todayHours($uid),'recent'=>$this->recentEntries($uid)]);}
+ #[NoAdminRequired] public function saveStockMovement(int $materialId,string $movementType,float $quantity,?int $projectId=null,?string $note=null):RedirectResponse{$this->permissions->assert('inventory');if(!in_array($movementType,['in','out','adjustment'],true))throw new \InvalidArgumentException('Ungültige Lagerbewegung.');$m=$this->one('re_erp_materials',$materialId);if(!$m)throw new \InvalidArgumentException('Material nicht gefunden.');$qty=abs($quantity);$current=(float)($m['stock_quantity']??0);$new=$movementType==='in'?$current+$qty:($movementType==='out'?$current-$qty:$quantity);if($new<0)throw new \InvalidArgumentException('Lagerbestand darf nicht negativ werden.');$this->db->beginTransaction();try{$this->insert('re_erp_stock_movements',['material_id'=>$materialId,'project_id'=>$projectId&&$projectId>0?$projectId:null,'movement_type'=>$movementType,'quantity'=>$movementType==='out'?-1*$qty:($movementType==='in'?$qty:$quantity),'note'=>$note,'created_by'=>$this->uid(),'created_at'=>date('Y-m-d H:i:s')]);$this->update('re_erp_materials',$materialId,['stock_quantity'=>$new]);$this->db->commit();$this->markOfflineOpDone($clientOperationId);}catch(\Throwable $e){$this->db->rollBack();throw $e;}return $this->go('reinhardterp.business.inventory');}
+ #[NoAdminRequired,NoCSRFRequired] public function aboutRelease():TemplateResponse{
+  $this->permissions->assert('settings');
+  return $this->page('about_release',['urlGenerator'=>$this->url]);
+ }
+ #[NoAdminRequired,NoCSRFRequired] public function mobileAdmin():TemplateResponse{
+  $this->permissions->assert('settings');
+  return $this->page('mobile_admin',['urlGenerator'=>$this->url]);
+ }
+ #[NoAdminRequired,NoCSRFRequired] public function documentation():TemplateResponse{
+  return $this->page('documentation',['urlGenerator'=>$this->url]);
+ }
+ #[NoAdminRequired,NoCSRFRequired] public function mobile():TemplateResponse{$this->addPwaHeaders();
+  $this->permissions->assert('mobile'); $uid=$this->uid();
+  $projects=array_values(array_filter($this->rows('re_erp_projects','project_no'),fn(array $p):bool=>$this->permissions->canAccessProject((int)$p['id'],$uid)));
+  $view=(string)$this->request->getParam('view','today');
+  return $this->page('mobile',[
+    'view'=>$view,
+    'projects'=>$projects,
+    'todayHours'=>$this->todayHours($uid),
+    'recent'=>$this->recentEntries($uid),
+    'displayName'=>$this->session->getUser()?->getDisplayName() ?: $uid,
+    'role'=>$this->permissions->role(),
+    'urlGenerator'=>$this->url,
+  ]);
+ }
+
+ #[NoAdminRequired,NoCSRFRequired] public function mobileProject(int $id):TemplateResponse{$this->addPwaHeaders();
+  $this->permissions->assert('mobile');$uid=$this->uid();$this->permissions->assertProjectAccess($id);
+  $project=$this->one('re_erp_projects',$id);if(!$project)throw new \InvalidArgumentException('Projekt nicht gefunden.');
+  $customer=!empty($project['customer_id'])?$this->one('re_erp_customers',(int)$project['customer_id']):null;
+  return $this->page('mobile_project',['project'=>$project,'customer'=>$customer,'urlGenerator'=>$this->url]);
+ }
+ #[NoAdminRequired,NoCSRFRequired] public function mobileMaterial(?int $projectId=null,?string $q=null):TemplateResponse{$this->addPwaHeaders();
+  $this->permissions->assert('materials_use');$uid=$this->uid();
+  $projects=array_values(array_filter($this->rows('re_erp_projects','project_no'),fn(array $p):bool=>$this->permissions->canAccessProject((int)$p['id'],$uid)));
+  if($projectId)$this->permissions->assertProjectAccess($projectId);
+  $materials=$this->materialsWithMeta();$query=mb_strtolower(trim((string)$q));
+  if($query!=='')$materials=array_values(array_filter($materials,static function(array $m)use($query):bool{$hay=mb_strtolower(implode(' ',[(string)($m['article_no']??''),(string)($m['name']??''),(string)($m['barcode']??''),(string)($m['storage_location']??'')]));return str_contains($hay,$query);}));
+  return $this->page('mobile_material',['materials'=>$materials,'projects'=>$projects,'projectId'=>$projectId,'query'=>$q,'urlGenerator'=>$this->url]);
+ }
+ #[NoAdminRequired] public function saveMobileMaterial(int $materialId,int $projectId,float $quantity,?string $note=null,?string $clientOperationId=null):RedirectResponse{
+  $this->permissions->assert('materials_use');$this->permissions->assertProjectAccess($projectId);if($this->offlineOpDone($clientOperationId))return $this->go('reinhardterp.business.mobileMaterial',['projectId'=>$projectId]);
+  if($quantity<=0)throw new \InvalidArgumentException('Menge muss größer als 0 sein.');$m=$this->one('re_erp_materials',$materialId);if(!$m)throw new \InvalidArgumentException('Material nicht gefunden.');
+  $current=(float)($m['stock_quantity']??0);if($quantity>$current)throw new \InvalidArgumentException('Nicht genügend Lagerbestand vorhanden.');
+  $this->db->beginTransaction();try{$this->insert('re_erp_stock_movements',['material_id'=>$materialId,'project_id'=>$projectId,'movement_type'=>'out','quantity'=>-1*abs($quantity),'note'=>trim((string)$note)?:'Mobile Materialentnahme','created_by'=>$this->uid(),'created_at'=>date('Y-m-d H:i:s')]);$this->update('re_erp_materials',$materialId,['stock_quantity'=>$current-$quantity]);$this->db->commit();}catch(\Throwable $e){$this->db->rollBack();throw $e;}
+  return $this->go('reinhardterp.business.mobileMaterial',['projectId'=>$projectId]);
+ }
+
+ #[NoAdminRequired,NoCSRFRequired] public function mobileTime(?int $projectId=null):TemplateResponse{$this->addPwaHeaders();
+  $this->permissions->assert('time');$uid=$this->uid();
+  $projects=array_values(array_filter($this->rows('re_erp_projects','project_no'),fn(array $p):bool=>$this->permissions->canAccessProject((int)$p['id'],$uid)));
+  if($projectId){$this->permissions->assertProjectAccess($projectId);}
+  return $this->page('mobile_time',['projects'=>$projects,'projectId'=>$projectId,'userId'=>$uid,'urlGenerator'=>$this->url]);
+ }
+ #[NoAdminRequired] public function saveMobileTime(int $projectId,string $workDate,float $hours=0,string $activity='',?string $startTime=null,?string $endTime=null,int $breakMinutes=0,?string $notes=null,?string $clientOperationId=null):RedirectResponse{
+  $this->permissions->assert('time');$this->permissions->assertProjectAccess($projectId);$uid=$this->uid();if($this->offlineOpDone($clientOperationId))return $this->go('reinhardterp.business.mobileProject',['id'=>$projectId]);
+  if($hours<=0&&$startTime&&$endTime){$start=strtotime($workDate.' '.$startTime);$end=strtotime($workDate.' '.$endTime);if($end<$start)$end+=86400;$hours=max(0,(($end-$start)/3600)-($breakMinutes/60));}
+  $hours=round($hours,2);if($hours<=0)throw new \InvalidArgumentException('Stunden oder Beginn und Ende müssen angegeben werden.');if(trim($activity)==='')throw new \InvalidArgumentException('Tätigkeit fehlt.');
+  $project=$this->one('re_erp_projects',$projectId);if(!$project)throw new \InvalidArgumentException('Projekt nicht gefunden.');
+  $now=date('Y-m-d H:i:s');$workdayId=$this->insert('re_erp_workdays',['user_id'=>$uid,'work_date'=>$workDate,'start_time'=>$startTime?:null,'end_time'=>$endTime?:null,'break_minutes'=>$breakMinutes,'notes'=>$notes,'entered_by'=>$uid,'updated_by'=>$uid,'created_at'=>$now,'updated_at'=>$now]);
+  $this->insert('re_erp_workday_entries',['workday_id'=>$workdayId,'customer_id'=>$project['customer_id']??null,'project_id'=>$projectId,'activity'=>trim($activity),'hours'=>$hours,'imported_to_report_id'=>null,'created_at'=>$now]);$this->markOfflineOpDone($clientOperationId);
+  return $this->go('reinhardterp.business.mobileProject',['id'=>$projectId]);
+ }
+
+ #[NoAdminRequired,NoCSRFRequired] public function mobileReports(int $projectId):TemplateResponse{$this->addPwaHeaders();
+  $this->permissions->assert('reports');$this->permissions->assertProjectAccess($projectId);
+  $project=$this->one('re_erp_projects',$projectId);if(!$project)throw new \InvalidArgumentException('Projekt nicht gefunden.');
+  $rows=array_values(array_filter($this->where('re_erp_reports','project_id',$projectId,'report_date'),static fn(array $r):bool=>empty($r['archived'])));
+  usort($rows,static fn(array $a,array $b):int=>strcmp((string)($b['report_date']??''),(string)($a['report_date']??'')));
+  return $this->page('mobile_reports',['project'=>$project,'reports'=>$rows,'urlGenerator'=>$this->url]);
+ }
+ #[NoAdminRequired,NoCSRFRequired] public function mobileReport(int $id):TemplateResponse{$this->addPwaHeaders();
+  $this->permissions->assert('reports');$report=$this->one('re_erp_reports',$id);if(!$report)throw new \InvalidArgumentException('Rapport nicht gefunden.');
+  $this->permissions->assertProjectAccess((int)$report['project_id']);$project=$this->one('re_erp_projects',(int)$report['project_id']);
+  $hours=$this->where('re_erp_report_hours','report_id',$id,'id');$items=$this->where('re_erp_report_items','report_id',$id,'id');
+  return $this->page('mobile_report',['report'=>$report,'project'=>$project,'hours'=>$hours,'items'=>$items,'urlGenerator'=>$this->url]);
+ }
+ #[NoAdminRequired] public function saveMobileSignature(int $id,string $signedBy,string $signatureData):RedirectResponse{
+  $this->permissions->assert('reports');$report=$this->one('re_erp_reports',$id);if(!$report)throw new \InvalidArgumentException('Rapport nicht gefunden.');
+  $this->permissions->assertProjectAccess((int)$report['project_id']);$signedBy=trim($signedBy);if($signedBy==='')throw new \InvalidArgumentException('Bitte Namen eintragen.');
+  if(!str_starts_with($signatureData,'data:image/png;base64,'))throw new \InvalidArgumentException('Ungültige Unterschrift.');
+  $encoded=substr($signatureData,strpos($signatureData,',')+1);if(strlen($encoded)>4000000)throw new \InvalidArgumentException('Unterschrift zu groß.');
+  $raw=base64_decode($encoded,true);if($raw===false||strlen($raw)<100||substr($raw,0,8)!=="\x89PNG\r\n\x1a\n")throw new \InvalidArgumentException('Unterschrift konnte nicht verarbeitet werden.');
+  $now=date('Y-m-d H:i:s');$this->update('re_erp_reports',$id,['signature_data'=>$signatureData,'signature_mime'=>'image/png','signed_by'=>$signedBy,'signed_at'=>$now,'status'=>'Unterschrieben','locked'=>1,'finalized_at'=>$now,'updated_at'=>$now]);
+  return $this->go('reinhardterp.business.mobileReport',['id'=>$id]);
+ }
+ private function addPwaHeaders():void{
+  $manifest=$this->url->linkToRoute('reinhardterp.page.pwaManifest').'?v=127-force';
+  $icon=$this->url->linkToRoute('reinhardterp.page.pwaIcon',['size'=>'192']);
+  Util::addHeader('link',['rel'=>'manifest','href'=>$manifest]);
+  Util::addHeader('meta',['name'=>'theme-color','content'=>'#1265d8']);
+  Util::addHeader('meta',['name'=>'mobile-web-app-capable','content'=>'yes']);
+  Util::addHeader('meta',['name'=>'apple-mobile-web-app-capable','content'=>'yes']);
+  Util::addHeader('meta',['name'=>'apple-mobile-web-app-title','content'=>'NextERP']);
+  Util::addHeader('meta',['name'=>'apple-mobile-web-app-status-bar-style','content'=>'default']);
+  Util::addHeader('link',['rel'=>'apple-touch-icon','href'=>$icon]);
+ }
+ private function offlineOpMarker(?string $clientOperationId):?string{
+  $id=trim((string)$clientOperationId);if($id===''||!preg_match('/^[a-zA-Z0-9._:-]{12,120}$/',$id))return null;
+  return rtrim(sys_get_temp_dir(),DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.'nexterp-offline-'.hash('sha256',$this->uid().'|'.$id).'.done';
+ }
+ private function offlineOpDone(?string $clientOperationId):bool{$f=$this->offlineOpMarker($clientOperationId);return $f!==null&&is_file($f);}
+ private function markOfflineOpDone(?string $clientOperationId):void{$f=$this->offlineOpMarker($clientOperationId);if($f!==null)@file_put_contents($f,(string)time(),LOCK_EX);}
  private function page(string $template,array $data):TemplateResponse{return new TemplateResponse($this->appName,$template,$data);}
  private function go(string $route,array $params=[]):RedirectResponse{return new RedirectResponse($this->url->linkToRoute($route,$params));}
  private function uid():string{return $this->session->getUser()?->getUID()??'';}

@@ -84,6 +84,17 @@ require __DIR__ . '/_nav.php';
 				<h2>Rapportgestaltung</h2>
 				<p>Rapporte werden neutral in Schwarz, Weiß und Grautönen ausgegeben. Das hinterlegte Firmenlogo wird automatisch in neue und bestehende Rapportdateien übernommen.</p>
 			</section>
+
+			<section class="erp-card erp-wide">
+				<h2>Über NextERP</h2>
+				<p><strong>Entwickler: André Reinhardt</strong></p>
+				<p>NextERP wird als praxisnahes ERP für das Handwerk entwickelt.</p>
+				<div class="erp-actions">
+					<a class="button" href="https://www.schreinerei-reinhardt.de" target="_blank" rel="noopener">Website</a>
+					<button class="button" type="button" onclick="navigator.clipboard.writeText('andrereinhardt@kassel-net.de');this.textContent='PayPal-Adresse kopiert ✓'">☕ Buy me a Coffee · PayPal-Adresse kopieren</button>
+				</div>
+				<p class="erp-muted">PayPal: <code>andrereinhardt@kassel-net.de</code></p>
+			</section>
 		</div>
 	</div>
 </div>

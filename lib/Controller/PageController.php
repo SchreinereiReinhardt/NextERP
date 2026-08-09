@@ -14,12 +14,60 @@ use OCP\IDBConnection;
 use OCP\IRequest;
 use OCP\IUserSession;
 use OCP\IUserManager;
+use OCP\Util;
 use OCP\AppFramework\Http\DataDownloadResponse;
+use OCP\AppFramework\Http\DataDisplayResponse;
 use OCA\ReinhardtERP\Service\PermissionService;
 use OCA\ReinhardtERP\Service\ActivityService;
 use OCA\ReinhardtERP\Service\NextcloudIntegrationService;
 final class PageController extends Controller {
  public function __construct(string $appName,IRequest $request,private CustomerMapper $customers,private ProjectMapper $projects,private IUserSession $users,private IDBConnection $db,private PermissionService $permissions,private FolderService $folders,private IURLGenerator $url,private ActivityService $activities,private NextcloudIntegrationService $integration,private IUserManager $userManager){parent::__construct($appName,$request);}
+ #[NoAdminRequired,NoCSRFRequired] public function pwaManifest():DataDisplayResponse{
+  $start=$this->url->linkToRoute('reinhardterp.business.mobile').'?pwa=1&v=127-force';
+  $scope=preg_replace('~/mobile$~','/',$start);
+  $data=[
+   'id'=>$this->url->linkToRoute('reinhardterp.business.mobile'),
+   'name'=>'NextERP',
+   'short_name'=>'NextERP',
+   'description'=>'NextERP Mobile',
+   'start_url'=>$start,
+   'scope'=>$scope,
+   'display'=>'standalone',
+   'display_override'=>['standalone','minimal-ui'],'launch_handler'=>['client_mode'=>'navigate-new'],
+   'orientation'=>'any',
+   'background_color'=>'#f4f7fb',
+   'theme_color'=>'#1265d8',
+   'icons'=>[
+    ['src'=>$this->url->linkToRoute('reinhardterp.page.pwaIcon',['size'=>'192']),'sizes'=>'192x192','type'=>'image/svg+xml','purpose'=>'any maskable'],
+    ['src'=>$this->url->linkToRoute('reinhardterp.page.pwaIcon',['size'=>'512']),'sizes'=>'512x512','type'=>'image/svg+xml','purpose'=>'any maskable'],
+   ],
+  ];
+  return new DataDisplayResponse(
+   json_encode($data,JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR),
+   200,
+   ['Content-Type'=>'application/manifest+json; charset=utf-8','Cache-Control'=>'no-store, no-cache, must-revalidate, max-age=0']
+  );
+ }
+ #[NoAdminRequired,NoCSRFRequired] public function pwaServiceWorker():DataDisplayResponse{
+  $offline=$this->url->linkToRoute('reinhardterp.business.mobile');
+  $js="const CACHE='nexterp-mobile-v128';const OFFLINE=".json_encode($offline).";"
+    ."self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.add(OFFLINE)).catch(()=>{}))});"
+    ."self.addEventListener('activate',e=>e.waitUntil(Promise.all([caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('nexterp-')&&k!==CACHE).map(k=>caches.delete(k)))),self.clients.claim()])));"
+    ."self.addEventListener('fetch',e=>{const r=e.request;if(r.method!=='GET')return;const u=new URL(r.url);if(u.origin!==self.location.origin)return;"
+    ."if(r.mode==='navigate'){e.respondWith(fetch(r).then(x=>{if(x.ok&&u.pathname.includes('/apps/reinhardterp/mobile')){const c=x.clone();caches.open(CACHE).then(k=>k.put(r,c)).catch(()=>{})}return x}).catch(()=>caches.match(r).then(x=>x||caches.match(OFFLINE))));return;}"
+    ."if(u.pathname.includes('/apps/reinhardterp/')||u.pathname.includes('/apps/theming/')||u.pathname.includes('/core/')){e.respondWith(caches.match(r).then(c=>c||fetch(r).then(x=>{if(x.ok){const y=x.clone();caches.open(CACHE).then(k=>k.put(r,y)).catch(()=>{})}return x})));}});";
+  return new DataDisplayResponse($js,200,['Content-Type'=>'application/javascript; charset=utf-8','Cache-Control'=>'no-store, no-cache, must-revalidate, max-age=0','Service-Worker-Allowed'=>'/']);
+ }
+ #[NoAdminRequired,NoCSRFRequired] public function pwaIcon(string $size):DataDisplayResponse{
+  $n=$size==='512'?512:192;
+  $svg='<svg xmlns="http://www.w3.org/2000/svg" width="'.$n.'" height="'.$n.'" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#1265d8"/><path d="M118 126h84l108 166V126h84v260h-82L202 220v166h-84z" fill="white"/><path d="M337 306h69v80h-69z" fill="#9bd36a"/></svg>';
+  return new DataDisplayResponse(
+   $svg,
+   200,
+   ['Content-Type'=>'image/svg+xml; charset=utf-8','Cache-Control'=>'public, max-age=86400']
+  );
+ }
+
  #[NoAdminRequired,NoCSRFRequired] public function index():TemplateResponse{$this->permissions->assert('dashboard');return new TemplateResponse($this->appName,'dashboard',['displayName'=>$this->users->getUser()?->getDisplayName()??'Benutzer','customerCount'=>$this->count('re_erp_customers'),'projectCount'=>count($this->filterProjects($this->projects->findAllActive())),'reportCount'=>$this->count('re_erp_reports'),'openReportCount'=>$this->countWhere('re_erp_reports','locked',0),'todayHours'=>$this->todayHours(),'upcomingEvents'=>$this->upcomingEvents(),'activities'=>$this->activities->recent(12)]);}
  #[NoAdminRequired,NoCSRFRequired] public function customers():TemplateResponse{$this->permissions->assert('customers');return new TemplateResponse($this->appName,'customers',['customers'=>$this->customers->findAllActive(),'contactsEnabled'=>$this->integration->contactsEnabled(),'message'=>(string)$this->request->getParam('message','')]);}
  #[NoAdminRequired,NoCSRFRequired] public function customerForm(?int $id=null):TemplateResponse{$this->permissions->assert('customers');return new TemplateResponse($this->appName,'customer_form',['customer'=>$id?$this->customers->find($id):null,'contactsEnabled'=>$this->integration->contactsEnabled(),'addressBooks'=>$this->integration->writableAddressBooks()]);}
@@ -64,6 +112,39 @@ final class PageController extends Controller {
   ]);
  }
 
+
+ private function addMobilePwaHeaders():void{
+  $manifest=$this->url->linkToRoute('reinhardterp.page.pwaManifest').'?v=127-force';
+  $icon=$this->url->linkToRoute('reinhardterp.page.pwaIcon',['size'=>'192']);
+  Util::addHeader('link',['rel'=>'manifest','href'=>$manifest]);
+  Util::addHeader('meta',['name'=>'theme-color','content'=>'#1265d8']);
+  Util::addHeader('meta',['name'=>'mobile-web-app-capable','content'=>'yes']);
+  Util::addHeader('meta',['name'=>'apple-mobile-web-app-capable','content'=>'yes']);
+  Util::addHeader('meta',['name'=>'apple-mobile-web-app-title','content'=>'NextERP']);
+  Util::addHeader('link',['rel'=>'apple-touch-icon','href'=>$icon]);
+ }
+ #[NoAdminRequired,NoCSRFRequired] public function mobileProjectDocuments(int $id):TemplateResponse{$this->addMobilePwaHeaders();
+  $this->permissions->assertProjectAccess($id);$p=$this->queryProject($id);$owner=(string)($p['created_by']??'');if($owner==='')$owner=$this->users->getUser()?->getUID()??'';
+  $allowed=$this->permissions->projectFolders($id);$documents=$this->filterDocumentsByFolders($this->documentsForUser($owner,(string)($p['folder_path']??''),100,4),$p['folder_path']??'',$allowed);
+  return new TemplateResponse($this->appName,'mobile_documents',['project'=>$p,'documents'=>$documents,'allowedFolders'=>$allowed]);
+ }
+ #[NoAdminRequired,NoCSRFRequired] public function mobileProjectPhotos(int $id):TemplateResponse{$this->addMobilePwaHeaders();
+  $this->permissions->assertProjectAccess($id);$p=$this->queryProject($id);$owner=(string)($p['created_by']??'');if($owner==='')$owner=$this->users->getUser()?->getUID()??'';
+  $allowed=$this->permissions->projectFolders($id);$photos=[];
+  if($this->permissions->canAccessProjectFolder($id,'07_Fotos')){$all=$this->documentsForUser($owner,(string)($p['folder_path']??''),120,4);foreach($all as $d){$path=(string)($d['path']??'');$mime=strtolower((string)($d['mime']??$d['mimetype']??''));$name=strtolower((string)($d['name']??''));if(str_contains($path,'/07_Fotos/')&&(str_starts_with($mime,'image/')||preg_match('/\.(jpe?g|png|webp|gif)$/i',$name)))$photos[]=$d;}}
+  return new TemplateResponse($this->appName,'mobile_photos',['project'=>$p,'photos'=>$photos,'canUpload'=>$this->permissions->canAccessProjectFolder($id,'07_Fotos')]);
+ }
+ #[NoAdminRequired] public function uploadMobileProjectPhoto(int $id,?string $description=null):RedirectResponse{
+  $this->permissions->assertProjectAccess($id);if(!$this->permissions->canAccessProjectFolder($id,'07_Fotos'))throw new \OCP\AppFramework\Http\ForbiddenException('Der Fotoordner ist nicht freigegeben.');
+  $p=$this->queryProject($id);$owner=(string)($p['created_by']??'');if($owner==='')$owner=$this->users->getUser()?->getUID()??'';
+  $file=$this->request->getUploadedFile('document');if(!is_array($file)||($file['error']??UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_OK)throw new \InvalidArgumentException('Bitte ein Foto auswählen.');
+  $mime=strtolower((string)($file['type']??''));if(!str_starts_with($mime,'image/'))throw new \InvalidArgumentException('Bitte eine Bilddatei auswählen.');
+  if((int)($file['size']??0)>25*1024*1024)throw new \InvalidArgumentException('Das Foto darf maximal 25 MB groß sein.');
+  $folder=$this->folders->ensureFolderPathForUser($owner,(string)($p['folder_path']??''),'07_Fotos');$name=(string)($file['name']??('Foto-'.date('Ymd-His').'.jpg'));$this->folders->writeFromLocalFileForUser($owner,$folder,$name,(string)$file['tmp_name']);
+  $path=trim((string)$p['folder_path'],'/').'/07_Fotos/'.$name;$qb=$this->db->getQueryBuilder();$qb->insert('re_erp_project_documents')->values(['project_id'=>$qb->createNamedParameter($id),'customer_id'=>$qb->createNamedParameter((int)$p['customer_id']),'document_type'=>$qb->createNamedParameter('photo'),'file_name'=>$qb->createNamedParameter($name),'file_path'=>$qb->createNamedParameter($path),'mime_type'=>$qb->createNamedParameter($mime),'status'=>$qb->createNamedParameter('uploaded'),'source'=>$qb->createNamedParameter('mobile'),'created_by'=>$qb->createNamedParameter($this->users->getUser()?->getUID()??'system'),'created_at'=>$qb->createNamedParameter(date('Y-m-d H:i:s'))])->executeStatement();
+  $note=trim((string)$description);$this->activities->record('project',$id,'photo_uploaded','Foto mobil aufgenommen',$name.($note!==''?' · '.$note:''),(int)$p['customer_id'],$id);
+  return new RedirectResponse($this->url->linkToRoute('reinhardterp.page.mobileProjectPhotos',['id'=>$id]));
+ }
  #[NoAdminRequired] public function uploadCustomerDocument(int $id,string $targetFolder='09_Sonstiges'):RedirectResponse{$this->permissions->assert('customers');$c=$this->customers->find($id);$allowed=['01_Kundendaten','02_Anfragen','03_Angebote','04_Auftraege','06_Rechnungen','07_Korrespondenz','08_Bilder','09_Sonstiges'];if(!in_array($targetFolder,$allowed,true))$targetFolder='09_Sonstiges';$name=$this->uploadTo((string)($c->getFolderPath()??''),$targetFolder);$this->activities->record('customer',$id,'document_uploaded','Dokument hochgeladen',$name.' → '.$targetFolder,$id,null);return new RedirectResponse($this->url->linkToRoute('reinhardterp.page.customerDetail',['id'=>$id]));}
  #[NoAdminRequired] public function uploadProjectDocument(int $id,string $targetFolder='01_Aufmass',string $documentType='other'):RedirectResponse{
   $this->permissions->assertProjectAccess($id);$p=$this->queryProject($id);

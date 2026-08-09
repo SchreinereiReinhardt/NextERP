@@ -5,13 +5,13 @@ require __DIR__.'/_nav.php';
     <div class="erp-head">
         <div>
             <h1>Systemprüfung</h1>
-            <p class="erp-sub">Diagnose des stabilen NextERP-Kerns</p>
+            <p class="erp-sub">Server- und NextERP-Voraussetzungen auf einen Blick</p>
         </div>
         <div class="erp-actions"><a class="button" href="<?php p($url->linkToRoute('reinhardterp.module.settings')); ?>">Zurück zu Einstellungen</a><a class="button primary" href="<?php p($url->linkToRoute('reinhardterp.systemCheck.index')); ?>">Erneut prüfen</a></div>
     </div>
 
     <section class="erp-card erp-wide erp-health-summary <?= !empty($_['healthy']) ? 'is-healthy' : 'has-errors' ?>">
-        <strong><?= !empty($_['healthy']) ? 'Stable Core bereit' : 'Prüfung mit Fehlern' ?></strong>
+        <strong><?= !empty($_['healthy']) ? 'Server für NextERP bereit' : 'Prüfung mit Fehlern' ?></strong>
         <span><?php p((string)$_['failed']); ?> Fehler · <?php p((string)$_['warnings']); ?> Hinweise · geprüft am <?php p((string)$_['checkedAt']); ?></span>
     </section>
 

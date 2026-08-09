@@ -66,12 +66,20 @@ $groups = [
         ],
     ],
     [
+        'label' => 'Hilfe', 'icon' => 'document', 'key' => 'help',
+        'items' => [
+            ['Dokumentation', 'reinhardterp.business.documentation', 'mobile', '/documentation'],
+        ],
+    ],
+    [
         'label' => 'Verwaltung', 'icon' => 'settings', 'key' => 'admin',
         'items' => [
+            ['Mobile', 'reinhardterp.business.mobileAdmin', 'settings', '/mobile-admin'],
             ['Integration', 'reinhardterp.integration.index', 'settings', '/integration'],
             ['Benutzer & Rechte', 'reinhardterp.module.users', 'users_view', '/users'],
             ['Einstellungen', 'reinhardterp.module.settings', 'settings', '/settings'],
             ['Systemprüfung', 'reinhardterp.systemCheck.index', 'settings', '/system-check'],
+            ['Über NextERP & Release', 'reinhardterp.business.aboutRelease', 'settings', '/about-release'],
         ],
     ],
 ];
