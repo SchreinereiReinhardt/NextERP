@@ -8,17 +8,18 @@ final class PermissionService {
  public const ADMIN='admin'; public const OFFICE='office'; public const MANAGER='manager'; public const EMPLOYEE='employee'; public const TIME='time';
  public function __construct(private IDBConnection $db,private IUserSession $session,private IGroupManager $groups){}
  public function uid():string{return $this->session->getUser()?->getUID()??'';}
+ public function isNextcloudAdmin(?string $uid=null):bool{$uid=$uid??$this->uid();return $uid!==''&&$this->groups->isAdmin($uid);}
  public function isEnabled(?string $uid=null):bool{
   $uid=$uid??$this->uid(); if($uid==='')return false;
-  if($this->groups->isAdmin($uid))return true;
+  if($this->isNextcloudAdmin($uid))return true;
   $qb=$this->db->getQueryBuilder();$qb->select('enabled')->from('re_erp_user_roles')->where($qb->expr()->eq('user_id',$qb->createNamedParameter($uid)));$r=$qb->executeQuery()->fetchOne();
-  return $r===false ? true : (bool)$r;
+  return $r===false ? false : (bool)$r;
  }
  public function role(?string $uid=null):string{
   $uid=$uid??$this->uid(); if($uid==='')return self::TIME;
-  if($this->groups->isAdmin($uid))return self::ADMIN;
+  if($this->isNextcloudAdmin($uid))return self::ADMIN;
   $qb=$this->db->getQueryBuilder();$qb->select('role')->from('re_erp_user_roles')->where($qb->expr()->eq('user_id',$qb->createNamedParameter($uid)));$r=$qb->executeQuery()->fetchOne();
-  return is_string($r)&&$r!==''?$r:self::EMPLOYEE;
+  return is_string($r)&&$r!==''?$r:self::TIME;
  }
  public function can(string $permission):bool{
   if(!$this->isEnabled())return false;

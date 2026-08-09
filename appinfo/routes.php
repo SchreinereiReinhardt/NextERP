@@ -1,6 +1,8 @@
 <?php
 return ['routes'=>[
  ['name'=>'page#index','url'=>'/','verb'=>'GET'],
+ ['name'=>'page#setupWizard','url'=>'/setup','verb'=>'GET'],
+ ['name'=>'page#saveSetupWizard','url'=>'/setup','verb'=>'POST'],
  ['name'=>'page#pwaManifest','url'=>'/mobile/manifest.webmanifest','verb'=>'GET'],
  ['name'=>'page#pwaServiceWorker','url'=>'/mobile/service-worker.js','verb'=>'GET'],
  ['name'=>'page#pwaIcon','url'=>'/mobile/icon/{size}.svg','verb'=>'GET','requirements'=>['size'=>'192|512']],
@@ -37,6 +39,7 @@ return ['routes'=>[
  ['name'=>'module#saveReport','url'=>'/api/reports','verb'=>'POST'],
  ['name'=>'module#reportDetail','url'=>'/reports/{id}','verb'=>'GET'],
  ['name'=>'module#reportPrint','url'=>'/reports/{id}/print','verb'=>'GET'],
+ ['name'=>'module#reportPdf','url'=>'/reports/{id}/pdf','verb'=>'GET'],
  ['name'=>'module#updateReport','url'=>'/api/reports/{id}','verb'=>'POST'],
  ['name'=>'module#saveReportSignature','url'=>'/api/reports/{id}/signature','verb'=>'POST'],
  ['name'=>'module#finalizeReport','url'=>'/api/reports/{id}/finalize','verb'=>'POST'],
@@ -76,6 +79,7 @@ return ['routes'=>[
  ['name'=>'module#saveUserRole','url'=>'/api/users/role','verb'=>'POST'],
  ['name'=>'module#settings','url'=>'/settings','verb'=>'GET'],
  ['name'=>'systemCheck#index','url'=>'/system-check','verb'=>'GET'],
+ ['name'=>'systemCheck#diagnostics','url'=>'/system-check/diagnostics','verb'=>'GET'],
  ['name'=>'module#saveSettings','url'=>'/api/settings','verb'=>'POST'],
  ['name'=>'integration#saveCalendarSettings','url'=>'/api/settings/calendar','verb'=>'POST'],
  ['name'=>'integration#syncCalendar','url'=>'/api/calendar/sync','verb'=>'POST'],
@@ -95,6 +99,7 @@ return ['routes'=>[
  ['name'=>'business#inventory','url'=>'/inventory','verb'=>'GET'],
  ['name'=>'business#saveStockMovement','url'=>'/api/inventory/movements','verb'=>'POST'],
  ['name'=>'business#documentation','url'=>'/documentation','verb'=>'GET'],
+ ['name'=>'business#privacy','url'=>'/privacy','verb'=>'GET'],
  ['name'=>'business#mobileAdmin','url'=>'/mobile-admin','verb'=>'GET'],
  ['name'=>'business#aboutRelease','url'=>'/about-release','verb'=>'GET'],
  ['name'=>'business#mobile','url'=>'/mobile','verb'=>'GET'],

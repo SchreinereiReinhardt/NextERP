@@ -135,6 +135,10 @@ final class MobileService {
    ->orderBy('created_at','DESC')->setMaxResults(200);
   foreach($qb->executeQuery()->fetchAllAssociative() as $row){
    $path=trim((string)($row['file_path']??''),'/');
+   $relative=$path;
+   $basePath=trim((string)($project['folder_path']??''),'/');
+   if($basePath!==''&&str_starts_with($relative,$basePath.'/'))$relative=substr($relative,strlen($basePath)+1);
+   if($relative!==''&&!$this->permissions->canAccessProjectFolder($id,$relative,$uid))continue;
    if($path!=='')$knownPaths[$path]=true;
    $documents[]=$this->mobileDocumentRow($row,$id);
   }
@@ -453,8 +457,12 @@ final class MobileService {
   if(!in_array($category,$allowedCategories,true))$category='Sonstige';
   $folderMap=['photo'=>'07_Fotos/'.$category,'scan'=>'00_Eingang','pdf'=>'12_Sonstiges','document'=>'12_Sonstiges'];
   $sub=$folderMap[$type]??'12_Sonstiges';
-  $target=$this->ensureFolder($uid,$base.'/'.$sub);
+  if(!$this->permissions->canAccessProjectFolder($projectId,$sub,$uid))throw new \OCP\AppFramework\Http\ForbiddenException('Keine Berechtigung für diesen Projektordner.');
   $name=$this->safeFile((string)($file['name']??'Datei'));
+  $extension=strtolower(pathinfo($name,PATHINFO_EXTENSION));
+  $allowedExtensions=['pdf','jpg','jpeg','png','webp','txt','csv','doc','docx','xls','xlsx'];
+  if(!in_array($extension,$allowedExtensions,true))throw new \InvalidArgumentException('Dieser Dateityp ist für mobile Uploads nicht freigegeben.');
+  if($type==='photo'&&!in_array($extension,['jpg','jpeg','png','webp'],true))throw new \InvalidArgumentException('Als Foto sind nur JPG, PNG und WebP zulässig.');
   if($type==='photo'){
    $extension=pathinfo($name,PATHINFO_EXTENSION);
    $stem=pathinfo($name,PATHINFO_FILENAME);

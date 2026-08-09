@@ -64,7 +64,8 @@ final class SystemCheckService {
         $checks[] = $this->check(
             'Datenbanktabellen',
             $missing === [],
-            $missing === [] ? count(self::TABLES).' Tabellen erreichbar' : 'Fehlend oder nicht lesbar: '.implode(', ', $missing)
+            $missing === [] ? count(self::TABLES).' Tabellen erreichbar' : 'Fehlend oder nicht lesbar: '.implode(', ', $missing),
+            $missing === [] ? null : 'Nextcloud-App-Migrationen ausführen: sudo -u www-data php occ upgrade. Bleibt der Fehler bestehen, Datenbankrechte und Nextcloud-Log prüfen.'
         );
 
         try {
@@ -73,14 +74,14 @@ final class SystemCheckService {
             $sequences = $qb->executeQuery()->fetchAllAssociative();
             $checks[] = $this->check('Nummernkreise', true, count($sequences).' aktive Zähler gefunden');
         } catch (\Throwable $e) {
-            $checks[] = $this->check('Nummernkreise', false, $e->getMessage());
+            $checks[] = $this->check('Nummernkreise', false, $e->getMessage(), 'Zuerst die Datenbanktabellen prüfen und anschließend sudo -u www-data php occ upgrade ausführen.');
         }
 
         try {
             $this->folders->ensureFolderPath('ERP');
             $checks[] = $this->check('ERP-Dateiablage', true, 'ERP-Ordner ist erreichbar und beschreibbar');
         } catch (\Throwable $e) {
-            $checks[] = $this->check('ERP-Dateiablage', false, $e->getMessage());
+            $checks[] = $this->check('ERP-Dateiablage', false, $e->getMessage(), 'Nextcloud-Datenverzeichnis, Dateirechte und freien Speicher prüfen. Der Webserver-Benutzer muss auf die Nextcloud-Dateiablage zugreifen können.');
         }
 
         try {
@@ -89,16 +90,35 @@ final class SystemCheckService {
                 'name' => 'Firmenlogo',
                 'status' => $logo ? 'ok' : 'warning',
                 'message' => $logo ? (string)$logo['path'] : 'Noch kein Logo hinterlegt',
+                'recommendation' => $logo ? null : 'Unter Verwaltung → Einstellungen ein Firmenlogo hinterlegen. Es wird unter anderem für Belege und Rapporte verwendet.',
             ];
         } catch (\Throwable $e) {
             $checks[] = $this->check('Firmenlogo', false, $e->getMessage());
         }
 
-        $checks[] = $this->check('PHP-Version', version_compare(PHP_VERSION, '8.2.0', '>='), PHP_VERSION.' (benötigt: >= 8.2)');
-        $checks[] = $this->check('HTTPS', (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (string)($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https', 'Für Mobile/PWA und sichere Anmeldung wird HTTPS empfohlen');
-        $checks[] = $this->check('JSON', extension_loaded('json'), extension_loaded('json') ? 'geladen' : 'nicht geladen');
+        $phpOk = version_compare(PHP_VERSION, '8.2.0', '>=');
+        $checks[] = $this->check('PHP-Version', $phpOk, PHP_VERSION.' (benötigt: >= 8.2)', $phpOk ? null : 'PHP auf mindestens 8.2 aktualisieren und sicherstellen, dass Webserver und CLI dieselbe unterstützte PHP-Version verwenden.');
+
+        $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || strtolower((string)($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
+        $checks[] = [
+            'name'=>'HTTPS',
+            'status'=>$https ? 'ok' : 'warning',
+            'message'=>$https ? 'HTTPS erkannt' : 'HTTPS wurde für diese Anfrage nicht erkannt',
+            'recommendation'=>$https ? null : 'HTTPS für die Nextcloud-Domain aktivieren. Bei Reverse Proxy außerdem X-Forwarded-Proto bzw. die Nextcloud-Proxy-Konfiguration prüfen.',
+        ];
+
+        $jsonLoaded = extension_loaded('json');
+        $checks[] = $this->check('JSON', $jsonLoaded, $jsonLoaded ? 'geladen' : 'nicht geladen', $jsonLoaded ? null : 'Die PHP-JSON-Unterstützung aktivieren; sie ist für NextERP-API und Mobile erforderlich.');
+
         $memory = (string)ini_get('memory_limit');
-        $checks[] = ['name'=>'PHP Memory Limit','status'=>'ok','message'=>$memory !== '' ? $memory : 'nicht gesetzt'];
+        $memoryBytes = $this->iniBytes($memory);
+        $memoryOk = $memory === '-1' || $memoryBytes >= 256 * 1024 * 1024;
+        $checks[] = [
+            'name'=>'PHP Memory Limit',
+            'status'=>$memoryOk ? 'ok' : 'warning',
+            'message'=>$memory !== '' ? $memory.' (empfohlen: mindestens 256M)' : 'nicht gesetzt',
+            'recommendation'=>$memoryOk ? null : 'PHP memory_limit auf mindestens 256M setzen; bei großen PDFs oder vielen Dokumenten sind 512M sinnvoll.',
+        ];
 
 
         $ncVersion = 'unbekannt';
@@ -112,14 +132,20 @@ final class SystemCheckService {
         } catch (\Throwable) {
         }
         if ($ncVersion === 'unbekannt') {
-            $checks[] = ['name' => 'Nextcloud-Version', 'status' => 'warning', 'message' => 'Version konnte nicht automatisch ermittelt werden'];
+            $checks[] = ['name' => 'Nextcloud-Version', 'status' => 'warning', 'message' => 'Version konnte nicht automatisch ermittelt werden', 'recommendation' => 'Nextcloud-Version mit sudo -u www-data php occ status prüfen. NextERP 1.4.13 unterstützt laut App-Metadaten Nextcloud 33–34.'];
         } else {
             $ncOk = version_compare($ncVersion, '33.0.0', '>=') && version_compare($ncVersion, '35.0.0', '<');
-            $checks[] = $this->check('Nextcloud-Version', $ncOk, $ncVersion.' (unterstützt: 33–34)');
+            $checks[] = $this->check('Nextcloud-Version', $ncOk, $ncVersion.' (unterstützt: 33–34)', $ncOk ? null : 'Eine von NextERP unterstützte Nextcloud-Version (33 oder 34) verwenden. Vor einem Nextcloud-Upgrade zuerst NextERP-Kompatibilität prüfen.');
         }
 
         foreach (['mbstring', 'gd', 'curl', 'dom', 'xml', 'zip', 'openssl', 'iconv'] as $extension) {
-            $checks[] = $this->check('PHP-Erweiterung '.$extension, extension_loaded($extension), extension_loaded($extension) ? 'geladen' : 'nicht geladen');
+            $loaded = extension_loaded($extension);
+            $checks[] = $this->check(
+                'PHP-Erweiterung '.$extension,
+                $loaded,
+                $loaded ? 'geladen' : 'nicht geladen',
+                $loaded ? null : 'PHP-Erweiterung '.$extension.' für die vom Webserver verwendete PHP-Version installieren/aktivieren und PHP-FPM bzw. Apache anschließend neu laden.'
+            );
         }
 
         $disabledFunctions = array_filter(array_map('trim', explode(',', (string)ini_get('disable_functions'))));
@@ -127,21 +153,24 @@ final class SystemCheckService {
         $checks[] = $this->check(
             'proc_open()',
             $procOpenAvailable,
-            $procOpenAvailable ? 'verfügbar – externe PDF-Werkzeuge können gestartet werden' : 'nicht verfügbar oder in disable_functions gesperrt'
+            $procOpenAvailable ? 'verfügbar – externe PDF-Werkzeuge können gestartet werden' : 'nicht verfügbar oder in disable_functions gesperrt',
+            $procOpenAvailable ? null : 'proc_open in der PHP-Konfiguration für Nextcloud freigeben, wenn PDF-Import/Vorschau genutzt werden soll. Danach PHP-FPM bzw. Apache neu laden.'
         );
 
         $pdftotext = $this->findExecutable('pdftotext');
         $checks[] = $this->check(
             'PDF-Texterkennung (pdftotext)',
             $pdftotext !== null,
-            $pdftotext ?? 'nicht gefunden – unter Debian/Ubuntu: apt install poppler-utils'
+            $pdftotext ?? 'nicht gefunden',
+            $pdftotext !== null ? null : 'Unter Debian/Ubuntu installieren: apt install poppler-utils. Danach die Systemprüfung erneut ausführen.'
         );
 
         $pdftoppm = $this->findExecutable('pdftoppm');
         $checks[] = $this->check(
             'PDF-Vorschau (pdftoppm)',
             $pdftoppm !== null,
-            $pdftoppm ?? 'nicht gefunden – unter Debian/Ubuntu: apt install poppler-utils'
+            $pdftoppm ?? 'nicht gefunden',
+            $pdftoppm !== null ? null : 'Unter Debian/Ubuntu installieren: apt install poppler-utils. Das Paket stellt pdftoppm für PDF-Vorschauen bereit.'
         );
 
         $cronMode = $this->detectCronMode();
@@ -150,9 +179,67 @@ final class SystemCheckService {
             'status' => $cronMode === 'cron' ? 'ok' : 'warning',
             'message' => $cronMode === 'cron'
                 ? 'System-Cron ist konfiguriert'
-                : ($cronMode === null ? 'Modus konnte nicht ermittelt werden – System-Cron alle 5 Minuten empfohlen' : 'Aktueller Modus: '.$cronMode.' – System-Cron alle 5 Minuten empfohlen'),
+                : ($cronMode === null ? 'Modus konnte nicht ermittelt werden' : 'Aktueller Modus: '.$cronMode),
+            'recommendation' => $cronMode === 'cron' ? null : 'In Nextcloud unter Verwaltung → Grundeinstellungen „Cron“ wählen und cron.php systemseitig alle 5 Minuten als Webserver-Benutzer ausführen.',
         ];
-        $checks[] = $this->check('ERP-Zugriff', $this->permissions->isEnabled(), 'Rolle: '.$this->permissions->role());
+        $erpEnabled = $this->permissions->isEnabled();
+        $checks[] = $this->check('ERP-Zugriff', $erpEnabled, 'Rolle: '.$this->permissions->role(), $erpEnabled ? null : 'Dem Benutzer in NextERP eine passende Rolle bzw. Berechtigung zuweisen.');
+
+        $checks[] = [
+            'name' => 'Administrator-Notfallzugang',
+            'status' => $this->permissions->isNextcloudAdmin() ? 'ok' : 'info',
+            'message' => $this->permissions->isNextcloudAdmin()
+                ? 'Dieses Nextcloud-Administratorkonto besitzt automatisch vollständigen NextERP-Adminzugriff'
+                : 'Nextcloud-Administratoren besitzen unabhängig von der NextERP-Rollentabelle vollständigen NextERP-Adminzugriff',
+            'recommendation' => null,
+        ];
+        $checks[] = [
+            'name' => 'Berechtigungsmodell',
+            'status' => 'ok',
+            'message' => 'Nextcloud-Administratoren haben immer Adminzugriff; andere nicht konfigurierte Benutzer erhalten standardmäßig keinen NextERP-Zugriff',
+            'recommendation' => null,
+        ];
+        $checks[] = [
+            'name' => 'Mobile Projektordner',
+            'status' => 'ok',
+            'message' => 'Mobile Dokumentzugriffe und Uploads beachten Projekt- und Ordnerfreigaben',
+            'recommendation' => null,
+        ];
+        $checks[] = [
+            'name' => 'Mobile Upload-Dateitypen',
+            'status' => 'ok',
+            'message' => 'Uploads sind auf freigegebene Dokument- und Bildformate begrenzt',
+            'recommendation' => null,
+        ];
+        $checks[] = [
+            'name' => 'Release-Metadaten',
+            'status' => 'ok',
+            'message' => 'Lizenz, Repository, Support-/Fehlerlink und unterstützte Nextcloud-Versionen sind in den App-Metadaten hinterlegt',
+            'recommendation' => null,
+        ];
+        $migrationDir = dirname(__DIR__).'/Migration';
+        $migrationFiles = is_dir($migrationDir) ? glob($migrationDir.'/Version*.php') : [];
+        $checks[] = [
+            'name' => 'Datenbank-Migrationen',
+            'status' => !empty($migrationFiles) ? 'ok' : 'warning',
+            'message' => !empty($migrationFiles)
+                ? count($migrationFiles).' versionierte NextERP-Migrationen im Release vorhanden'
+                : 'Keine versionierten NextERP-Migrationen gefunden',
+            'recommendation' => !empty($migrationFiles) ? null : 'Release-Paket prüfen. Für bestehende Installationen müssen notwendige Schemaänderungen als Nextcloud-Migrationen ausgeliefert werden.',
+        ];
+        $checks[] = [
+            'name' => 'Backup vor Updates',
+            'status' => 'info',
+            'message' => 'NextERP verwendet die Nextcloud-Datenbank, App-Konfiguration und Nextcloud-Dateispeicher; diese Bereiche müssen gemeinsam gesichert werden',
+            'recommendation' => 'Vor Updates ein vollständiges Nextcloud-Backup inklusive Datenbank, config-Verzeichnis und Datenverzeichnis erstellen und die Wiederherstellung regelmäßig auf einer Testinstanz prüfen.',
+        ];
+        $checks[] = [
+            'name' => 'Deinstallation',
+            'status' => 'info',
+            'message' => 'App-Deaktivierung, App-Entfernung und bewusste Löschung von Geschäftsdaten sind getrennte Vorgänge',
+            'recommendation' => 'Vor dem Entfernen der App Rapporte/Projektunterlagen sichern und ein vollständiges Backup erstellen. Geschäftsdaten niemals durch manuelles Löschen von Datenbanktabellen oder Projektordnern entfernen.',
+        ];
+
 
         $failed = count(array_filter($checks, static fn(array $c): bool => $c['status'] === 'error'));
         $warnings = count(array_filter($checks, static fn(array $c): bool => $c['status'] === 'warning'));
@@ -194,7 +281,27 @@ final class SystemCheckService {
         return null;
     }
 
-    private function check(string $name, bool $ok, string $message): array {
-        return ['name' => $name, 'status' => $ok ? 'ok' : 'error', 'message' => $message];
+    private function iniBytes(string $value): int {
+        $value = trim($value);
+        if ($value === '' || $value === '-1') {
+            return $value === '-1' ? PHP_INT_MAX : 0;
+        }
+        $unit = strtolower(substr($value, -1));
+        $number = (float)$value;
+        return match ($unit) {
+            'g' => (int)($number * 1024 * 1024 * 1024),
+            'm' => (int)($number * 1024 * 1024),
+            'k' => (int)($number * 1024),
+            default => (int)$number,
+        };
+    }
+
+    private function check(string $name, bool $ok, string $message, ?string $recommendation = null): array {
+        return [
+            'name' => $name,
+            'status' => $ok ? 'ok' : 'error',
+            'message' => $message,
+            'recommendation' => $ok ? null : $recommendation,
+        ];
     }
 }

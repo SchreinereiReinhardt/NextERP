@@ -6,33 +6,44 @@ require __DIR__ . '/_nav.php';
 		<div class="erp-page erp-settings-page">
 			<div class="erp-head">
 				<div>
-					<h1>Einstellungen</h1>
+					<h1>Einstellungen</h1><p><a class="button" href="<?=p(\OC::$server->getURLGenerator()->linkToRoute('reinhardterp.page.setupWizard'))?>">Ersteinrichtungsassistent öffnen</a></p>
 					<p class="erp-sub">Firmenangaben, Logo und Ausgabe der Rapporte</p>
 				</div>
                 <div class="erp-actions"><a class="button" href="<?php p($url->linkToRoute('reinhardterp.systemCheck.index')); ?>">Systemprüfung</a></div>
 			</div>
 
 			<section class="erp-card erp-wide">
-				<h2>Firmenlogo für Rapporte</h2>
-				<p>Das Logo erscheint oben rechts in der Druckansicht, der HTML-Datei und der PDF. Empfohlen ist eine PNG-Datei mit transparentem oder weißem Hintergrund.</p>
-
-				<?php if (!empty($_['logoDataUri'])): ?>
-					<div class="erp-logo-preview">
-						<img src="<?php p($_['logoDataUri']); ?>" alt="Gespeichertes Firmenlogo">
-					</div>
-					<p class="erp-muted">Gespeichert unter <code><?php p($_['logoPath']); ?></code></p>
-				<?php else: ?>
-					<div class="erp-notice">Noch kein Firmenlogo hinterlegt.</div>
-				<?php endif; ?>
-
-				<form class="erp-settings-form" method="post" action="<?php p($url->linkToRoute('reinhardterp.module.saveSettings')); ?>" enctype="multipart/form-data">
-					<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
-					<label for="companyLogo">Logo auswählen</label>
-					<input id="companyLogo" type="file" name="companyLogo" accept="image/png,image/jpeg" required>
-					<p class="erp-muted">PNG oder JPG, maximal 5 MB.</p>
-					<button class="button primary" type="submit">Firmenlogo speichern</button>
-				</form>
-			</section>
+    <h2>Firmendaten & Briefkopf</h2>
+    <p>Diese Angaben werden zentral in NextERP gespeichert und automatisch auf Rapporten und Rapport-PDFs verwendet.</p>
+    <form class="erp-settings-form" method="post" action="<?php p($url->linkToRoute('reinhardterp.module.saveSettings')); ?>" enctype="multipart/form-data">
+        <input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
+        <?php $company = $_['company'] ?? []; ?>
+        <div class="erp-form-grid">
+            <div><label>Firmenname *</label><input name="company_name" value="<?php p($company['name'] ?? ''); ?>" placeholder="Muster Schreinerei GmbH" required></div>
+            <div><label>Inhaber / Geschäftsführung</label><input name="company_owner" value="<?php p($company['owner'] ?? ''); ?>" placeholder="Max Mustermann"></div>
+            <div><label>Straße / Hausnummer</label><input name="company_street" value="<?php p($company['street'] ?? ''); ?>" placeholder="Musterstraße 1"></div>
+            <div><label>PLZ</label><input name="company_zip" value="<?php p($company['zip'] ?? ''); ?>" placeholder="34100"></div>
+            <div><label>Ort</label><input name="company_city" value="<?php p($company['city'] ?? ''); ?>" placeholder="Kassel"></div>
+            <div><label>Land</label><input name="company_country" value="<?php p($company['country'] ?? 'Deutschland'); ?>" placeholder="Deutschland"></div>
+            <div><label>Telefon</label><input name="company_phone" value="<?php p($company['phone'] ?? ''); ?>"></div>
+            <div><label>E-Mail</label><input type="email" name="company_email" value="<?php p($company['email'] ?? ''); ?>"></div>
+            <div><label>Website</label><input name="company_website" value="<?php p($company['website'] ?? ''); ?>" placeholder="www.example.de"></div>
+            <div><label>Steuernummer</label><input name="company_taxNo" value="<?php p($company['taxNo'] ?? ''); ?>"></div>
+            <div><label>USt-IdNr.</label><input name="company_vatId" value="<?php p($company['vatId'] ?? ''); ?>"></div>
+            <div><label>Registergericht</label><input name="company_registerCourt" value="<?php p($company['registerCourt'] ?? ''); ?>"></div>
+            <div><label>Registernummer</label><input name="company_registerNo" value="<?php p($company['registerNo'] ?? ''); ?>"></div>
+        </div>
+        <div class="erp-settings-logo-row">
+            <div>
+                <label for="companyLogo">Firmenlogo</label>
+                <input id="companyLogo" type="file" name="companyLogo" accept="image/png,image/jpeg">
+                <p class="erp-muted">PNG oder JPG, maximal 5 MB. Ein vorhandenes Logo bleibt bestehen, wenn keine neue Datei gewählt wird.</p>
+            </div>
+            <?php if (!empty($_['logoDataUri'])): ?><img class="erp-settings-logo-preview" src="<?php p($_['logoDataUri']); ?>" alt="Firmenlogo"><?php endif; ?>
+        </div>
+        <div class="erp-actions"><button class="button primary" type="submit">Firmendaten speichern</button></div>
+    </form>
+</section>
 
 
 			<section class="erp-card erp-wide">

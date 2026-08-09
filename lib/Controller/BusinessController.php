@@ -38,6 +38,10 @@ final class BusinessController extends Controller {
  #[NoAdminRequired,NoCSRFRequired] public function documentation():TemplateResponse{
   return $this->page('documentation',['urlGenerator'=>$this->url]);
  }
+ #[NoAdminRequired,NoCSRFRequired] public function privacy():TemplateResponse{
+  $this->permissions->assert('settings');
+  return $this->page('privacy',['urlGenerator'=>$this->url]);
+ }
  #[NoAdminRequired,NoCSRFRequired] public function mobile():TemplateResponse{$this->addPwaHeaders();
   $this->permissions->assert('mobile'); $uid=$this->uid();
   $projects=array_values(array_filter($this->rows('re_erp_projects','project_no'),fn(array $p):bool=>$this->permissions->canAccessProject((int)$p['id'],$uid)));

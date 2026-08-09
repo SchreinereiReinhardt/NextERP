@@ -79,6 +79,7 @@ $groups = [
             ['Benutzer & Rechte', 'reinhardterp.module.users', 'users_view', '/users'],
             ['Einstellungen', 'reinhardterp.module.settings', 'settings', '/settings'],
             ['Systemprüfung', 'reinhardterp.systemCheck.index', 'settings', '/system-check'],
+            ['Datenschutz', 'reinhardterp.business.privacy', 'document', '/privacy'],
             ['Über NextERP & Release', 'reinhardterp.business.aboutRelease', 'settings', '/about-release'],
         ],
     ],

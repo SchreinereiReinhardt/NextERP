@@ -9,6 +9,7 @@ use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\IURLGenerator;
+use OCP\IConfig;
 use OCA\ReinhardtERP\Service\FolderService;
 use OCP\IDBConnection;
 use OCP\IRequest;
@@ -21,7 +22,7 @@ use OCA\ReinhardtERP\Service\PermissionService;
 use OCA\ReinhardtERP\Service\ActivityService;
 use OCA\ReinhardtERP\Service\NextcloudIntegrationService;
 final class PageController extends Controller {
- public function __construct(string $appName,IRequest $request,private CustomerMapper $customers,private ProjectMapper $projects,private IUserSession $users,private IDBConnection $db,private PermissionService $permissions,private FolderService $folders,private IURLGenerator $url,private ActivityService $activities,private NextcloudIntegrationService $integration,private IUserManager $userManager){parent::__construct($appName,$request);}
+ public function __construct(string $appName,IRequest $request,private CustomerMapper $customers,private ProjectMapper $projects,private IUserSession $users,private IDBConnection $db,private PermissionService $permissions,private FolderService $folders,private IURLGenerator $url,private ActivityService $activities,private NextcloudIntegrationService $integration,private IUserManager $userManager,private IConfig $config){parent::__construct($appName,$request);}
  #[NoAdminRequired,NoCSRFRequired] public function pwaManifest():DataDisplayResponse{
   $start=$this->url->linkToRoute('reinhardterp.business.mobile').'?pwa=1&v=127-force';
   $scope=preg_replace('~/mobile$~','/',$start);
@@ -68,6 +69,25 @@ final class PageController extends Controller {
   );
  }
 
+ #[NoAdminRequired,NoCSRFRequired] public function setupWizard():TemplateResponse{
+  $this->permissions->assert('settings');
+  $company=[];foreach(['name','owner','street','zip','city','country','phone','email','website','taxNo','vatId','registerCourt','registerNo'] as $key)$company[$key]=$this->config->getAppValue($this->appName,'company_'.$key,'');
+  return new TemplateResponse($this->appName,'setup_wizard',[
+   'company'=>$company,
+   'completed'=>$this->config->getAppValue($this->appName,'setup_completed','0')==='1',
+   'mobileUrl'=>$this->url->linkToRouteAbsolute('reinhardterp.business.mobile'),
+   'calendars'=>$this->integration->availableCalendars(),
+   'selectedCalendarName'=>$this->integration->selectedCalendarName(),
+  ]);
+ }
+ #[NoAdminRequired] public function saveSetupWizard():RedirectResponse{
+  $this->permissions->assert('settings');
+  foreach(['name','owner','street','zip','city','country','phone','email','website','taxNo','vatId','registerCourt','registerNo'] as $key){
+   $this->config->setAppValue($this->appName,'company_'.$key,trim((string)$this->request->getParam('company_'.$key,'')));
+  }
+  $this->config->setAppValue($this->appName,'setup_completed','1');
+  return new RedirectResponse($this->url->linkToRoute('reinhardterp.page.index'));
+ }
  #[NoAdminRequired,NoCSRFRequired] public function index():TemplateResponse{$this->permissions->assert('dashboard');return new TemplateResponse($this->appName,'dashboard',['displayName'=>$this->users->getUser()?->getDisplayName()??'Benutzer','customerCount'=>$this->count('re_erp_customers'),'projectCount'=>count($this->filterProjects($this->projects->findAllActive())),'reportCount'=>$this->count('re_erp_reports'),'openReportCount'=>$this->countWhere('re_erp_reports','locked',0),'todayHours'=>$this->todayHours(),'upcomingEvents'=>$this->upcomingEvents(),'activities'=>$this->activities->recent(12)]);}
  #[NoAdminRequired,NoCSRFRequired] public function customers():TemplateResponse{$this->permissions->assert('customers');return new TemplateResponse($this->appName,'customers',['customers'=>$this->customers->findAllActive(),'contactsEnabled'=>$this->integration->contactsEnabled(),'message'=>(string)$this->request->getParam('message','')]);}
  #[NoAdminRequired,NoCSRFRequired] public function customerForm(?int $id=null):TemplateResponse{$this->permissions->assert('customers');return new TemplateResponse($this->appName,'customer_form',['customer'=>$id?$this->customers->find($id):null,'contactsEnabled'=>$this->integration->contactsEnabled(),'addressBooks'=>$this->integration->writableAddressBooks()]);}
