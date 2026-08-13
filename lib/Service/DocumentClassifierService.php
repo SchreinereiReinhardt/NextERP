@@ -15,8 +15,10 @@ final class DocumentClassifierService {
      * @param array<int,array<string,mixed>> $suppliers
      * @return array<string,mixed>
      */
-    public function classify(string $filename, array $customers = [], array $projects = [], array $suppliers = []): array {
+    public function classify(string $filename, array $customers = [], array $projects = [], array $suppliers = [], string $content = ''): array {
         $plain = $this->normalise(pathinfo($filename, PATHINFO_FILENAME));
+        $contentPlain = $this->normalise($content);
+        $searchPlain = trim($plain.' '.$contentPlain);
         $type = 'unassigned';
         $confidence = 0;
         $reason = 'Keine eindeutige Regel gefunden.';
@@ -38,6 +40,7 @@ final class DocumentClassifierService {
             'bank_statement' => ['kontoauszug', 'bank statement', 'umsatzanzeige'],
             'cash' => ['kassenbeleg', 'kassenbon', 'quittung', 'receipt'],
             'tax' => ['steuerbescheid', 'umsatzsteuer', 'lohnsteuer', 'finanzamt'],
+            'accounting_other' => ['buchungsbeleg', 'buchhaltungsbeleg', 'zahlungsbeleg', 'abrechnungsbeleg'],
             'offer' => ['angebot', 'offerte', 'quotation'],
             'order' => ['auftrag', 'auftragsbestaetigung', 'auftragsbestatigung', 'order confirmation'],
             'report' => ['rapport', 'arbeitsbericht', 'servicebericht'],
@@ -47,8 +50,8 @@ final class DocumentClassifierService {
         if ($type === 'unassigned') {
         foreach ($rules as $candidate => $keywords) {
             foreach ($keywords as $keyword) {
-                if (str_contains(' '.$plain.' ', ' '.$this->normalise($keyword).' ')
-                    || str_contains($plain, $this->normalise($keyword))) {
+                if (str_contains(' '.$searchPlain.' ', ' '.$this->normalise($keyword).' ')
+                    || str_contains($searchPlain, $this->normalise($keyword))) {
                     $type = $candidate;
                     $confidence = 92;
                     $reason = 'Dateiname enthält das eindeutige Schlüsselwort „'.$keyword.'“.';
@@ -58,8 +61,17 @@ final class DocumentClassifierService {
         }
         }
 
+        if ($contentPlain !== '') {
+            if (preg_match('/\b(lieferschein|lieferschein nr|delivery note)\b/u',$contentPlain)) {$type='delivery_note';$confidence=max($confidence,94);$reason='Dokumentinhalt als Lieferschein erkannt.';}
+            elseif (preg_match('/\b(gutschrift|credit note)\b/u',$contentPlain)) {$type='credit_note';$confidence=max($confidence,94);$reason='Dokumentinhalt als Gutschrift erkannt.';}
+            elseif (preg_match('/\b(kontoauszug|bank statement)\b/u',$contentPlain)) {$type='bank_statement';$confidence=max($confidence,94);$reason='Dokumentinhalt als Kontoauszug erkannt.';}
+            elseif (preg_match('/\b(angebot|offerte|quotation)\b/u',$contentPlain)) {$type='offer';$confidence=max($confidence,90);$reason='Dokumentinhalt als Angebot erkannt.';}
+            elseif (preg_match('/\b(auftragsbestaetigung|auftragsbestatigung|order confirmation)\b/u',$contentPlain)) {$type='order';$confidence=max($confidence,92);$reason='Dokumentinhalt als Auftragsbestätigung erkannt.';}
+            elseif (preg_match('/\b(rechnung|invoice|rechnungsnummer|rechnungs nr)\b/u',$contentPlain) && $type==='unassigned') {$type='incoming_invoice';$confidence=78;$reason='Dokumentinhalt als Rechnung erkannt; Richtung bitte prüfen.';}
+        }
+
         // Generic 'Rechnung' stays deliberately uncertain and must be reviewed.
-        if ($type === 'unassigned' && str_contains($plain, 'rechnung')) {
+        if ($type === 'unassigned' && str_contains($searchPlain, 'rechnung')) {
             $type = 'incoming_invoice';
             $confidence = 60;
             $reason = 'Nur das allgemeine Wort „Rechnung“ wurde erkannt; Richtung bitte prüfen.';
@@ -70,6 +82,10 @@ final class DocumentClassifierService {
             $documentNo = $match[1];
         } elseif (preg_match('/\b(20\d{6,})\b/u', $filename, $match)) {
             $documentNo = $match[1];
+        }
+
+        if ($documentNo === null && $content !== '') {
+            if (preg_match('/(?:rechnungs(?:nummer|nr\.?)|beleg(?:nummer|nr\.?)|lieferschein(?:nummer|nr\.?)|gutschrift(?:nummer|nr\.?)|angebots(?:nummer|nr\.?))\s*[:#]?\s*([A-Z0-9][A-Z0-9._\/-]{2,})/iu',$content,$match)) $documentNo=$match[1];
         }
 
         $documentDate = null;
@@ -85,9 +101,15 @@ final class DocumentClassifierService {
             }
         }
 
-        $customerId = $this->bestEntityMatch($plain, $customers, ['name', 'customer_no']);
-        $projectId = $this->bestEntityMatch($plain, $projects, ['title', 'project_no']);
-        $supplierId = $this->bestEntityMatch($plain, $suppliers, ['name', 'supplier_no']);
+        if ($documentDate === null && $content !== '') {
+            if (preg_match('/(?:rechnungsdatum|belegdatum|lieferscheindatum|datum)\s*:?\s*(\d{1,2})[.\/-](\d{1,2})[.\/-](20\d{2})/iu',$content,$match)) {
+                $documentDate=sprintf('%04d-%02d-%02d',(int)$match[3],(int)$match[2],(int)$match[1]);
+            }
+        }
+
+        $customerId = $this->bestEntityMatch($searchPlain, $customers, ['name', 'customer_no']);
+        $projectId = $this->bestEntityMatch($searchPlain, $projects, ['title', 'project_no']);
+        $supplierId = $this->bestEntityMatch($searchPlain, $suppliers, ['name', 'supplier_no']);
 
         if ($type === 'unassigned' && ($customerId || $projectId || $supplierId)) {
             $confidence = 35;

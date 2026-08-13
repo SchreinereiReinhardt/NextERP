@@ -42,6 +42,7 @@ $groups = [
         'items' => [
             ['Lagerbestand', 'reinhardterp.business.inventory', 'inventory', '/inventory'],
             ['Materialstamm', 'reinhardterp.module.materials', 'materials', '/materials'],
+            ['Lieferanten', 'reinhardterp.module.suppliers', 'materials', '/suppliers'],
         ],
     ],
     [
@@ -56,6 +57,18 @@ $groups = [
             ['Gutschriften', 'reinhardterp.document.index', 'documents', '/documents?type=credit_note'],
             ['Kontoauszüge', 'reinhardterp.document.index', 'documents', '/documents?type=bank_statement'],
             ['Dokumentenarchiv', 'reinhardterp.document.index', 'documents', '/documents?processing=assigned'],
+        ],
+    ],
+    [
+        'label' => 'Finanzen', 'icon' => 'statistics', 'key' => 'finance',
+        'items' => [
+            ['Übersicht', 'reinhardterp.document.finance', 'documents', '/finance'],
+            ['Eingangsrechnungen', 'reinhardterp.document.finance', 'documents', '/finance?type=incoming_invoice'],
+            ['Ausgangsrechnungen', 'reinhardterp.document.finance', 'documents', '/finance?type=outgoing_invoice'],
+            ['Kontoauszüge', 'reinhardterp.document.finance', 'documents', '/finance?type=bank_statement'],
+            ['Kasse', 'reinhardterp.document.finance', 'documents', '/finance?type=cash'],
+            ['Gutschriften', 'reinhardterp.document.finance', 'documents', '/finance?type=credit_note'],
+            ['Steuern', 'reinhardterp.document.finance', 'documents', '/finance?type=tax'],
         ],
     ],
     [
@@ -130,7 +143,7 @@ $quickCreate = [
                     ?>
                         <?php
                             $routeParams = [];
-                            if ($group['key'] === 'documents' && str_contains($match, '?')) {
+                            if (in_array($group['key'], ['documents','finance'], true) && str_contains($match, '?')) {
                                 [, $queryString] = explode('?', $match, 2);
                                 parse_str($queryString, $routeParams);
                             }

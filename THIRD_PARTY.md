@@ -12,3 +12,7 @@ NextERP is a Nextcloud app and uses Nextcloud public APIs. Nextcloud itself is n
 Mobile/PWA functions can use browser camera, file and Web APIs supplied by the user's platform. These are not bundled libraries.
 
 Before every public release, this inventory should be compared with the actual bundled source tree so newly added dependencies are not omitted.
+
+## PDF.js
+
+NextERP's project-file PDF preview uses Mozilla PDF.js 5.4.54 (Apache-2.0). The browser module and worker are loaded from cdnjs only on the project explorer page.

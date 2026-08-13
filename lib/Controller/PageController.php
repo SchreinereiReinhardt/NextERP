@@ -17,6 +17,7 @@ use OCP\IUserSession;
 use OCP\IUserManager;
 use OCP\Util;
 use OCP\AppFramework\Http\DataDownloadResponse;
+use OCP\AppFramework\Http\ContentSecurityPolicy;
 use OCP\AppFramework\Http\DataDisplayResponse;
 use OCA\ReinhardtERP\Service\PermissionService;
 use OCA\ReinhardtERP\Service\ActivityService;
@@ -88,7 +89,18 @@ final class PageController extends Controller {
   $this->config->setAppValue($this->appName,'setup_completed','1');
   return new RedirectResponse($this->url->linkToRoute('reinhardterp.page.index'));
  }
- #[NoAdminRequired,NoCSRFRequired] public function index():TemplateResponse{$this->permissions->assert('dashboard');return new TemplateResponse($this->appName,'dashboard',['displayName'=>$this->users->getUser()?->getDisplayName()??'Benutzer','customerCount'=>$this->count('re_erp_customers'),'projectCount'=>count($this->filterProjects($this->projects->findAllActive())),'reportCount'=>$this->count('re_erp_reports'),'openReportCount'=>$this->countWhere('re_erp_reports','locked',0),'todayHours'=>$this->todayHours(),'upcomingEvents'=>$this->upcomingEvents(),'activities'=>$this->activities->recent(12)]);}
+ #[NoAdminRequired,NoCSRFRequired] public function index():TemplateResponse{
+  $this->permissions->assert('dashboard');
+  $projects=$this->filterProjects($this->projects->findAllActive());
+  $can=['customers'=>$this->permissions->can('customers'),'projects'=>$this->permissions->can('projects'),'reports'=>$this->permissions->can('reports'),'time'=>$this->permissions->can('time'),'documents'=>$this->permissions->can('documents'),'invoices'=>$this->permissions->can('invoices'),'inventory'=>$this->permissions->can('inventory'),'calendar'=>$this->permissions->can('calendar'),'offers'=>$this->permissions->can('offers'),'orders'=>$this->permissions->can('orders')];
+  return new TemplateResponse($this->appName,'dashboard',[
+   'displayName'=>$this->users->getUser()?->getDisplayName()??'Benutzer','role'=>$this->permissions->role(),'can'=>$can,
+   'customerCount'=>$can['customers']?$this->count('re_erp_customers'):0,'projectCount'=>count($projects),
+   'openReportCount'=>$this->dashboardOpenReports($projects),'todayHours'=>$this->todayHours(),
+   'upcomingEvents'=>$can['calendar']?$this->upcomingEvents():[],'activities'=>$this->activities->recent(10),
+   'attention'=>$this->dashboardAttention($projects,$can),'recentProjects'=>$this->dashboardRecentProjects($projects),
+  ]);
+ }
  #[NoAdminRequired,NoCSRFRequired] public function customers():TemplateResponse{$this->permissions->assert('customers');return new TemplateResponse($this->appName,'customers',['customers'=>$this->customers->findAllActive(),'contactsEnabled'=>$this->integration->contactsEnabled(),'message'=>(string)$this->request->getParam('message','')]);}
  #[NoAdminRequired,NoCSRFRequired] public function customerForm(?int $id=null):TemplateResponse{$this->permissions->assert('customers');return new TemplateResponse($this->appName,'customer_form',['customer'=>$id?$this->customers->find($id):null,'contactsEnabled'=>$this->integration->contactsEnabled(),'addressBooks'=>$this->integration->writableAddressBooks()]);}
  #[NoAdminRequired,NoCSRFRequired] public function customerDetail(int $id):TemplateResponse{$this->permissions->assert('customers');$c=$this->customers->find($id);$projects=$this->queryProjects($id);$reports=$this->queryReportsByCustomer($id);$documents=$this->documents((string)($c->getFolderPath()??''),40,3);return new TemplateResponse($this->appName,'customer_detail',['customer'=>$c,'projects'=>$projects,'reports'=>$reports,'documents'=>$documents,'activities'=>$this->activities->forCustomer($id,60),'contacts'=>$this->customerContacts($id),'reminders'=>$this->customerReminders($id),'stats'=>$this->customerStats($id,$projects,$reports,$documents),'nextcloudContacts'=>$this->integration->contactsForSelection(),'contactsIntegrationEnabled'=>$this->integration->contactsEnabled(),'message'=>(string)$this->request->getParam('message','')]);}
@@ -178,8 +190,46 @@ final class PageController extends Controller {
   $this->activities->record('project',$id,'document_uploaded',$label.' hochgeladen',$name.' → '.$targetFolder,(int)$p['customer_id'],$id);
   return new RedirectResponse($this->url->linkToRoute('reinhardterp.page.projectDetail',['id'=>$id]).'#documents');
  }
+ #[NoAdminRequired,NoCSRFRequired] public function projectExplorer(int $id,string $path=''):TemplateResponse{
+  $this->permissions->assertProjectAccess($id);$project=$this->queryProject($id);$base=trim((string)($project['folder_path']??''),'/');
+  $owner=(string)($project['created_by']??'');if($owner==='')$owner=$this->users->getUser()?->getUID()??'';
+  $relative=trim($path,'/');$current=$relative===''?$base:$base.'/'.$relative;
+  if($base===''||!str_starts_with($current,$base))throw new \OCP\AppFramework\Http\ForbiddenException('Ungültiger Projektpfad.');
+  if($relative!==''){$top=explode('/',$relative,2)[0]??'';if(!$this->permissions->canAccessProjectFolder($id,$top))throw new \OCP\AppFramework\Http\ForbiddenException('Dieser Projektordner ist nicht freigegeben.');}
+  $items=$this->folders->listDirectoryForUser($owner,$current);
+  if(!$this->permissions->isProjectSupervisor()&&$relative===''){$allowed=$this->permissions->projectFolders($id);$items=array_values(array_filter($items,static fn(array $x):bool=>!$x['isFolder']||in_array($x['name'],$allowed,true)));}
+  $response=new TemplateResponse($this->appName,'project_explorer',['project'=>$project,'items'=>$items,'path'=>$relative,'currentPath'=>$current,'isProjectSupervisor'=>$this->permissions->isProjectSupervisor(),'urlGenerator'=>$this->url]);
+  $csp=new ContentSecurityPolicy();
+  $csp->addAllowedScriptDomain('https://cdnjs.cloudflare.com');
+  $response->setContentSecurityPolicy($csp);
+  return $response;
+ }
+ #[NoAdminRequired] public function createProjectFolder(int $id,string $path='',string $name=''):RedirectResponse{
+  $this->permissions->assertProjectAccess($id);$project=$this->queryProject($id);$base=trim((string)($project['folder_path']??''),'/');$relative=trim($path,'/');
+  if(trim($name)==='')throw new \InvalidArgumentException('Ordnername fehlt.');
+  if($relative===''){if(!$this->permissions->isProjectSupervisor())throw new \OCP\AppFramework\Http\ForbiddenException('Neue Hauptordner dürfen nur durch die Projektleitung angelegt werden.');}
+  else{$top=explode('/',$relative,2)[0]??'';if(!$this->permissions->canAccessProjectFolder($id,$top))throw new \OCP\AppFramework\Http\ForbiddenException('Dieser Projektordner ist nicht freigegeben.');}
+  $owner=(string)($project['created_by']??'');if($owner==='')$owner=$this->users->getUser()?->getUID()??'';$this->folders->createFolderForUser($owner,$relative===''?$base:$base.'/'.$relative,$name);
+  return new RedirectResponse($this->url->linkToRoute('reinhardterp.page.projectExplorer',['id'=>$id,'path'=>$relative]));
+ }
+ #[NoAdminRequired] public function uploadProjectExplorerFile(int $id,string $path=''):RedirectResponse{
+  $this->permissions->assertProjectAccess($id);$project=$this->queryProject($id);$base=trim((string)($project['folder_path']??''),'/');$relative=trim($path,'/');
+  if($relative==='')throw new \InvalidArgumentException('Bitte zuerst einen Projektordner öffnen.');
+  $top=explode('/',$relative,2)[0]??'';if(!$this->permissions->canAccessProjectFolder($id,$top))throw new \OCP\AppFramework\Http\ForbiddenException('Dieser Projektordner ist nicht freigegeben.');
+  $owner=(string)($project['created_by']??'');if($owner==='')$owner=$this->users->getUser()?->getUID()??'';$this->uploadToForUser($owner,$base,$relative);
+  return new RedirectResponse($this->url->linkToRoute('reinhardterp.page.projectExplorer',['id'=>$id,'path'=>$relative]));
+ }
  #[NoAdminRequired,NoCSRFRequired] public function projectFile(int $id,string $path):DataDownloadResponse{
-  $this->permissions->assertProjectAccess($id);$p=$this->queryProject($id);$base=trim((string)($p['folder_path']??''),'/');$clean=trim($path,'/');if($base===''||!str_starts_with($clean,$base.'/'))throw new \OCP\AppFramework\Http\ForbiddenException('Ungültiger Projektpfad.');$relative=substr($clean,strlen($base)+1);$folder=explode('/',$relative,2)[0]??'';if(!$this->permissions->canAccessProjectFolder($id,$folder))throw new \OCP\AppFramework\Http\ForbiddenException('Dieser Projektordner ist nicht freigegeben.');$owner=(string)($p['created_by']??'');if($owner==='')$owner=$this->users->getUser()?->getUID()??'';$file=$this->folders->readFileForUser($owner,$clean);return new DataDownloadResponse($file['content'],$file['name'],$file['mime']);
+  $this->permissions->assertProjectAccess($id);$p=$this->queryProject($id);$base=trim((string)($p['folder_path']??''),'/');$clean=trim($path,'/');
+  if($base===''||!str_starts_with($clean,$base.'/'))throw new \OCP\AppFramework\Http\ForbiddenException('Ungültiger Projektpfad.');
+  $relative=substr($clean,strlen($base)+1);$folder=explode('/',$relative,2)[0]??'';
+  if(!$this->permissions->canAccessProjectFolder($id,$folder))throw new \OCP\AppFramework\Http\ForbiddenException('Dieser Projektordner ist nicht freigegeben.');
+  $owner=(string)($p['created_by']??'');if($owner==='')$owner=$this->users->getUser()?->getUID()??'';
+  $file=$this->folders->readFileForUser($owner,$clean);
+  $response=new DataDownloadResponse((string)$file['content'],(string)$file['name'],(string)($file['mime']??'application/octet-stream'),200);
+  $response->addHeader('Content-Disposition','inline; filename="'.str_replace(['"',"\r","\n"],'',(string)$file['name']).'"');
+  $response->addHeader('X-Content-Type-Options','nosniff');
+  return $response;
  }
  private function uploadToForUser(string $uid,string $basePath,string $targetFolder):string{if(trim($basePath,'/')==='')throw new \InvalidArgumentException('Ordnerpfad fehlt.');$file=$this->request->getUploadedFile('document');if(!is_array($file)||($file['error']??UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_OK)throw new \InvalidArgumentException('Bitte eine Datei auswählen.');if((int)($file['size']??0)>100*1024*1024)throw new \InvalidArgumentException('Die Datei darf maximal 100 MB groß sein.');$folder=$this->folders->ensureFolderPathForUser($uid,$basePath,$targetFolder);$name=(string)($file['name']??'Datei');$this->folders->writeFromLocalFileForUser($uid,$folder,$name,(string)$file['tmp_name']);return $name;}
  private function uploadTo(string $basePath,string $targetFolder):string{if(trim($basePath,'/')==='')throw new \InvalidArgumentException('Ordnerpfad fehlt.');$file=$this->request->getUploadedFile('document');if(!is_array($file)||($file['error']??UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_OK)throw new \InvalidArgumentException('Bitte eine Datei auswählen.');if((int)($file['size']??0)>100*1024*1024)throw new \InvalidArgumentException('Die Datei darf maximal 100 MB groß sein.');$folder=$this->folders->ensureFolderPath($basePath,$targetFolder);$name=(string)($file['name']??'Datei');$this->folders->writeFromLocalFile($folder,$name,(string)$file['tmp_name']);return $name;}
@@ -271,6 +321,18 @@ final class PageController extends Controller {
  private function customerReminders(int $customerId):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_customer_reminders')->where($qb->expr()->eq('customer_id',$qb->createNamedParameter($customerId)))->orderBy('is_done','ASC')->addOrderBy('due_date','ASC');return $qb->executeQuery()->fetchAllAssociative();}
  private function customerStats(int $customerId,array $projects,array $reports,array $documents):array{$qb=$this->db->getQueryBuilder();$qb->select($qb->func()->sum('e.hours','s'))->from('re_erp_workday_entries','e')->innerJoin('e','re_erp_workdays','w',$qb->expr()->eq('w.id','e.workday_id'))->innerJoin('e','re_erp_projects','p',$qb->expr()->eq('p.id','e.project_id'))->where($qb->expr()->eq('p.customer_id',$qb->createNamedParameter($customerId)));$hours=(float)($qb->executeQuery()->fetchOne()?:0);$openReports=0;foreach($reports as $report){if(empty($report['locked']))$openReports++;}return ['projects'=>count($projects),'reports'=>count($reports),'openReports'=>$openReports,'documents'=>count($documents),'hours'=>$hours];}
  private function countWhere(string $table,string $column,int $value):int{$qb=$this->db->getQueryBuilder();$qb->select($qb->func()->count('*','c'))->from($table)->where($qb->expr()->eq($column,$qb->createNamedParameter($value)));return (int)$qb->executeQuery()->fetchOne();}
- private function todayHours():float{$qb=$this->db->getQueryBuilder();$qb->select($qb->func()->sum('e.hours','s'))->from('re_erp_workday_entries','e')->innerJoin('e','re_erp_workdays','w',$qb->expr()->eq('w.id','e.workday_id'))->where($qb->expr()->eq('w.work_date',$qb->createNamedParameter(date('Y-m-d'))));return (float)($qb->executeQuery()->fetchOne()?:0);}
+ private function todayHours():float{$qb=$this->db->getQueryBuilder();$qb->select($qb->func()->sum('e.hours','s'))->from('re_erp_workday_entries','e')->innerJoin('e','re_erp_workdays','w',$qb->expr()->eq('w.id','e.workday_id'))->where($qb->expr()->eq('w.work_date',$qb->createNamedParameter(date('Y-m-d'))));if(!$this->permissions->isProjectSupervisor())$qb->andWhere($qb->expr()->eq('w.user_id',$qb->createNamedParameter($this->permissions->uid())));return (float)($qb->executeQuery()->fetchOne()?:0);}
+ private function dashboardOpenReports(array $projects):int{if(!$this->permissions->can('reports'))return 0;$ids=array_map(static fn($p):int=>(int)$p->getId(),$projects);if(!$ids)return 0;$qb=$this->db->getQueryBuilder();$qb->select($qb->func()->count('*','c'))->from('re_erp_reports')->where($qb->expr()->in('project_id',array_map(fn(int $id)=>$qb->createNamedParameter($id),$ids)))->andWhere($qb->expr()->eq('locked',$qb->createNamedParameter(0)))->andWhere($qb->expr()->eq('archived',$qb->createNamedParameter(0)));return (int)$qb->executeQuery()->fetchOne();}
+ private function dashboardRecentProjects(array $projects,int $limit=5):array{$rows=[];foreach(array_slice($projects,0,$limit) as $p){$rows[]=['id'=>(int)$p->getId(),'project_no'=>(string)$p->getProjectNo(),'title'=>(string)$p->getTitle(),'status'=>(string)$p->getStatus(),'due_date'=>$p->getDueDate()?->format('Y-m-d')??''];}return $rows;}
+ private function dashboardAttention(array $projects,array $can):array{
+  $items=[];$today=date('Y-m-d');
+  $overdue=0;foreach($projects as $p){$due=$p->getDueDate()?->format('Y-m-d')??'';if($due!==''&&$due<$today)$overdue++;}
+  if($overdue>0)$items[]=['kind'=>'warning','count'=>$overdue,'title'=>'Projekte über Termin','text'=>'Aktive Projekte mit überschrittenem Fälligkeitsdatum','route'=>'reinhardterp.page.projects'];
+  $open=$this->dashboardOpenReports($projects);if($can['reports']&&$open>0)$items[]=['kind'=>'info','count'=>$open,'title'=>'Offene Rapporte','text'=>'Rapporte warten noch auf Abschluss oder Unterschrift','route'=>'reinhardterp.module.reports'];
+  if($can['documents']){try{$qb=$this->db->getQueryBuilder();$qb->select($qb->func()->count('*','c'))->from('re_erp_documents')->where($qb->expr()->neq('processing_status',$qb->createNamedParameter('assigned')));$n=(int)$qb->executeQuery()->fetchOne();if($n>0)$items[]=['kind'=>'warning','count'=>$n,'title'=>'Dokumente bearbeiten','text'=>'Neue oder noch nicht vollständig zugeordnete Dokumente','route'=>'reinhardterp.document.index'];}catch(\Throwable){}}
+  if($can['inventory']){try{$qb=$this->db->getQueryBuilder();$qb->select($qb->func()->count('*','c'))->from('re_erp_materials')->where($qb->expr()->gt('min_stock',$qb->createNamedParameter(0)))->andWhere($qb->expr()->lte('stock_quantity','min_stock'));$n=(int)$qb->executeQuery()->fetchOne();if($n>0)$items[]=['kind'=>'danger','count'=>$n,'title'=>'Mindestbestand erreicht','text'=>'Materialpositionen müssen geprüft oder nachbestellt werden','route'=>'reinhardterp.business.inventory'];}catch(\Throwable){}}
+  if(!$items)$items[]=['kind'=>'ok','count'=>0,'title'=>'Alles im Blick','text'=>'Aktuell gibt es keine dringenden Hinweise.','route'=>''];
+  return $items;
+ }
 
 }

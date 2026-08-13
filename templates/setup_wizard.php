@@ -7,7 +7,7 @@ $company=$_['company']??[];
 <div id="erp-app" class="erp-shell">
 <main class="erp-main erp-setup-wizard">
 <section class="erp-card erp-wide">
-<div class="erp-wizard-head"><div><span class="erp-kicker">ERSTEINRICHTUNG</span><h1>Willkommen bei NextERP</h1><p>Dieser Assistent führt durch die wichtigsten Schritte für einen neuen Betrieb. Die Einstellungen können später jederzeit in der Verwaltung geändert werden.</p></div><div class="erp-wizard-badge">1.5.0</div></div>
+<div class="erp-wizard-head"><div><span class="erp-kicker">ERSTEINRICHTUNG</span><h1>Willkommen bei NextERP</h1><p>Dieser Assistent führt durch die wichtigsten Schritte für einen neuen Betrieb. Die Einstellungen können später jederzeit in der Verwaltung geändert werden.</p></div><div class="erp-wizard-badge">1.5.1</div></div>
 <div class="erp-wizard-steps"><span class="active">1 Firma</span><span>2 Benutzer</span><span>3 Grundeinstellungen</span><span>4 Kalender</span><span>5 Mobile</span><span>6 Systemprüfung</span><span>✓ Bereit</span></div>
 </section>
 

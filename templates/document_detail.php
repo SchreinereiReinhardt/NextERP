@@ -11,6 +11,7 @@ $types = [
     'bank_statement' => 'Kontoauszug',
     'cash' => 'Kassenbeleg',
     'tax' => 'Steuerunterlage',
+    'accounting_other' => 'Sonstiger Buchhaltungsbeleg',
     'offer' => 'Angebot',
     'order' => 'Auftragsbestätigung',
     'report' => 'Rapport',

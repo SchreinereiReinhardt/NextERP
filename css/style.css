@@ -697,3 +697,69 @@
 
 /* NextERP 1.4.12 – Ersteinrichtungsassistent */
 .erp-setup-wizard{max-width:1120px;margin:0 auto;padding-bottom:40px}.erp-wizard-head{display:flex;justify-content:space-between;gap:24px;align-items:flex-start}.erp-kicker{font-size:11px;font-weight:800;letter-spacing:1.4px;color:var(--color-primary-element)}.erp-wizard-badge{padding:7px 11px;border-radius:999px;background:var(--color-background-dark);font-weight:700}.erp-wizard-steps{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.erp-wizard-steps span{padding:7px 11px;border-radius:999px;background:var(--color-background-dark);font-size:12px;font-weight:700}.erp-wizard-steps span.active{background:var(--color-primary-element);color:var(--color-primary-element-text)}.erp-codebox{padding:12px 14px;border-radius:8px;background:var(--color-background-dark);font-family:monospace;overflow-wrap:anywhere}.erp-wizard-finish{text-align:center;padding:28px}
+
+/* NextERP 1.5.1 – Finanzen & Beleg-Dropzone */
+.erp-finance-page{max-width:1400px}
+.erp-finance-dropzone{position:relative;display:flex;align-items:center;justify-content:center;min-height:180px;border:2px dashed var(--color-border-maxcontrast);border-radius:14px;background:var(--color-background-hover);cursor:pointer;transition:.15s ease}
+.erp-finance-dropzone:hover,.erp-finance-dropzone.is-dragging{border-color:var(--color-primary-element);background:var(--color-primary-element-light)}
+.erp-finance-dropzone input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.erp-finance-drop-content{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;pointer-events:none}
+.erp-finance-drop-content .erp-ui-icon{width:34px;height:34px;color:var(--color-primary-element)}
+.erp-finance-drop-content strong{font-size:18px}
+.erp-finance-drop-content span:last-child{color:var(--color-text-maxcontrast)}
+.erp-finance-folder-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-bottom:18px}
+.erp-finance-folder-card{display:grid;grid-template-columns:1fr auto;gap:8px 14px;text-decoration:none!important;align-items:center}
+.erp-finance-folder-card>span{font-weight:700}.erp-finance-folder-card>strong{font-size:24px}.erp-finance-folder-card>small{grid-column:1/-1;color:var(--color-text-maxcontrast);overflow-wrap:anywhere}
+.erp-finance-folder-card.is-active{outline:2px solid var(--color-primary-element)}
+
+.erp-finance-filter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;align-items:end}.erp-finance-filter-grid label{display:flex;flex-direction:column;gap:6px;font-weight:600}.erp-finance-filter-grid .erp-finance-search{grid-column:span 2}.erp-finance-filter-grid .erp-actions{grid-column:1/-1}
+
+/* NextERP 1.5.4 – vereinfachter Belegimport */
+.erp-document-drop-card{padding-bottom:12px}
+.erp-scanner-target{margin-top:10px;padding:9px 12px;border-radius:8px;background:var(--color-background-hover);font-size:13px;color:var(--color-text-maxcontrast)}
+.erp-scanner-target strong{color:var(--color-main-text)}
+.erp-scanner-target code{font-weight:600;color:var(--color-main-text);user-select:all}
+
+/* NextERP 1.5.5 – Rapportübersicht */
+.erp-report-project a{display:inline-block;text-decoration:none}.erp-report-project a:hover strong{text-decoration:underline}.erp-report-project span{font-weight:600}.erp-report-project small{color:var(--color-text-maxcontrast)}
+
+/* NextERP 1.5.6 – Projektakten Explorer */
+.erp-explorer-page{max-width:1500px}.erp-explorer-breadcrumb{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 14px;padding:10px 14px;background:var(--color-background-hover);border-radius:10px}.erp-explorer-breadcrumb a{text-decoration:none;font-weight:600}.erp-explorer-toolbar{display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px}.erp-explorer-toolbar form{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.erp-explorer-list{border:1px solid var(--color-border);border-radius:10px;overflow:hidden}.erp-explorer-row{display:grid;grid-template-columns:minmax(300px,2fr) minmax(150px,1fr) 100px 150px auto;gap:12px;align-items:center;padding:11px 14px;border-bottom:1px solid var(--color-border)}.erp-explorer-row:last-child{border-bottom:0}.erp-explorer-head{font-size:12px;font-weight:700;background:var(--color-background-hover);color:var(--color-text-maxcontrast)}.erp-explorer-name{display:flex;align-items:center;gap:9px;min-width:0}.erp-explorer-name a{overflow:hidden;text-overflow:ellipsis;text-decoration:none}.erp-explorer-actions{justify-self:end}.erp-file-preview{width:min(1200px,94vw);height:min(850px,92vh);padding:0;border:0;border-radius:14px;overflow:hidden}.erp-file-preview::backdrop{background:rgba(0,0,0,.55)}.erp-preview-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--color-border);background:var(--color-main-background)}#erp-preview-body{height:calc(100% - 58px);background:#555;display:flex;align-items:center;justify-content:center}#erp-preview-body iframe{width:100%;height:100%;border:0;background:white}#erp-preview-body img{max-width:100%;max-height:100%;object-fit:contain}@media(max-width:900px){.erp-explorer-row{grid-template-columns:1fr auto}.erp-explorer-row>span:nth-child(2),.erp-explorer-row>span:nth-child(3),.erp-explorer-row>span:nth-child(4),.erp-explorer-head{display:none}}
+
+/* NextERP 1.5.7 – Explorer Bedienung */
+.erp-explorer-item-title{font-size:15px;font-weight:600;line-height:1.35;overflow-wrap:anywhere}.erp-explorer-name>a{min-width:0}.erp-explorer-drop{margin-bottom:14px;min-height:145px}.erp-explorer-drop.is-uploading{opacity:.65;pointer-events:none}.erp-explorer-drop.is-uploading .erp-finance-drop-content strong::after{content:" – Upload läuft …"}.erp-explorer-toolbar{margin-top:12px}
+
+/* NextERP 1.5.8 */
+.erp-preview-fallback{min-width:34px;padding-left:9px;padding-right:9px}.erp-explorer-row>span:nth-child(3):empty{min-height:1px}
+
+/* NextERP 1.5.12 – Dateivorschau direkt in der Projektakte */
+.erp-inline-preview{margin-top:16px;scroll-margin-top:70px}
+.erp-inline-preview[hidden]{display:none!important}
+.erp-inline-preview .erp-preview-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 0 12px;border-bottom:1px solid var(--color-border);background:transparent}
+.erp-inline-preview .erp-preview-head>div{display:flex;flex-direction:column;gap:4px}
+.erp-inline-preview #erp-preview-title{font-size:18px}
+.erp-inline-preview #erp-preview-status{padding:18px 4px}
+.erp-inline-preview #erp-preview-body{height:min(72vh,900px);min-height:560px;background:var(--color-background-dark);border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.erp-inline-preview #erp-preview-body iframe{width:100%;height:100%;border:0;background:white}
+.erp-inline-preview #erp-preview-body img{max-width:100%;max-height:100%;object-fit:contain}
+@media(max-width:900px){.erp-inline-preview #erp-preview-body{height:65vh;min-height:420px}}
+
+/* NextERP 1.5.13 – PDF.js Canvas Viewer */
+.erp-inline-preview #erp-preview-body{height:auto;min-height:260px;max-height:76vh;overflow:auto;display:block;padding:16px;background:var(--color-background-dark)}
+.erp-pdf-page{max-width:1180px;margin:0 auto 18px;background:#fff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.12);overflow:hidden}
+.erp-pdf-page:last-child{margin-bottom:0}
+.erp-pdf-page-label{padding:7px 10px;font-size:12px;color:#555;background:#f3f3f3;border-bottom:1px solid #ddd}
+.erp-pdf-page canvas{display:block;max-width:100%;margin:0 auto;background:#fff}
+
+/* NextERP 1.6.0 – Dashboard 2.0 */
+.erp-dashboard-v2 .erp-attention-card{margin:0 0 18px;padding:20px}
+.erp-attention-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.erp-attention-item{display:flex;align-items:center;gap:13px;padding:14px 16px;border:1px solid var(--color-border,#d8d8d8);border-radius:12px;text-decoration:none;color:var(--color-main-text);background:var(--color-main-background)}
+.erp-attention-item:hover{text-decoration:none;background:var(--color-background-hover,#f5f5f5)}
+.erp-attention-count{display:grid;place-items:center;min-width:42px;height:42px;border-radius:11px;background:var(--color-background-dark,#eee);font-size:19px;font-weight:700}
+.erp-attention-item span:last-child{min-width:0}.erp-attention-item strong,.erp-attention-item small{display:block}.erp-attention-item small{margin-top:3px;color:var(--color-text-maxcontrast);line-height:1.35}
+.erp-attention-warning .erp-attention-count{background:#fff1c2;color:#7a5400}.erp-attention-danger .erp-attention-count{background:#ffe0df;color:#9b1c1c}.erp-attention-info .erp-attention-count{background:#e1efff;color:#1559a6}.erp-attention-ok .erp-attention-count{background:#e1f5e6;color:#216b35}
+.erp-dashboard-v2-layout{grid-template-columns:minmax(480px,1.15fr) minmax(360px,.85fr)}
+.erp-dashboard-projects{display:flex;flex-direction:column;gap:8px}.erp-dashboard-projects>a{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--color-border,#ddd);border-radius:10px;text-decoration:none;color:var(--color-main-text)}.erp-dashboard-projects>a:hover{background:var(--color-background-hover,#f5f5f5);text-decoration:none}.erp-dashboard-projects strong,.erp-dashboard-projects small{display:block}.erp-dashboard-projects small{margin-top:3px;color:var(--color-text-maxcontrast)}.erp-dashboard-projects b{font-size:24px;font-weight:400}
+.erp-dashboard-activity{margin-top:18px;padding:20px}
+@media(max-width:1000px){.erp-dashboard-v2-layout{grid-template-columns:1fr}}@media(max-width:700px){.erp-attention-grid{grid-template-columns:1fr}.erp-dashboard-head .erp-actions{width:100%;display:grid;grid-template-columns:1fr}.erp-dashboard-head .erp-actions .button{width:100%}}

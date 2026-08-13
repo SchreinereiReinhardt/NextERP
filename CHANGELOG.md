@@ -1,4 +1,170 @@
+# NextERP 1.6.2 – Dashboard 2.0 / Nextcloud-34-CSP-Fix
+
+- Nextcloud-34.0.2-Kompatibilitätsfehler im Projektakten-Explorer behoben.
+- Nicht verfügbare CSP-Methode `ContentSecurityPolicy::addAllowedChildSrcDomain()` entfernt.
+- PDF.js bleibt per `script-src` für cdnjs freigegeben; der iframe-freie Canvas-Viewer benötigt keine `child-src`-Freigabe.
+- Bestehender Nextcloud-34-IURLGenerator-Fix aus 1.6.1 bleibt erhalten.
+- Keine Datenbankmigration.
+
+# NextERP 1.6.1 – Dashboard 2.0 / Nextcloud-34-Projektakten-Fix
+
+- Projektakten-Explorer für Nextcloud 34 angepasst.
+- Direkter Zugriff des Templates auf den internen Nextcloud-Servicecontainer `\OC::$server` entfernt.
+- Der bereits injizierte öffentliche `OCP\IURLGenerator` wird nun vom Controller an das Template übergeben.
+- PDF.js, Drag & Drop, Dateivorschau und bestehende Dashboard-2.0-Funktionen bleiben unverändert.
+- Keine Datenbankmigration.
+
+# NextERP 1.6.0 – Dashboard 2.0
+
+- Dashboard als zentrale Arbeitsübersicht neu aufgebaut.
+- Rollenabhängige Kennzahlen und Schnellaktionen für Administration, Büro, Projektleitung und Monteure.
+- Neuer Bereich „Jetzt wichtig“ für überfällige Projekte, offene Rapporte, unbearbeitete Dokumente und kritische Lagerbestände.
+- Aktuelle Projekte direkt vom Dashboard erreichbar.
+- Termine, Aktivitäten und Schnellzugriffe in eine klare Tagesansicht integriert.
+- Stundenanzeige für Monteure auf die eigenen heutigen Zeiten begrenzt.
+- Rapport-Kennzahl berücksichtigt nur Projekte, auf die der angemeldete Benutzer Zugriff hat.
+- Bestehende Module, Projektakten und PDF.js-Viewer unverändert beibehalten.
+
 # Changelog
+
+## 1.5.14 – Vollprüfung und Berechtigungs-Fixes
+
+- Behebt einen Laufzeitfehler beim Anlegen von Dokumentenregeln durch den bislang nicht definierten Parameter `orderId`.
+- Rapporte können nur noch mit gültiger Projektberechtigung wieder geöffnet, archiviert, wiederhergestellt oder unterschrieben werden.
+- Archivierte Rapporte können nicht direkt wieder geöffnet oder unterschrieben werden.
+- Bereits abgeschlossene Rapporte können nicht erneut über den Signatur-Endpunkt abgeschlossen werden.
+- Beim Löschen von Rapportzeiten und Materialpositionen wird jetzt geprüft, dass der Datensatz tatsächlich zum angegebenen Rapport gehört.
+- PHP- und JavaScript-Syntax sowie Release-Struktur vollständig geprüft.
+- Keine Datenbankmigration.
+
+## 1.5.13 – PDF.js Projektakten-Viewer
+
+- PDFs werden nicht mehr über Browser-PDF-Viewer oder iframe dargestellt.
+- NextERP rendert PDF-Seiten mit Mozilla PDF.js direkt als Canvas in der Projektakte.
+- Mehrseitige PDFs werden untereinander dargestellt und können innerhalb der Vorschau gescrollt werden.
+- Bilder bleiben direkt in der Projektakte sichtbar.
+- Nextcloud Frame-Sicherheitsheader blockieren die PDF-Darstellung dadurch nicht mehr.
+- PDF.js ist auf Version 5.4.54 festgelegt; CSP-Freigabe gilt nur für cdnjs auf der Projekt-Explorer-Seite.
+- Drag & Drop bleibt unverändert.
+- Keine Datenbankmigration.
+
+## 1.5.12 – PDF-Vorschau direkt in der Projektakte
+
+- PDF- und Bildvorschau öffnet nicht mehr in einem Dialog oder neuen Fenster.
+- Vorschau erscheint direkt unter der Dateiliste innerhalb derselben Projektakte.
+- Dateien werden per Fetch geladen und als lokale Blob-URL dargestellt; damit greifen die Nextcloud Frame-Sicherheitsheader nicht gegen die Vorschau.
+- „Zurück zu Dateien“ blendet die Vorschau wieder aus.
+- Der direkte Neu-Tab-Fallback wurde entfernt.
+- Funktionierendes Drag & Drop bleibt unverändert.
+- Keine Datenbankmigration.
+
+## 1.5.11 – PDF-Vorschau Nextcloud-33-Fix
+
+- Korrigiert den Konstruktor von `DataDownloadResponse` für Nextcloud 33.
+- HTTP-Status wird korrekt als `200` übergeben statt als boolescher Wert.
+- Inline-Ausgabe für PDF/Bilder bleibt erhalten.
+- Funktionierendes Projektakten-Drag-&-Drop bleibt unverändert.
+- Keine Datenbankmigration.
+
+## 1.5.10 – PDF-Vorschau Response-Fix
+
+- Behebt den HTTP-500 beim Öffnen von PDFs im Projektakten-Explorer.
+- Entfernt den ungültigen Aufruf `Response::setContent()`.
+- Binärdateien werden wieder über Nextcloud `DataDownloadResponse` ausgeliefert.
+- PDF/Bild-Ausgabe bleibt `inline`, damit die integrierte Vorschau funktioniert.
+- Das funktionierende Drag & Drop aus 1.5.9 bleibt unverändert.
+- Keine Datenbankmigration.
+
+## 1.5.9 – Projektakten Drag & Drop CSP-Fix
+
+- Explorer-JavaScript aus dem Template in eine eigene Nextcloud-JavaScript-Datei verschoben.
+- Dadurch funktionieren Drag & Drop und PDF-Vorschau auch mit der Nextcloud Content-Security-Policy.
+- Browser-Standardaktion für hineingezogene Dateien wird auf Dokument- und Fensterebene blockiert.
+- Mehrfachupload lädt Dateien nacheinander in den aktuell geöffneten Projektordner.
+- Keine Datenbankmigration.
+
+## 1.5.8 – Projektakten Explorer PDF & Drag-and-Drop Fix
+
+- PDF/Bilder ausdrücklich inline für die Vorschau.
+- Öffnen im neuen Tab als Browser-Fallback.
+- Datei-Drops werden browserweit abgefangen, damit PDFs beim Reinziehen nicht gleichzeitig geöffnet werden.
+- Ordnergröße bleibt leer.
+- Keine Datenbankmigration.
+
+# Changelog
+
+## 1.5.7 – Projektakten Explorer Fix
+
+- PDF- und Bilddateien werden für die integrierte Vorschau inline ausgeliefert statt als Download erzwungen.
+- Dateinamen und Ordnernamen im Explorer deutlich kompakter dargestellt.
+- Große Drag-&-Drop-Fläche wie bei Belegen direkt im geöffneten Projektordner.
+- Mehrere Dateien können per Drag & Drop oder Dateiauswahl nacheinander hochgeladen werden.
+- Upload erfolgt direkt in den aktuell geöffneten Projektordner.
+- Keine Datenbankmigration.
+
+## 1.5.6 – Projektakten Explorer
+
+- Projektordner lassen sich direkt innerhalb von NextERP wie in einem Dateiexplorer öffnen.
+- Ordnernavigation mit Breadcrumb-Pfad.
+- Ordner werden vor Dateien angezeigt.
+- PDF-Dateien öffnen direkt in einer integrierten Vorschau.
+- Bilder öffnen ebenfalls direkt in NextERP.
+- Dateien können im aktuell geöffneten Projektordner hochgeladen werden.
+- Unterordner können direkt im ERP angelegt werden.
+- Projektordner-Berechtigungen der Monteure werden auch im Explorer berücksichtigt.
+- Für Projektleitung bleibt zusätzlich „In Nextcloud öffnen“ verfügbar.
+- Keine Datenbankmigration.
+
+## 1.5.5 – Projekt in Rapportübersicht
+
+- Neue eigene Spalte „Projekt“ in der Übersicht aktiver und archivierter Rapporte.
+- Anzeige von Projektnummer und Projektname.
+- Kunde wird ergänzend unter dem Projekt angezeigt.
+- Projekt ist direkt anklickbar und öffnet die zugehörige Projektakte.
+- Keine Datenbankmigration.
+
+## 1.5.4 – Belegimport aufgeräumt
+
+- Redundanten Bereich „PDF-Beleg importieren“ aus der Belegübersicht entfernt.
+- Drag & Drop bleibt der zentrale manuelle Dokumentimport.
+- Scanner/WebDAV-Ziel bleibt dauerhaft sichtbar direkt unter der Drag-&-Drop-Fläche.
+- Scanner/WebDAV-Pfad ist gut lesbar und einfach markierbar.
+- Keine Datenbankmigration.
+
+## 1.5.3 – Lieferanten & intelligente Belegerkennung
+
+- Eigene Lieferantenverwaltung unter Lager mit Adresse, Ansprechpartner, Kontakt, Kundennummer, Zahlungsziel, IBAN/BIC, Website, Notizen und Aktivstatus.
+- Lieferantenübersicht zeigt verknüpfte Materialien und Belege.
+- Belegfilter direkt unter Belege: Art, Jahr, Monat, Lieferant, Kunde, Projekt, Status und Suche.
+- Digitale PDFs werden vollständig über alle Seiten ausgelesen.
+- Bei PDFs ohne brauchbare Textschicht wird – sofern pdftoppm und Tesseract installiert sind – OCR über alle PDF-Seiten versucht.
+- Bildbelege können per Tesseract erkannt werden.
+- Dokumenttyp, Belegnummer, Datum sowie Kunde/Projekt/Lieferant werden zusätzlich aus dem Dokumentinhalt vorgeschlagen.
+- Lieferantenerkennung nutzt bekannte Lieferanten aus dem Lieferantenstamm.
+- Datenbankmigration erweitert den bestehenden Lieferantenstamm; vorhandene Lieferanten bleiben erhalten.
+
+## 1.5.2 – Finanzfilter, Steuerbüro-Export & Dokumentablage
+
+- Buchhaltungsbelege werden unabhängig von Projekt-/Lieferantenzuordnung immer als ein Original unter ERP/30_Finanzen abgelegt.
+- Projekt, Kunde und Lieferant bleiben zusätzliche ERP-Verknüpfungen auf dasselbe Dokument.
+- Finanzfilter nach Belegart, Jahr, Monat, Lieferant, Kunde, Projekt und Suche.
+- ZIP-Gesamtexport für Steuerbüro mit Ordnern je Belegart und Beleguebersicht.csv.
+- Mehrfach-Drag-&-Drop im Finanzbereich und Dokumenteneingang.
+- PDF-Prüfung: digitale PDFs werden mit pdftotext vollständig ausgelesen; es besteht keine Beschränkung auf Seite 1.
+- Keine Datenbankmigration.
+
+## 1.5.1 – Finanzen & Belegmanagement
+
+- Neuer eigener Bereich „Finanzen“ in der NextERP-Navigation.
+- Drag-&-Drop-Zone für PDF- und Bildbelege.
+- Vorhandene Dokumentenerkennung wird beim Import weiterverwendet.
+- Finanzübersicht für Eingangs-/Ausgangsrechnungen, Kontoauszüge, Kasse, Gutschriften, Steuern und sonstige Buchhaltungsbelege.
+- Finanzordner in Nextcloud um Gutschriften und sonstige Buchhaltungsbelege ergänzt.
+- Ablage weiterhin automatisch nach Dokumentart, Jahr und Monat.
+- Neuer Dokumenttyp „Sonstiger Buchhaltungsbeleg“.
+- Direkte Links zu den Finanzordnern in Nextcloud.
+- Dokumentation ergänzt.
+- Keine Datenbankmigration.
 
 ## 1.5.0 – Final
 

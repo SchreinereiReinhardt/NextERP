@@ -26,6 +26,17 @@ final class FolderService {
  }
  public function writeFromLocalFile(string $folderPath,string $name,string $tmpPath):string{$content=file_get_contents($tmpPath);if($content===false)throw new \RuntimeException('Datei konnte nicht gelesen werden.');return $this->write($folderPath,$name,$content);}
  public function writeFromLocalFileForUser(string $uid,string $folderPath,string $name,string $tmpPath):string{$content=file_get_contents($tmpPath);if($content===false)throw new \RuntimeException('Datei konnte nicht gelesen werden.');$folder=$this->folderByPathForUser($uid,$folderPath);$safe=$this->safeFile($name);try{$node=$folder->get($safe);if($node instanceof File)$node->putContent($content);else throw new \RuntimeException('Dateiname ist bereits ein Ordner.');}catch(\OCP\Files\NotFoundException){$folder->newFile($safe,$content);}return trim($folderPath,'/').'/'.$safe;}
+ public function listDirectoryForUser(string $uid,string $folderPath):array{
+  $folder=$this->folderByPathForUser($uid,$folderPath);$rows=[];
+  foreach($folder->getDirectoryListing() as $node){
+   $rows[]=['id'=>$node->getId(),'name'=>$node->getName(),'path'=>trim($folderPath,'/').'/'.$node->getName(),'mime'=>$node->getMimeType(),'size'=>$node instanceof File?$node->getSize():0,'mtime'=>$node->getMTime(),'isFolder'=>$node instanceof Folder];
+  }
+  usort($rows,static function(array $a,array $b):int{if($a['isFolder']!==$b['isFolder'])return $a['isFolder']?-1:1;return strnatcasecmp($a['name'],$b['name']);});
+  return $rows;
+ }
+ public function createFolderForUser(string $uid,string $parentPath,string $name):string{
+  $parent=$this->folderByPathForUser($uid,$parentPath);$safe=$this->safe($name);$this->folder($parent,$safe);return trim($parentPath,'/').'/'.$safe;
+ }
  public function ensureFolderPathForUser(string $uid,string $basePath,string $relative=''):string{$path=trim($basePath,'/');$node=$this->folderByPathForUser($uid,$path);foreach(explode('/',trim($relative,'/')) as $part){if($part!==''){$part=$this->safe($part);$node=$this->folder($node,$part);$path.='/'.$part;}}return $path;}
  public function readFileForUser(string $uid,string $path):array{$node=$this->rootFolder->getUserFolder($uid)->get(trim($path,'/'));if(!$node instanceof File)throw new \RuntimeException('Datei nicht gefunden.');return ['content'=>$node->getContent(),'mime'=>$node->getMimeType(),'name'=>$node->getName(),'size'=>$node->getSize(),'id'=>$node->getId()];}
  public function exists(string $path):bool{try{$this->userRoot()->get(trim($path,'/'));return true;}catch(\Throwable){return false;}}
