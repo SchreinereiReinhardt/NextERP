@@ -118,7 +118,7 @@ final class BusinessController extends Controller {
   return $this->go('reinhardterp.business.mobileReport',['id'=>$id]);
  }
  private function addPwaHeaders():void{
-  $manifest=$this->url->linkToRoute('reinhardterp.page.pwaManifest').'?v=127-force';
+  $manifest=$this->url->linkToRoute('reinhardterp.page.pwaManifest').'?v=180-pwa';
   $icon=$this->url->linkToRoute('reinhardterp.page.pwaIcon',['size'=>'192']);
   Util::addHeader('link',['rel'=>'manifest','href'=>$manifest]);
   Util::addHeader('meta',['name'=>'theme-color','content'=>'#1265d8']);

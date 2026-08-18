@@ -6,3 +6,4 @@
 <?php if(!$_['reports']):?><div class="erp-rcard">Für dieses Projekt sind keine offenen Rapporte vorhanden.</div><?php endif;?>
 <?php foreach($_['reports'] as $r):?><a class="erp-rcard" href="<?php p($url->linkToRoute('reinhardterp.business.mobileReport',['id'=>(int)$r['id']])); ?>"><small><?php p($r['report_no']??'RAPPORT');?></small><b><?php p($r['title']??'Rapport');?></b><div class="erp-rmeta"><?php p($r['report_date']??'');?></div><span class="erp-rstatus"><?php p($r['status']??'Entwurf');?></span></a><?php endforeach;?>
 </main></div>
+<?php $mobileActive='projects'; $mobileProjectId=(int)($p['id']??0); require __DIR__.'/_mobile_nav.php'; ?>

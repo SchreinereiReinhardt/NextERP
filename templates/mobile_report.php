@@ -21,3 +21,4 @@ c.addEventListener('pointerdown',start);c.addEventListener('pointermove',move);w
 document.getElementById('clearSign').onclick=()=>{ctx.clearRect(0,0,c.width,c.height);dirty=false;hidden.value=''};
 form.addEventListener('submit',e=>{if(!dirty){e.preventDefault();alert('Bitte zuerst unterschreiben.');return}hidden.value=c.toDataURL('image/png')});
 })();</script><?php endif;?>
+<?php $mobileActive='projects'; $mobileProjectId=(int)($p['id']??0); require __DIR__.'/_mobile_nav.php'; ?>

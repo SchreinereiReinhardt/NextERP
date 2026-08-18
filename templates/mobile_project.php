@@ -5,6 +5,7 @@
 <div id="app-content"><main class="erp-mob2">
 <header class="erp-mob2-head"><a class="erp-mob2-back" href="<?php p($url->linkToRoute('reinhardterp.business.mobile')); ?>">‹</a><div><h1>Projekt</h1><p>Mobile Projektakte</p></div></header>
 <section class="erp-mob2-card"><span class="erp-mob2-projectno"><?php p($p['project_no']??'Projekt'); ?></span><h2><?php p($p['title']??''); ?></h2><div class="erp-mob2-muted"><?php p($c['name']??''); ?><?php if(!empty($p['status'])){p(' · '.$p['status']);} ?></div></section>
+<div class="erp-project-quickbar"><a href="<?php p($url->linkToRoute('reinhardterp.business.mobileTime',['projectId'=>(int)$p['id']])); ?>">Zeit</a><a href="<?php p($url->linkToRoute('reinhardterp.page.mobileProjectPhotos',['id'=>(int)$p['id']])); ?>">Foto</a><a href="<?php p($url->linkToRoute('reinhardterp.business.mobileReports',['projectId'=>(int)$p['id']])); ?>">Rapport</a></div>
 <div class="erp-mob2-grid">
 <a class="erp-mob2-action primary" href="<?php p($url->linkToRoute('reinhardterp.business.mobileTime',['projectId'=>(int)$p['id']])); ?>"><b>Zeit erfassen</b><small>Direkt auf dieses Projekt</small></a>
 <a class="erp-mob2-action" href="<?php p($url->linkToRoute('reinhardterp.business.mobileReports',['projectId'=>(int)$p['id']])); ?>"><b>Rapporte</b><small>Öffnen & unterschreiben</small></a>
@@ -36,3 +37,4 @@ $notes=trim((string)($c['notes']??''));
 </section><?php endif;?>
 <section class="erp-mob2-card"><a href="<?php p($url->linkToRoute('reinhardterp.page.projectDetail',['id'=>(int)$p['id']])); ?>" style="color:#1265d8;font-weight:800">Vollständige Projektinformationen öffnen →</a></section>
 </main></div>
+<?php $mobileActive='projects'; $mobileProjectId=(int)$p['id']; require __DIR__.'/_mobile_nav.php'; ?>

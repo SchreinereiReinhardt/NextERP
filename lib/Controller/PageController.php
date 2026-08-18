@@ -8,6 +8,7 @@ use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\RedirectResponse;
+use OCP\AppFramework\Http\JSONResponse;
 use OCP\IURLGenerator;
 use OCP\IConfig;
 use OCA\ReinhardtERP\Service\FolderService;
@@ -25,8 +26,9 @@ use OCA\ReinhardtERP\Service\NextcloudIntegrationService;
 final class PageController extends Controller {
  public function __construct(string $appName,IRequest $request,private CustomerMapper $customers,private ProjectMapper $projects,private IUserSession $users,private IDBConnection $db,private PermissionService $permissions,private FolderService $folders,private IURLGenerator $url,private ActivityService $activities,private NextcloudIntegrationService $integration,private IUserManager $userManager,private IConfig $config){parent::__construct($appName,$request);}
  #[NoAdminRequired,NoCSRFRequired] public function pwaManifest():DataDisplayResponse{
-  $start=$this->url->linkToRoute('reinhardterp.business.mobile').'?pwa=1&v=127-force';
-  $scope=preg_replace('~/mobile$~','/',$start);
+  $start=$this->url->linkToRoute('reinhardterp.business.mobile').'?pwa=1&v=192-pwa';
+  $scopeBase=$this->url->linkToRoute('reinhardterp.business.mobile');
+  $scope=preg_replace('~/mobile$~','/',$scopeBase);
   $data=[
    'id'=>$this->url->linkToRoute('reinhardterp.business.mobile'),
    'name'=>'NextERP',
@@ -51,13 +53,12 @@ final class PageController extends Controller {
   );
  }
  #[NoAdminRequired,NoCSRFRequired] public function pwaServiceWorker():DataDisplayResponse{
-  $offline=$this->url->linkToRoute('reinhardterp.business.mobile');
-  $js="const CACHE='nexterp-mobile-v128';const OFFLINE=".json_encode($offline).";"
-    ."self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.add(OFFLINE)).catch(()=>{}))});"
-    ."self.addEventListener('activate',e=>e.waitUntil(Promise.all([caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('nexterp-')&&k!==CACHE).map(k=>caches.delete(k)))),self.clients.claim()])));"
-    ."self.addEventListener('fetch',e=>{const r=e.request;if(r.method!=='GET')return;const u=new URL(r.url);if(u.origin!==self.location.origin)return;"
-    ."if(r.mode==='navigate'){e.respondWith(fetch(r).then(x=>{if(x.ok&&u.pathname.includes('/apps/reinhardterp/mobile')){const c=x.clone();caches.open(CACHE).then(k=>k.put(r,c)).catch(()=>{})}return x}).catch(()=>caches.match(r).then(x=>x||caches.match(OFFLINE))));return;}"
-    ."if(u.pathname.includes('/apps/reinhardterp/')||u.pathname.includes('/apps/theming/')||u.pathname.includes('/core/')){e.respondWith(caches.match(r).then(c=>c||fetch(r).then(x=>{if(x.ok){const y=x.clone();caches.open(CACHE).then(k=>k.put(r,y)).catch(()=>{})}return x})));}});";
+  // Keep the service worker deliberately conservative: it enables installation,
+  // but does not intercept navigation. This prevents stale/broken cached mobile
+  // pages from blocking NextERP after an update on Android/iOS.
+  $js="const CACHE='nexterp-mobile-v193';"
+    ."self.addEventListener('install',e=>{self.skipWaiting();});"
+    ."self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('nexterp-')).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});";
   return new DataDisplayResponse($js,200,['Content-Type'=>'application/javascript; charset=utf-8','Cache-Control'=>'no-store, no-cache, must-revalidate, max-age=0','Service-Worker-Allowed'=>'/']);
  }
  #[NoAdminRequired,NoCSRFRequired] public function pwaIcon(string $size):DataDisplayResponse{
@@ -146,7 +147,7 @@ final class PageController extends Controller {
 
 
  private function addMobilePwaHeaders():void{
-  $manifest=$this->url->linkToRoute('reinhardterp.page.pwaManifest').'?v=127-force';
+  $manifest=$this->url->linkToRoute('reinhardterp.page.pwaManifest').'?v=190-camera';
   $icon=$this->url->linkToRoute('reinhardterp.page.pwaIcon',['size'=>'192']);
   Util::addHeader('link',['rel'=>'manifest','href'=>$manifest]);
   Util::addHeader('meta',['name'=>'theme-color','content'=>'#1265d8']);
@@ -158,24 +159,31 @@ final class PageController extends Controller {
  #[NoAdminRequired,NoCSRFRequired] public function mobileProjectDocuments(int $id):TemplateResponse{$this->addMobilePwaHeaders();
   $this->permissions->assertProjectAccess($id);$p=$this->queryProject($id);$owner=(string)($p['created_by']??'');if($owner==='')$owner=$this->users->getUser()?->getUID()??'';
   $allowed=$this->permissions->projectFolders($id);$documents=$this->filterDocumentsByFolders($this->documentsForUser($owner,(string)($p['folder_path']??''),100,4),$p['folder_path']??'',$allowed);
-  return new TemplateResponse($this->appName,'mobile_documents',['project'=>$p,'documents'=>$documents,'allowedFolders'=>$allowed]);
+  return new TemplateResponse($this->appName,'mobile_documents',['project'=>$p,'documents'=>$documents,'allowedFolders'=>$allowed,'urlGenerator'=>$this->url]);
  }
  #[NoAdminRequired,NoCSRFRequired] public function mobileProjectPhotos(int $id):TemplateResponse{$this->addMobilePwaHeaders();
   $this->permissions->assertProjectAccess($id);$p=$this->queryProject($id);$owner=(string)($p['created_by']??'');if($owner==='')$owner=$this->users->getUser()?->getUID()??'';
   $allowed=$this->permissions->projectFolders($id);$photos=[];
   if($this->permissions->canAccessProjectFolder($id,'07_Fotos')){$all=$this->documentsForUser($owner,(string)($p['folder_path']??''),120,4);foreach($all as $d){$path=(string)($d['path']??'');$mime=strtolower((string)($d['mime']??$d['mimetype']??''));$name=strtolower((string)($d['name']??''));if(str_contains($path,'/07_Fotos/')&&(str_starts_with($mime,'image/')||preg_match('/\.(jpe?g|png|webp|gif)$/i',$name)))$photos[]=$d;}}
-  return new TemplateResponse($this->appName,'mobile_photos',['project'=>$p,'photos'=>$photos,'canUpload'=>$this->permissions->canAccessProjectFolder($id,'07_Fotos')]);
+  return new TemplateResponse($this->appName,'mobile_photos',['project'=>$p,'photos'=>$photos,'canUpload'=>$this->permissions->canAccessProjectFolder($id,'07_Fotos'),'urlGenerator'=>$this->url]);
  }
- #[NoAdminRequired] public function uploadMobileProjectPhoto(int $id,?string $description=null):RedirectResponse{
-  $this->permissions->assertProjectAccess($id);if(!$this->permissions->canAccessProjectFolder($id,'07_Fotos'))throw new \OCP\AppFramework\Http\ForbiddenException('Der Fotoordner ist nicht freigegeben.');
-  $p=$this->queryProject($id);$owner=(string)($p['created_by']??'');if($owner==='')$owner=$this->users->getUser()?->getUID()??'';
-  $file=$this->request->getUploadedFile('document');if(!is_array($file)||($file['error']??UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_OK)throw new \InvalidArgumentException('Bitte ein Foto auswählen.');
-  $mime=strtolower((string)($file['type']??''));if(!str_starts_with($mime,'image/'))throw new \InvalidArgumentException('Bitte eine Bilddatei auswählen.');
-  if((int)($file['size']??0)>25*1024*1024)throw new \InvalidArgumentException('Das Foto darf maximal 25 MB groß sein.');
-  $folder=$this->folders->ensureFolderPathForUser($owner,(string)($p['folder_path']??''),'07_Fotos');$name=(string)($file['name']??('Foto-'.date('Ymd-His').'.jpg'));$this->folders->writeFromLocalFileForUser($owner,$folder,$name,(string)$file['tmp_name']);
-  $path=trim((string)$p['folder_path'],'/').'/07_Fotos/'.$name;$qb=$this->db->getQueryBuilder();$qb->insert('re_erp_project_documents')->values(['project_id'=>$qb->createNamedParameter($id),'customer_id'=>$qb->createNamedParameter((int)$p['customer_id']),'document_type'=>$qb->createNamedParameter('photo'),'file_name'=>$qb->createNamedParameter($name),'file_path'=>$qb->createNamedParameter($path),'mime_type'=>$qb->createNamedParameter($mime),'status'=>$qb->createNamedParameter('uploaded'),'source'=>$qb->createNamedParameter('mobile'),'created_by'=>$qb->createNamedParameter($this->users->getUser()?->getUID()??'system'),'created_at'=>$qb->createNamedParameter(date('Y-m-d H:i:s'))])->executeStatement();
-  $note=trim((string)$description);$this->activities->record('project',$id,'photo_uploaded','Foto mobil aufgenommen',$name.($note!==''?' · '.$note:''),(int)$p['customer_id'],$id);
-  return new RedirectResponse($this->url->linkToRoute('reinhardterp.page.mobileProjectPhotos',['id'=>$id]));
+ #[NoAdminRequired] public function uploadMobileProjectPhoto(int $id):JSONResponse{
+  try{
+   $this->permissions->assertProjectAccess($id);if(!$this->permissions->canAccessProjectFolder($id,'07_Fotos'))return new JSONResponse(['ok'=>false,'message'=>'Der Fotoordner ist nicht freigegeben.'],403);
+   $p=$this->queryProject($id);$owner=(string)($p['created_by']??'');if($owner==='')$owner=$this->users->getUser()?->getUID()??'';
+   $file=$this->request->getUploadedFile('document');if(!is_array($file)||($file['error']??UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_OK)return new JSONResponse(['ok'=>false,'message'=>'Es wurde kein gültiges Foto empfangen.'],400);
+   if((int)($file['size']??0)<=0)return new JSONResponse(['ok'=>false,'message'=>'Das Foto ist leer.'],400);
+   if((int)($file['size']??0)>25*1024*1024)return new JSONResponse(['ok'=>false,'message'=>'Das Foto darf maximal 25 MB groß sein.'],413);
+   $tmp=(string)($file['tmp_name']??'');$imageInfo=$tmp!==''?@getimagesize($tmp):false;$mime=strtolower((string)(is_array($imageInfo)?($imageInfo['mime']??''):($file['type']??'')));
+   $allowed=['image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp','image/gif'=>'gif','image/heic'=>'heic','image/heif'=>'heif'];
+   if(!isset($allowed[$mime]))return new JSONResponse(['ok'=>false,'message'=>'Das ausgewählte Format wird nicht als Bild erkannt.'],415);
+   $folder=$this->folders->ensureFolderPathForUser($owner,(string)($p['folder_path']??''),'07_Fotos');
+   $name='Foto-'.date('Ymd-His').'-'.substr(bin2hex(random_bytes(3)),0,6).'.'.$allowed[$mime];
+   $this->folders->writeFromLocalFileForUser($owner,$folder,$name,$tmp);
+   $path=trim((string)$p['folder_path'],'/').'/07_Fotos/'.$name;$qb=$this->db->getQueryBuilder();$qb->insert('re_erp_project_documents')->values(['project_id'=>$qb->createNamedParameter($id),'customer_id'=>$qb->createNamedParameter((int)$p['customer_id']),'document_type'=>$qb->createNamedParameter('photo'),'file_name'=>$qb->createNamedParameter($name),'file_path'=>$qb->createNamedParameter($path),'mime_type'=>$qb->createNamedParameter($mime),'status'=>$qb->createNamedParameter('uploaded'),'source'=>$qb->createNamedParameter('mobile'),'created_by'=>$qb->createNamedParameter($this->users->getUser()?->getUID()??'system'),'created_at'=>$qb->createNamedParameter(date('Y-m-d H:i:s'))])->executeStatement();
+   $note=trim((string)$this->request->getParam('description',''));$this->activities->record('project',$id,'photo_uploaded','Foto mobil aufgenommen',$name.($note!==''?' · '.$note:''),(int)$p['customer_id'],$id);
+   return new JSONResponse(['ok'=>true,'name'=>$name,'path'=>$path]);
+  }catch(\Throwable $e){return new JSONResponse(['ok'=>false,'message'=>'Foto konnte nicht im Projekt gespeichert werden: '.$e->getMessage()],500);}
  }
  #[NoAdminRequired] public function uploadCustomerDocument(int $id,string $targetFolder='09_Sonstiges'):RedirectResponse{$this->permissions->assert('customers');$c=$this->customers->find($id);$allowed=['01_Kundendaten','02_Anfragen','03_Angebote','04_Auftraege','06_Rechnungen','07_Korrespondenz','08_Bilder','09_Sonstiges'];if(!in_array($targetFolder,$allowed,true))$targetFolder='09_Sonstiges';$name=$this->uploadTo((string)($c->getFolderPath()??''),$targetFolder);$this->activities->record('customer',$id,'document_uploaded','Dokument hochgeladen',$name.' → '.$targetFolder,$id,null);return new RedirectResponse($this->url->linkToRoute('reinhardterp.page.customerDetail',['id'=>$id]));}
  #[NoAdminRequired] public function uploadProjectDocument(int $id,string $targetFolder='01_Aufmass',string $documentType='other'):RedirectResponse{

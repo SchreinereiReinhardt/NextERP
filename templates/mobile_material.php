@@ -7,7 +7,7 @@
 <form class="erp-mm-search" method="get"><input id="material-q" type="search" name="q" value="<?php p((string)($_['query']??''));?>" placeholder="Artikel, Material oder Barcode"><input type="hidden" name="projectId" value="<?php p($pid?:'');?>"><button>Suchen</button></form>
 <div class="erp-scan"><button type="button" id="scan-btn">Barcode scannen</button><button type="button" id="stop-scan-btn" style="display:none;background:#6b7280">Scanner schließen</button></div>
 <div id="scan-status" style="display:none;margin:-5px 0 10px;padding:10px 12px;border-radius:12px;background:#eef5ff;color:#174c90;font-size:13px"></div>
-<video id="scan-video" playsinline muted></video>
+<div id="scanner-stage" style="display:none;position:relative;margin:8px 0 15px;border-radius:20px;overflow:hidden;background:#08111f"><video id="scan-video" playsinline muted style="display:block;width:100%;margin:0;border-radius:0;aspect-ratio:3/4;object-fit:cover"></video><div style="position:absolute;left:10%;right:10%;top:38%;height:24%;border:3px solid #fff;border-radius:16px;box-shadow:0 0 0 999px rgba(0,0,0,.28);pointer-events:none"></div><button type="button" id="torch-btn" style="display:none;position:absolute;right:12px;bottom:12px;width:auto;min-height:42px;background:rgba(8,17,31,.8)">Licht</button></div>
 <input id="camera-fallback" type="file" accept="image/*" capture="environment" style="display:none">
 <?php if(!$materials):?><div class="erp-empty">Kein Material gefunden.</div><?php endif;?>
 <?php foreach($materials as $m):$stock=(float)($m['stock_quantity']??0);?><article class="erp-mm-card"><div class="erp-mm-top"><div><b><?php p((string)$m['name']);?></b><small><?php p((string)($m['article_no']??''));?><?php if(!empty($m['barcode'])):?> · EAN <?php p((string)$m['barcode']);?><?php endif;?><?php if(!empty($m['storage_location'])):?> · <?php p((string)$m['storage_location']);?><?php endif;?></small></div><span class="erp-stock"><?php p(number_format($stock,3,',','.').' '.($m['unit']??''));?></span></div>
@@ -17,10 +17,12 @@
  const startBtn=document.getElementById('scan-btn');
  const stopBtn=document.getElementById('stop-scan-btn');
  const video=document.getElementById('scan-video');
+ const stage=document.getElementById('scanner-stage'); const torchBtn=document.getElementById('torch-btn');
  const q=document.getElementById('material-q');
  const status=document.getElementById('scan-status');
  const fallback=document.getElementById('camera-fallback');
- let stream=null,active=false,raf=0,detector=null;
+ let stream=null,active=false,raf=0,detector=null,torch=false,zxingReader=null,zxingControls=null;
+ const ZXING_URL='https://unpkg.com/@zxing/browser@0.2.1/umd/zxing-browser.min.js';
 
  function message(text,error=false){
    status.textContent=text;
@@ -30,9 +32,10 @@
  }
  function stop(){
    active=false;
+   if(zxingControls&&typeof zxingControls.stop==='function'){try{zxingControls.stop();}catch(e){}} zxingControls=null; zxingReader=null;
    if(raf)cancelAnimationFrame(raf);
    if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
-   video.pause();video.srcObject=null;video.style.display='none';
+   video.pause();video.srcObject=null;stage.style.display='none';torchBtn.style.display='none';torch=false;
    stopBtn.style.display='none';startBtn.style.display='';
  }
  async function detectLoop(){
@@ -46,6 +49,34 @@
    }catch(e){}
    raf=requestAnimationFrame(detectLoop);
  }
+
+ async function loadZXing(){
+   if(window.ZXingBrowser)return true;
+   return new Promise(resolve=>{
+     const old=document.querySelector('script[data-nexterp-zxing]');
+     if(old){old.addEventListener('load',()=>resolve(!!window.ZXingBrowser),{once:true});old.addEventListener('error',()=>resolve(false),{once:true});return;}
+     const el=document.createElement('script');el.src=ZXING_URL;el.async=true;el.dataset.nexterpZxing='1';
+     el.onload=()=>resolve(!!window.ZXingBrowser);el.onerror=()=>resolve(false);document.head.appendChild(el);
+   });
+ }
+ async function startZXing(){
+   const ok=await loadZXing();
+   if(!ok||!window.ZXingBrowser||!ZXingBrowser.BrowserMultiFormatReader){
+     message('Scanner-Fallback konnte nicht geladen werden. Barcode bitte manuell eingeben.',true);return;
+   }
+   try{
+     if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;video.srcObject=null;}
+     zxingReader=new ZXingBrowser.BrowserMultiFormatReader();
+     message('ZXing-Scanner aktiv – funktioniert auch als iOS-Fallback.');
+     zxingControls=await zxingReader.decodeFromConstraints({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false},video,(result,error,controls)=>{
+       if(controls)zxingControls=controls;
+       if(result){const value=(result.getText?result.getText():String(result.text||result)).trim();if(value){q.value=value;message('Barcode erkannt: '+value);if(navigator.vibrate)navigator.vibrate(80);stop();q.form.submit();}}
+     });
+     stream=video.srcObject||null;
+     const track=stream&&stream.getVideoTracks?stream.getVideoTracks()[0]:null;const caps=track&&track.getCapabilities?track.getCapabilities():{};if(caps&&caps.torch)torchBtn.style.display='block';
+   }catch(e){message('ZXing-Scanner konnte die Kamera nicht starten. Barcode bitte manuell eingeben.',true);}
+ }
+
  async function openCamera(){
    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
      message('Direkter Kamerazugriff wird von diesem Browser nicht unterstützt. Ich öffne die Handykamera.',true);
@@ -56,7 +87,8 @@
        video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},
        audio:false
      });
-     video.srcObject=stream;video.style.display='block';await video.play();
+     video.srcObject=stream;stage.style.display='block';await video.play();
+     const track=stream.getVideoTracks()[0]; const caps=track&&track.getCapabilities?track.getCapabilities():{}; if(caps.torch)torchBtn.style.display='block';
      active=true;startBtn.style.display='none';stopBtn.style.display='';
      if('BarcodeDetector' in window){
        try{
@@ -64,15 +96,11 @@
          const wanted=['ean_13','ean_8','code_128','code_39','upc_a','upc_e','qr_code'];
          const formats=supported.length?wanted.filter(x=>supported.includes(x)):wanted;
          detector=new BarcodeDetector(formats.length?{formats}:undefined);
-         message('Kamera aktiv – Barcode vor die Kamera halten.');
+         message('Scanner aktiv – Barcode vor die Kamera halten.');
          detectLoop();
-       }catch(e){
-         detector=null;
-         message('Kamera ist geöffnet. Automatische Barcode-Erkennung wird von diesem Browser nicht unterstützt – Barcode bitte manuell eingeben.',true);
-       }
+       }catch(e){ detector=null; await startZXing(); }
      }else{
-       detector=null;
-       message('Kamera ist geöffnet. Dieser Browser unterstützt die automatische Barcode-Erkennung nicht – Barcode bitte manuell eingeben.',true);
+       detector=null; await startZXing();
      }
    }catch(e){
      const name=e&&e.name?e.name:'';
@@ -86,6 +114,7 @@
      }
    }
  }
+ torchBtn.addEventListener('click',async()=>{try{const track=stream&&stream.getVideoTracks()[0];if(!track)return;torch=!torch;await track.applyConstraints({advanced:[{torch:torch}]});torchBtn.textContent=torch?'Licht aus':'Licht';}catch(e){}});
  startBtn.addEventListener('click',openCamera);
  stopBtn.addEventListener('click',stop);
  fallback.addEventListener('change',function(){
@@ -98,3 +127,4 @@
  document.addEventListener('visibilitychange',()=>{if(document.hidden&&active)stop();});
 })();
 </script>
+<?php $mobileActive='scanner'; $mobileProjectId=(int)($_['projectId']??0); require __DIR__.'/_mobile_nav.php'; ?>

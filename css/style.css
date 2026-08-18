@@ -682,8 +682,8 @@
 @media(max-width:800px){.erp-mobile-app{padding:14px 14px 94px!important}.erp-mobile-appbar h1{font-size:24px}.erp-mobile-bottom{position:fixed;display:grid;grid-template-columns:repeat(5,1fr);left:0;right:0;bottom:0;z-index:1100;padding:7px 6px calc(7px + env(safe-area-inset-bottom));border-top:1px solid var(--color-border);background:var(--color-main-background);box-shadow:0 -8px 24px rgba(0,0,0,.08)}.erp-mobile-bottom a{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;text-decoration:none;color:var(--color-text-maxcontrast)}.erp-mobile-bottom a.active{color:#1265d8}.erp-mobile-bottom .erp-ui-icon{width:20px;height:20px}.erp-mobile-bottom b{font-size:10px}}
 
 /* NextERP 1.2.1 Mobile App Alignment + About */
-.erp-mobile-bottom{grid-template-columns:repeat(7,1fr)!important}.erp-mobile-moredots{height:20px;display:flex;align-items:center;font-size:18px;font-weight:900;letter-spacing:1px}.erp-mobile-about-hero{background:#063b70;color:#fff;border-radius:26px;padding:24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:5px}.erp-mobile-about-mark{width:68px;height:68px;border-radius:20px;background:#1265d8;display:grid;place-items:center;font-size:34px;font-weight:900}.erp-mobile-about-hero h2{margin:8px 0 0;font-size:30px}.erp-mobile-about-hero p{margin:0;opacity:.85}.erp-mobile-about-hero strong{color:#a7cd58;margin-top:4px}.erp-mobile-about-hero span{margin-top:10px;padding:6px 10px;border:1px solid rgba(255,255,255,.25);border-radius:999px;font-size:12px}.erp-mobile-info-card,.erp-mobile-coffee-card{padding:18px;border:1px solid var(--color-border);border-radius:20px;background:var(--color-main-background)}.erp-mobile-info-card h2,.erp-mobile-coffee-card h2{margin:0 0 10px}.erp-mobile-info-card p,.erp-mobile-coffee-card p{color:var(--color-text-maxcontrast)}.erp-mobile-coffee-card code{display:block;padding:12px;border-radius:12px;background:#f2f6fa;font-size:14px;margin:10px 0}.erp-mobile-widebutton{width:100%;min-height:46px;display:flex;align-items:center;justify-content:center;border:0;border-radius:15px;background:#e8f3fa;color:#0b57c7!important;font-weight:800;padding:10px 14px;cursor:pointer}.erp-mobile-copyright{text-align:center;color:var(--color-text-maxcontrast);font-size:12px;margin:22px 0}
-@media(max-width:620px){.erp-mobile-bottom b{font-size:9px!important}.erp-mobile-bottom a{padding-left:0!important;padding-right:0!important}.erp-mobile-bottom .erp-ui-icon{width:18px!important;height:18px!important}}
+.erp-mobile-bottom{grid-template-columns:repeat(5,1fr)}.erp-mobile-moredots{height:20px;display:flex;align-items:center;font-size:18px;font-weight:900;letter-spacing:1px}.erp-mobile-about-hero{background:#063b70;color:#fff;border-radius:26px;padding:24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:5px}.erp-mobile-about-mark{width:68px;height:68px;border-radius:20px;background:#1265d8;display:grid;place-items:center;font-size:34px;font-weight:900}.erp-mobile-about-hero h2{margin:8px 0 0;font-size:30px}.erp-mobile-about-hero p{margin:0;opacity:.85}.erp-mobile-about-hero strong{color:#a7cd58;margin-top:4px}.erp-mobile-about-hero span{margin-top:10px;padding:6px 10px;border:1px solid rgba(255,255,255,.25);border-radius:999px;font-size:12px}.erp-mobile-info-card,.erp-mobile-coffee-card{padding:18px;border:1px solid var(--color-border);border-radius:20px;background:var(--color-main-background)}.erp-mobile-info-card h2,.erp-mobile-coffee-card h2{margin:0 0 10px}.erp-mobile-info-card p,.erp-mobile-coffee-card p{color:var(--color-text-maxcontrast)}.erp-mobile-coffee-card code{display:block;padding:12px;border-radius:12px;background:#f2f6fa;font-size:14px;margin:10px 0}.erp-mobile-widebutton{width:100%;min-height:46px;display:flex;align-items:center;justify-content:center;border:0;border-radius:15px;background:#e8f3fa;color:#0b57c7!important;font-weight:800;padding:10px 14px;cursor:pointer}.erp-mobile-copyright{text-align:center;color:var(--color-text-maxcontrast);font-size:12px;margin:22px 0}
+@media(max-width:620px){.erp-mobile-bottom a{padding-left:0;padding-right:0}}
 
 /* NextERP 1.4.4 – actionable system-check recommendations */
 .erp-check-solution{margin-top:9px;padding:9px 11px;border-left:3px solid var(--color-primary-element);border-radius:6px;background:var(--color-primary-element-light);color:var(--color-main-text);font-size:13px;line-height:1.45}
@@ -763,3 +763,29 @@
 .erp-dashboard-projects{display:flex;flex-direction:column;gap:8px}.erp-dashboard-projects>a{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--color-border,#ddd);border-radius:10px;text-decoration:none;color:var(--color-main-text)}.erp-dashboard-projects>a:hover{background:var(--color-background-hover,#f5f5f5);text-decoration:none}.erp-dashboard-projects strong,.erp-dashboard-projects small{display:block}.erp-dashboard-projects small{margin-top:3px;color:var(--color-text-maxcontrast)}.erp-dashboard-projects b{font-size:24px;font-weight:400}
 .erp-dashboard-activity{margin-top:18px;padding:20px}
 @media(max-width:1000px){.erp-dashboard-v2-layout{grid-template-columns:1fr}}@media(max-width:700px){.erp-attention-grid{grid-template-columns:1fr}.erp-dashboard-head .erp-actions{width:100%;display:grid;grid-template-columns:1fr}.erp-dashboard-head .erp-actions .button{width:100%}}
+
+/* NextERP 1.6.3 – Dashboard 2.0 Typografie-Fix */
+.erp-dashboard-v2 .erp-attention-item strong{
+    font-size:18px!important;
+    line-height:1.28!important;
+    font-weight:700!important;
+    overflow-wrap:anywhere;
+}
+.erp-dashboard-v2 .erp-attention-item small{
+    font-size:12px!important;
+    line-height:1.4!important;
+}
+.erp-dashboard-v2 .erp-dashboard-projects strong{
+    font-size:17px!important;
+    line-height:1.32!important;
+    font-weight:700!important;
+    overflow-wrap:anywhere;
+}
+.erp-dashboard-v2 .erp-dashboard-projects small{
+    font-size:12px!important;
+    line-height:1.4!important;
+}
+@media(max-width:700px){
+    .erp-dashboard-v2 .erp-attention-item strong{font-size:16px!important}
+    .erp-dashboard-v2 .erp-dashboard-projects strong{font-size:16px!important}
+}

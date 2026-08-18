@@ -1,5 +1,7 @@
 <?php
-$pwaUrl=\OC::$server->get(\OCP\IURLGenerator::class);
+$pwaUrl=$_['urlGenerator'];
+\OCP\Util::addStyle('reinhardterp','style');
+\OCP\Util::addStyle('reinhardterp','mobile');
 $sw=$pwaUrl->linkToRoute('reinhardterp.page.pwaServiceWorker');
 ?>
 <script>

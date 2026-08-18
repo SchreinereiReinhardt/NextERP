@@ -1,3 +1,172 @@
+## 1.9.11 – Mobile Projektakten Explorer
+
+- Mobile Dokumentansicht nicht mehr als flache, durcheinander wirkende Dateiliste.
+- Vorhandene NextERP-Projektpfade werden als echte Ordnerstruktur dargestellt.
+- Ordner antippen öffnet dessen Dateien und Unterordner.
+- Mobile Zurück-Navigation und Breadcrumbs ergänzt.
+- Ordner zeigen die Anzahl der enthaltenen Dateien.
+- Natürliche Sortierung für Ordner und Dateinamen.
+- Bestehende Berechtigungs-/Freigabelogik und Datei-Links bleiben erhalten.
+- Keine Änderung an der funktionierenden Kamera aus 1.9.10.
+
+## 1.9.10 – Kamera Auslöser UX Fix
+
+- Funktionierende Kamera-Technik aus 1.9.9 unverändert.
+- Großer, kontrastreicher Kamera-Auslöser im Stil einer nativen Kamera-App.
+- Beschriftung „Foto aufnehmen“ und deutlich größeres Touch-Ziel.
+- Kurzes visuelles Touch-Feedback.
+
+## 1.9.9 – Kamera CSP / JavaScript Fix
+
+- Ursache für den nicht reagierenden Kamera-Button behoben.
+- Kamera-JavaScript aus dem Inline-Template in `js/mobile-camera.js` verschoben.
+- Das Script wird nun über Nextcloud `script()` CSP-konform geladen.
+- Nextcloud 34 blockiert Inline-JavaScript standardmäßig; dadurch konnte der Kamera-Handler zuvor still ausfallen.
+- Live-Kamera mit `getUserMedia()`, Fotoaufnahme, Vorschau und Projekt-Upload bleiben erhalten.
+- Dynamische Upload-URL und Request-Token werden sicher über Data-Attribute an das externe Script übergeben.
+- Konkrete Kamera-Fehler werden weiterhin direkt in der mobilen Oberfläche angezeigt.
+
+## 1.9.8 – Live-Kamera Projektfoto
+
+- Kamera technisch neu aufgebaut: Live-Videostream direkt in NextERP.
+- Rückkamera wird bevorzugt; kein `capture`-Kamera-Dateifeld mehr.
+- Foto wird direkt aus dem Videostream als JPEG erzeugt.
+- Vorschau, Neuaufnahme und Speichern direkt in der PWA.
+- Kamera-Stream wird beim Abbrechen/Verlassen beendet.
+- Datei-Auswahl bleibt separat erhalten.
+
+## 1.9.7 – Kamera Auto-Speichern Fix
+
+- Fehlerhaften Verweis auf das nicht vorhandene Element `camera-recapture` entfernt.
+- Native Kamera speichert das bestätigte Foto nach dem Haken automatisch ins Projekt.
+- Keine zweite fehleranfällige Kamera-Vorschau/Bestätigung mehr nötig.
+- Sichtbarer Status während des Uploads und konkrete Fehlermeldung bei Fehlschlag.
+- Datei-Upload bleibt separat: auswählen, Vorschau prüfen, anschließend speichern.
+- Android/iOS-PWA-Workflow weiter ohne Nextcloud-Core-Änderungen.
+
+## 1.9.6 – Android Kamera Rückgabe / Vorschau Fix
+
+- Kamera- und Datei-Auswahl verwenden jetzt echte native File-Inputs direkt als Touch-Ziel.
+- Kein synthetischer Label-/Click-Umweg beim Kamera-Start.
+- Android-Kamerarückgabe wird unmittelbar aus `input.files[0]` übernommen und als Vorschau angezeigt.
+- Separater nativer Input für „Neu aufnehmen“, damit die gleiche Aufnahme erneut gewählt werden kann.
+- Fehlermeldung, wenn die Kamera ohne Bild zurückkehrt.
+- Foto-Upload-Fix aus 1.9.5 bleibt erhalten.
+
+## 1.9.5 – Mobile Projektfoto Speichern Fix
+- Foto-Upload liefert jetzt eine klare JSON-Antwort statt eines Redirects.
+- Speichern zeigt konkrete Serverfehler direkt in der mobilen Oberfläche.
+- Bildtyp wird serverseitig aus der Datei geprüft, nicht nur aus Browser-Metadaten.
+- Eindeutige Dateinamen verhindern Kollisionen.
+- CSRF-Token wird beim Fetch zusätzlich als Header übertragen.
+- Beschreibung wird zuverlässig aus dem Request übernommen.
+
+## 1.9.4 – Native Kamera Trigger Fix
+
+- Kamera-Button ist jetzt direkt als Label mit dem nativen `capture=environment`-Dateifeld verbunden.
+- Kein synthetischer JavaScript-`click()` mehr, der auf Android/PWA blockiert werden kann.
+- Datei-Auswahl bleibt separat ohne `capture`.
+- „Neu aufnehmen“ öffnet wieder direkt die Systemkamera.
+
+# NextERP 1.9.3 – Kamera Workflow Fix
+
+- Projektfoto-Button „Kamera“ öffnet jetzt bewusst die native Android/iOS-Systemkamera über `capture=environment`.
+- Kein still scheiternder `getUserMedia()`-Live-Stream mehr im Foto-Workflow.
+- „Datei“ ist getrennt und verwendet eine normale Bild-/Dateiauswahl ohne `capture`.
+- Nach Kamera oder Dateiauswahl erscheint dieselbe Vorschau mit Speichern bzw. „Neu aufnehmen“.
+- Barcode-Scanner bleibt unverändert als Live-Kamera-Workflow mit BarcodeDetector/ZXing.
+- PWA-Service-Worker-Version auf 1.9.3 angehoben.
+
+# NextERP 1.9.2 – Mobile/PWA Start-Fix
+
+- PWA-Service-Worker stark vereinfacht und Navigation nicht mehr gecacht/intercepted.
+- Alte NextERP-PWA-Caches werden beim Aktivieren vollständig entfernt.
+- Manifest-Startversion auf 1.9.2 aktualisiert.
+- Manifest-Scope wird jetzt aus der echten Mobile-Route ohne Query-String erzeugt.
+- ZXing-Scanner aus 1.9.1 bleibt erhalten.
+
+# NextERP 1.9.1 – Plattformübergreifender ZXing-Scanner
+
+- ZXing Browser 0.2.1 als automatischer Scanner-Fallback für Browser ohne BarcodeDetector vorbereitet.
+- Android nutzt weiterhin bevorzugt die native BarcodeDetector-API.
+- iOS/Safari kann auf den ZXing-MultiFormat-Reader ausweichen.
+- Kamera, Taschenlampe, Scan-Treffer und Materialsuche bleiben in derselben mobilen Ansicht.
+- Service-Worker-Cache auf v1.9.1 angehoben.
+
+# NextERP 1.9.0 – Mobile Kamera & Scanner
+
+- Kamera für Projektfotos als hochwertige In-App-Kamera mit Live-Vorschau umgesetzt.
+- Rückkamera wird auf Android und iOS bevorzugt; klassische Dateiauswahl bleibt als Fallback erhalten.
+- Foto-Vorschau vor dem Upload, Wiederholen und direktes Speichern in `07_Fotos`.
+- Barcode-Scanner als Vollbild-Kamera mit Suchrahmen, Statusanzeige und sauberem Kamera-Lifecycle überarbeitet.
+- Native `BarcodeDetector`-Erkennung für unterstützte Browser; EAN-13, EAN-8, Code 128, Code 39, UPC und QR.
+- Taschenlampe wird angeboten, wenn Browser und Kamera sie unterstützen.
+- iOS/Browser ohne BarcodeDetector erhalten einen klaren Kamera-/Foto-Fallback und manuelle Barcode-Suche statt eines defekten Scanners.
+- Kamera wird beim Seitenwechsel und beim Wechsel in den Hintergrund zuverlässig beendet.
+- HTTPS/Secure Context wird für Live-Kamera und Scanner geprüft und verständlich erklärt.
+- Service-Worker-Cache auf v1.9.0 angehoben.
+
+# NextERP 1.8.3 – Mobile Navigation konsistent
+
+- Ursache des springenden Bottom-Menüs behoben: mobile Seiten luden die Stylesheets in unterschiedlicher Reihenfolge.
+- `style.css` wird nun auf allen Mobile-Routen zuerst geladen, `mobile.css` danach als verbindliche Mobile-UX-Schicht.
+- Alte 7-Spalten-/9px-Navigationsregeln aus dem historischen Mobile-CSS neutralisiert.
+- Bottom-Navigation hat auf Heute, Projekte, Zeit, Scanner und Mehr identische Geometrie.
+- Beschriftungen auf 13px erhöht (12px auf sehr schmalen Displays), Icons 22px.
+- Keine Größen-, Scale- oder Layoutänderung beim aktiven Menüpunkt.
+- PWA-Cache auf v1.8.3 angehoben.
+
+# NextERP 1.8.2 – Mobile Navigation Stabilität & Lesbarkeit
+
+- Bottom-Navigation vollständig stabilisiert: keine Scale-/Tap-Animationen oder Größenänderungen mehr.
+- Feste Navigationshöhe für Android und iOS inklusive Safe-Area.
+- Lesbarkeit deutlich verbessert: 12 px Beschriftungen, höherer Kontrast und 24 px Icons.
+- Aktiver Bereich wird über eine ruhige Fläche und einen festen Indikator markiert, ohne Layout-Verschiebung.
+- Transparenz/Backdrop-Blur entfernt, um Darstellungs- und Compositing-Sprünge in mobilen Browsern zu vermeiden.
+- Zusätzlicher Inhaltsabstand verhindert Überdeckung durch die Navigation.
+- PWA-Cache auf v1.8.2 angehoben.
+
+# NextERP 1.8.1 – Mobile Navigation / Native UX Fix
+
+- Untere Mobile-Navigation vollständig auf eine ruhige, native Bottom-Bar umgestellt.
+- Alle fünf Navigationspunkte besitzen jetzt identische Abmessungen; der herausstehende Zeit-Button wurde entfernt.
+- Aktive Navigation wird über eine dezente, feste Hervorhebung statt Größen- oder Positionsänderung dargestellt.
+- Safe-Area-Unterstützung für iPhone/iPad und Android verbessert.
+- Touch-Feedback ohne Layout-Sprünge, größere und konsistente Touch-Ziele.
+- Standalone-PWA erhält eine kompaktere, appartige Darstellung ohne unnötige Browser-/Nextcloud-Flächen.
+- Mobile Seiten reservieren exakt den Platz der Bottom-Bar, damit Inhalte nicht verdeckt werden.
+- Service-Worker-Cache auf v1.8.1 angehoben.
+
+# NextERP 1.8.0 – Mobile UX / PWA First
+
+- Mobile Web/PWA vollständig auf einen App-ähnlichen Arbeitsablauf optimiert.
+- Einheitliche mobile 5-Punkt-Navigation: Heute, Projekte, Zeit, Scanner, Mehr.
+- Zeit erfassen als zentrale Primäraktion in der unteren Navigation.
+- Projektlisten führen jetzt konsequent in die mobile Projektakte statt in Desktop-Ansichten.
+- Mobile Projektsuche nach Projektnummer, Titel und Status.
+- Mobile Projektakte mit Schnellaktionen Zeit, Foto und Rapport.
+- Installationsbereich für PWA/Startbildschirm ergänzt.
+- Mobile Dokumente und Fotos bleiben beim Öffnen im gleichen Web-App-Kontext.
+- Interne Nutzung von OC::$server in mobilen Templates entfernt; öffentliche URL-Generator-Daten werden verwendet.
+- Mobile Styles zentralisiert und für kleine Touch-Displays, Safe Areas und lange Projektnamen optimiert.
+- Bestehende Offline-/Service-Worker-Funktion bleibt erhalten.
+
+# NextERP 1.7.0 – Nextcloud Dashboard Integration
+
+- Drei native Nextcloud-Dashboard-Widgets: Heute, Handlungsbedarf und Projekte.
+- Direkte Links aus den Widgets in NextERP.
+- Rollen- und Projektberechtigungen werden berücksichtigt.
+- Native Dashboard API V2 für Nextcloud 34, ohne Änderungen am Nextcloud-Core.
+- Dashboard 2.0 und Typografie-Fix aus 1.6.3 bleiben erhalten.
+
+# NextERP 1.6.3 – Dashboard 2.0 Typografie-Fix
+
+- Zu große Schriften in den „Jetzt wichtig“-Karten korrigiert.
+- Projekttitel unter „Aktuelle Projekte“ auf eine einheitliche Größe begrenzt.
+- Zeilenhöhe und Umbruch langer Titel verbessert.
+- Responsive Schriftgrößen für schmale Displays ergänzt.
+- Keine Funktions- oder Datenbankänderungen.
+
 # NextERP 1.6.2 – Dashboard 2.0 / Nextcloud-34-CSP-Fix
 
 - Nextcloud-34.0.2-Kompatibilitätsfehler im Projektakten-Explorer behoben.

@@ -14,3 +14,4 @@
 <label>Notiz</label><textarea name="notes" placeholder="Optional"></textarea>
 <button class="erp-mob2-save" type="submit">Zeit speichern</button><div class="erp-mob2-note">Wenn Von/Bis ausgefüllt sind, kann NextERP die Stunden abzüglich Pause berechnen.</div>
 </form></main></div>
+<?php $mobileActive='time'; $mobileProjectId=(int)($_['projectId']??0); require __DIR__.'/_mobile_nav.php'; ?>
