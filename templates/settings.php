@@ -6,7 +6,7 @@ require __DIR__ . '/_nav.php';
 		<div class="erp-page erp-settings-page">
 			<div class="erp-head">
 				<div>
-					<h1>Einstellungen</h1><p><a class="button" href="<?=p(\OC::$server->getURLGenerator()->linkToRoute('reinhardterp.page.setupWizard'))?>">Ersteinrichtungsassistent öffnen</a></p>
+					<h1>Einstellungen</h1><p><a class="button" href="<?php p($url->linkToRoute('reinhardterp.page.setupWizard')); ?>">Ersteinrichtungsassistent öffnen</a></p>
 					<p class="erp-sub">Firmenangaben, Logo und Ausgabe der Rapporte</p>
 				</div>
                 <div class="erp-actions"><a class="button" href="<?php p($url->linkToRoute('reinhardterp.systemCheck.index')); ?>">Systemprüfung</a></div>
