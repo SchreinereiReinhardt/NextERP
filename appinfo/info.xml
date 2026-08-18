@@ -53,13 +53,13 @@ Features:
 NextERP was developed from the daily practice of a craft business and is especially aimed at trades and craft companies that want to manage their operational workflows directly in Nextcloud.
   ]]></description>
 
-  <screenshot>https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/store/screenshots/01-nexterp-dashboard.png</screenshot>
+  <screenshot small-thumbnail="https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/img/app.png">https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/store/screenshots/01-nexterp-dashboard.png</screenshot>
   <screenshot>https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/store/screenshots/02-nexterp-projekte.png</screenshot>
   <screenshot>https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/store/screenshots/03-nexterp-projektdetails.png</screenshot>
   <screenshot>https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/store/screenshots/04-nexterp-mobile.png</screenshot>
   <screenshot>https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/store/screenshots/05-nexterp-scanner.png</screenshot>
 
-  <version>1.9.12</version>
+  <version>1.9.13</version>
   <licence>AGPL-3.0-or-later</licence>
 
   <author homepage="https://www.schreinerei-reinhardt.de">André Reinhardt</author>
