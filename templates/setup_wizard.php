@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
+use OCP\IURLGenerator;
 use OCP\Util;
+$url = \OC::$server->get(IURLGenerator::class);
 Util::addStyle('reinhardterp','style');
 $company=$_['company']??[];
 ?>
@@ -11,7 +13,7 @@ $company=$_['company']??[];
 <div class="erp-wizard-steps"><span class="active">1 Firma</span><span>2 Benutzer</span><span>3 Grundeinstellungen</span><span>4 Kalender</span><span>5 Mobile</span><span>6 Systemprüfung</span><span>✓ Bereit</span></div>
 </section>
 
-<form class="erp-settings-form" method="post" action="<?=p(\OC::$server->getURLGenerator()->linkToRoute('reinhardterp.page.saveSetupWizard'))?>">
+<form class="erp-settings-form" method="post" action="<?=p($url->linkToRoute('reinhardterp.page.saveSetupWizard'))?>">
 <input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
 <section class="erp-card erp-wide"><h2>1. Firma</h2><p>Diese Daten erscheinen unter anderem im Briefkopf der Rapporte.</p>
 <div class="erp-form-grid">
