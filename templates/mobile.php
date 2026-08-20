@@ -11,13 +11,13 @@ $greeting = $hour >= 5 && $hour <= 10 ? 'Guten Morgen' : ($hour <= 16 ? 'Guten T
 ?>
 <div id="app-content"><div class="erp-page erp-mobile-app">
 <header class="erp-mobile-appbar">
-  <div><small>NEXTERP MOBILE</small><h1><?php p($view==='today' ? $greeting.', '.($_['displayName'] ?? '') : match($view){'projects'=>'Projekte','more'=>'Mehr',default=>'NextERP Mobile'}); ?></h1><p><?php p(date('d.m.Y')); ?> · <?php p($_['role'] ?? ''); ?></p></div>
+  <div><small>BETRIO MOBILE</small><h1><?php p($view==='today' ? $greeting.', '.($_['displayName'] ?? '') : match($view){'projects'=>'Projekte','more'=>'Mehr',default=>'Betrio Mobile'}); ?></h1><p><?php p(date('d.m.Y')); ?> · <?php p($_['role'] ?? ''); ?></p></div>
   <a class="erp-mobile-refresh" href="<?php p($base.'?view='.rawurlencode($view)); ?>" aria-label="Aktualisieren">↻</a>
 </header>
 
 <?php if ($view === 'more'): ?>
 <section class="erp-mobile-install" id="nexterp-install-card">
-  <h2>NextERP wie eine App nutzen</h2>
+  <h2>Betrio wie eine App nutzen</h2>
   <p>Auf dem Startbildschirm installieren, im Vollbild öffnen und schneller in den Arbeitsalltag starten.</p>
   <button type="button" id="nexterp-install-button">Zum Startbildschirm</button>
   <small id="nexterp-install-hint">Falls kein Dialog erscheint: Browsermenü → „Zum Startbildschirm hinzufügen“.</small>
@@ -29,11 +29,11 @@ $greeting = $hour >= 5 && $hour <= 10 ? 'Guten Morgen' : ($hour <= 16 ? 'Guten T
  <a href="<?php p($url->linkToRoute('reinhardterp.page.customers')); ?>"><b>Kunden</b><small>Kontaktdaten und Kundenakten</small></a>
 </div></section>
 <section class="erp-mobile-section erp-mobile-info-card"><h2>Angemeldet als</h2><b><?php p($_['displayName'] ?? ''); ?></b><p><?php p($_['role'] ?? ''); ?></p></section>
-<section class="erp-mobile-section erp-mobile-info-card"><h2>NextERP</h2><p>ERP für das Handwerk · Mobile Web/PWA</p><p>Entwickler: André Reinhardt · Schreinerei Reinhardt</p></section>
-<p class="erp-mobile-copyright">© 2026 André Reinhardt · NextERP</p>
+<section class="erp-mobile-section erp-mobile-info-card"><h2>Betrio</h2><p>ERP für das Handwerk · Mobile Web/PWA</p><p>Entwickler: André Reinhardt · Schreinerei Reinhardt</p></section>
+<p class="erp-mobile-copyright">© 2026 André Reinhardt · Betrio</p>
 <script>
 (function(){let deferred=null,btn=document.getElementById('nexterp-install-button'),hint=document.getElementById('nexterp-install-hint');if(!btn)return;
-window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferred=e;btn.textContent='NextERP installieren';hint.textContent='Installation ist auf diesem Gerät verfügbar.';});
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferred=e;btn.textContent='Betrio installieren';hint.textContent='Installation ist auf diesem Gerät verfügbar.';});
 btn.addEventListener('click',async function(){if(deferred){deferred.prompt();try{await deferred.userChoice;}catch(e){}deferred=null;return;} hint.textContent='Browsermenü öffnen und „Zum Startbildschirm hinzufügen“ bzw. „App installieren“ wählen.';});})();
 </script>
 

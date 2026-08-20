@@ -683,7 +683,7 @@ ORG:" . $this->vEscape(trim($name)) . "
 
     private function buildIcs(string $uid,string $title,DateTimeImmutable $start,DateTimeImmutable $end,?string $location,?string $description): string {
         $esc=fn(string $v):string=>str_replace(["\\",",",";","\r","\n"],["\\\\","\\,","\\;",'',"\\n"],$v);$now=(new DateTimeImmutable('now',new DateTimeZone('UTC')))->format('Ymd\\THis\\Z');
-        $ics="BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//NextERP//DE\r\nBEGIN:VEVENT\r\nUID:".$esc($uid)."\r\nDTSTAMP:$now\r\nDTSTART:".$start->setTimezone(new DateTimeZone('UTC'))->format('Ymd\\THis\\Z')."\r\nDTEND:".$end->setTimezone(new DateTimeZone('UTC'))->format('Ymd\\THis\\Z')."\r\nSUMMARY:".$esc($title)."\r\n";
+        $ics="BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Betrio//DE\r\nBEGIN:VEVENT\r\nUID:".$esc($uid)."\r\nDTSTAMP:$now\r\nDTSTART:".$start->setTimezone(new DateTimeZone('UTC'))->format('Ymd\\THis\\Z')."\r\nDTEND:".$end->setTimezone(new DateTimeZone('UTC'))->format('Ymd\\THis\\Z')."\r\nSUMMARY:".$esc($title)."\r\n";
         if(trim((string)$location)!=='')$ics.='LOCATION:'.$esc(trim((string)$location))."\r\n";if(trim((string)$description)!=='')$ics.='DESCRIPTION:'.$esc(trim((string)$description))."\r\n";return $ics."END:VEVENT\r\nEND:VCALENDAR\r\n";
     }
 

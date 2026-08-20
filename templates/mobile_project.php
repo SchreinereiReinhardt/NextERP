@@ -35,6 +35,73 @@ $notes=trim((string)($c['notes']??''));
 </div><?php endif;?>
 <?php if($notes!==''):?><div class="erp-contact-label">Hinweise</div><div class="erp-contact-line"><?php p($notes);?></div><?php endif;?>
 </section><?php endif;?>
+
+<section class="erp-mob2-card" id="projektnotizen">
+	<span class="erp-mob2-projectno">NOTIZEN</span>
+	<h2>Projekt- und Auftragsnotizen</h2>
+
+	<form class="erp-mob2-form" method="post" action="<?php p($url->linkToRoute('reinhardterp.business.saveMobileProjectNote',['id'=>(int)$p['id']])); ?>">
+		<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
+
+		<label for="noteType">Art</label>
+		<select id="noteType" name="noteType" required>
+			<option value="note">Notiz</option>
+			<option value="measurement">Aufmaß</option>
+			<option value="meeting">Besprechung</option>
+			<option value="phone">Telefonnotiz</option>
+		</select>
+
+		<label for="noteContent">Eintrag</label>
+		<textarea
+			id="noteContent"
+			name="content"
+			rows="6"
+			required
+			placeholder="Notiz eingeben"></textarea>
+
+		<button class="erp-mob2-save" type="submit">Notiz speichern</button>
+	</form>
+
+	<?php
+	$noteLabels = [
+		'measurement' => 'Aufmaß',
+		'note' => 'Notiz',
+		'meeting' => 'Besprechung',
+		'phone' => 'Telefonnotiz',
+	];
+	$projectNotes = $_['notes'] ?? [];
+	?>
+
+	<?php if (!empty($projectNotes)): ?>
+		<div style="margin-top:18px">
+			<?php foreach ($projectNotes as $note): ?>
+				<div style="border-top:1px solid #e5e7eb;padding:13px 0">
+					<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+						<strong style="font-size:14px">
+							<?php p($noteLabels[$note['note_type']] ?? 'Notiz'); ?>
+						</strong>
+						<span class="erp-mob2-muted" style="font-size:11px;white-space:nowrap">
+							<?php p(date('d.m.Y H:i', strtotime($note['created_at']))); ?>
+						</span>
+					</div>
+
+					<?php if (!empty($note['created_by'])): ?>
+						<div class="erp-mob2-muted" style="margin-top:3px">
+							<?php p($note['created_by']); ?>
+						</div>
+					<?php endif; ?>
+
+					<div style="margin-top:8px;white-space:pre-wrap;line-height:1.5;font-size:15px">
+						<?php p($note['content']); ?>
+					</div>
+				</div>
+			<?php endforeach; ?>
+		</div>
+	<?php else: ?>
+		<div class="erp-mob2-note">Noch keine Notizen vorhanden.</div>
+	<?php endif; ?>
+</section>
+
 <section class="erp-mob2-card"><a href="<?php p($url->linkToRoute('reinhardterp.page.projectDetail',['id'=>(int)$p['id']])); ?>" style="color:#1265d8;font-weight:800">Vollständige Projektinformationen öffnen →</a></section>
 </main></div>
 <?php $mobileActive='projects'; $mobileProjectId=(int)$p['id']; require __DIR__.'/_mobile_nav.php'; ?>

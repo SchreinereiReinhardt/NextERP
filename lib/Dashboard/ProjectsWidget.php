@@ -5,7 +5,7 @@ use OCP\Dashboard\Model\WidgetItems;
 use OCP\Dashboard\Model\WidgetButton;
 final class ProjectsWidget extends AbstractNextErpWidget {
     public function getId(): string { return 'nexterp-projects'; }
-    public function getTitle(): string { return 'NextERP – Projekte'; }
+    public function getTitle(): string { return 'Betrio – Projekte'; }
     public function getOrder(): int { return 22; }
     public function getUrl(): ?string { return $this->url->linkToRouteAbsolute('reinhardterp.page.projects'); }
     public function getItemsV2(string $userId, ?string $since = null, int $limit = 7): WidgetItems {

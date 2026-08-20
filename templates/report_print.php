@@ -32,7 +32,7 @@ foreach ($photos as $photo) {
 </div>
 <header class="doc-header">
     <div class="brand">
-        <?php if($logoDataUri):?><img src="<?=p($logoDataUri)?>" alt="Firmenlogo"><?php else:?><div class="brand-name"><?=p($company['name'] ?: 'NextERP')?></div><?php endif;?>
+        <?php if($logoDataUri):?><img src="<?=p($logoDataUri)?>" alt="Firmenlogo"><?php else:?><div class="brand-name"><?=p($company['name'] ?: 'Betrio')?></div><?php endif;?>
     </div>
     <div class="header-details">
         <div class="brand-address">
@@ -56,6 +56,6 @@ foreach ($photos as $photo) {
 <section class="section"><h2 class="section-title">Material</h2><table class="modern-table"><tr><th>Beschreibung</th><th class="num">Menge</th><th>Einheit</th><th>Bemerkung</th></tr><?php if(empty($items)):?><tr><td colspan="4">Keine Materialeinträge vorhanden.</td></tr><?php else:foreach($items as $x):?><tr><td><?=p($x['description'])?></td><td class="num"><?=p(number_format((float)$x['quantity'],3,',','.'))?></td><td><?=p($x['unit'])?></td><td><?=p($x['notes']??'')?></td></tr><?php endforeach;endif;?></table></section>
 <?php if($photoGroups):?><section class="photo-section"><h2>Fotodokumentation</h2><?php foreach($photoGroups as $category=>$group):?><h3><?=p($category)?></h3><div class="photo-grid"><?php foreach($group as $photo):?><figure><img src="<?=p($photo['dataUri'])?>" alt="<?=p($photo['name'])?>"><figcaption><?=p($photo['name'])?><?php if(!empty($photo['createdAt'])):?> · <?=p($photo['createdAt'])?><?php endif;?></figcaption></figure><?php endforeach;?></div><?php endforeach;?></section><?php endif;?>
 <div class="signature-wrap"><section><h3>Unterschrift Auftraggeber</h3><?php if(!empty($report['signature_data'])):?><div class="signature"><img src="<?=p($report['signature_data'])?>" alt="Unterschrift Auftraggeber"><div class="signature-name"><?=p($report['signed_by']??'')?></div></div><?php if(!empty($report['signed_at'])):?><p>Unterschrieben am <?=p(date('d.m.Y H:i',strtotime((string)$report['signed_at'])))?></p><?php endif;?><?php else:?><div class="signature"></div><?php endif;?></section><section><h3>Unterschrift Monteur</h3><?php if(!empty($report['technician_signature_data'])):?><div class="signature"><img src="<?=p($report['technician_signature_data'])?>" alt="Unterschrift Monteur"><div class="signature-name"><?=p($report['technician_signed_by']??'')?></div></div><?php if(!empty($report['technician_signed_at'])):?><p>Unterschrieben am <?=p(date('d.m.Y H:i',strtotime((string)$report['technician_signed_at'])))?></p><?php endif;?><?php else:?><div class="signature"></div><?php endif;?></section></div>
-<p class="footer-note">Rapport <?=p($report['report_no'])?> · Erstellt mit NextERP</p>
+<p class="footer-note">Rapport <?=p($report['report_no'])?> · Erstellt mit Betrio</p>
 </body>
 </html>

@@ -9,7 +9,7 @@
 <div class="camera-card" id="camera-root"
  data-upload-url="<?php p($url->linkToRoute('reinhardterp.page.uploadMobileProjectPhoto',['id'=>(int)$p['id']])); ?>"
  data-requesttoken="<?php p($_['requesttoken']); ?>">
-  <div id="camera-idle" class="camera-idle"><div><b>Live-Kamera</b><span>Die Rückkamera wird direkt in NextERP geöffnet.</span></div></div>
+  <div id="camera-idle" class="camera-idle"><div><b>Live-Kamera</b><span>Die Rückkamera wird direkt in Betrio geöffnet.</span></div></div>
   <video id="camera-video" autoplay playsinline muted></video>
   <img id="camera-preview" alt="Foto Vorschau">
   <div class="camera-actions">

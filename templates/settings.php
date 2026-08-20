@@ -14,7 +14,7 @@ require __DIR__ . '/_nav.php';
 
 			<section class="erp-card erp-wide">
     <h2>Firmendaten & Briefkopf</h2>
-    <p>Diese Angaben werden zentral in NextERP gespeichert und automatisch auf Rapporten und Rapport-PDFs verwendet.</p>
+    <p>Diese Angaben werden zentral in Betrio gespeichert und automatisch auf Rapporten und Rapport-PDFs verwendet.</p>
     <form class="erp-settings-form" method="post" action="<?php p($url->linkToRoute('reinhardterp.module.saveSettings')); ?>" enctype="multipart/form-data">
         <input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
         <?php $company = $_['company'] ?? []; ?>
@@ -48,7 +48,7 @@ require __DIR__ . '/_nav.php';
 
 			<section class="erp-card erp-wide">
 				<h2>Nextcloud-Kalender</h2>
-				<p>Wähle den führenden Kalender für NextERP. Neue ERP-Termine werden dort gespeichert; Termine und Änderungen vom Handy werden zurück in den Teamkalender eingelesen.</p>
+				<p>Wähle den führenden Kalender für Betrio. Neue ERP-Termine werden dort gespeichert; Termine und Änderungen vom Handy werden zurück in den Teamkalender eingelesen.</p>
 				<form class="erp-settings-form" method="post" action="<?php p($url->linkToRoute('reinhardterp.integration.saveCalendarSettings')); ?>">
 					<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
 					<label for="calendarKey">Kalender für ERP-Termine</label>
@@ -58,7 +58,7 @@ require __DIR__ . '/_nav.php';
 						<option value="<?php p($calendar['key']); ?>" <?php if ($calendar['selected']): ?>selected<?php endif; ?> <?php if (!$calendar['writable']): ?>disabled<?php endif; ?>><?php p($calendar['name']); ?><?php if (!$calendar['writable']): ?> (schreibgeschützt)<?php endif; ?></option>
 						<?php endforeach; ?>
 					</select>
-					<?php if (!empty($_['selectedCalendarName'])): ?><div class="erp-integration-state is-connected"><span>✓ Aktiv</span><strong><?php p($_['selectedCalendarName']); ?></strong><small>Bidirektionaler Abgleich: NextERP schreibt Termine, NextERP liest Handy- und Nextcloud-Änderungen zurück.</small></div><?php endif; ?>
+					<?php if (!empty($_['selectedCalendarName'])): ?><div class="erp-integration-state is-connected"><span>✓ Aktiv</span><strong><?php p($_['selectedCalendarName']); ?></strong><small>Bidirektionaler Abgleich: Betrio schreibt Termine, Betrio liest Handy- und Nextcloud-Änderungen zurück.</small></div><?php endif; ?>
 					<?php if (empty($_['calendars'])): ?><div class="erp-notice">Es wurden keine Nextcloud-Kalender gefunden. Prüfe, ob die Kalender-App und der DAV-Hintergrunddienst aktiv sind.</div><?php endif; ?>
 					<button class="button primary" type="submit">Kalenderauswahl speichern</button>
 				</form>
@@ -97,9 +97,9 @@ require __DIR__ . '/_nav.php';
 			</section>
 
 			<section class="erp-card erp-wide">
-				<h2>Über NextERP</h2>
+				<h2>Über Betrio</h2>
 				<p><strong>Entwickler: André Reinhardt</strong></p>
-				<p>NextERP wird als praxisnahes ERP für das Handwerk entwickelt.</p>
+				<p>Betrio wird als praxisnahes ERP für das Handwerk entwickelt.</p>
 				<div class="erp-actions">
 					<a class="button" href="https://www.schreinerei-reinhardt.de" target="_blank" rel="noopener">Website</a>
 					<button class="button" type="button" onclick="navigator.clipboard.writeText('andrereinhardt@kassel-net.de');this.textContent='PayPal-Adresse kopiert ✓'">☕ Buy me a Coffee · PayPal-Adresse kopieren</button>

@@ -74,3 +74,97 @@ body{background:var(--nxm-bg)}
 #camera-shutter.camera-shutter::after{content:"Foto aufnehmen";position:absolute;left:50%;top:calc(100% + 10px);transform:translateX(-50%);width:130px;color:#fff;font-size:13px;font-weight:700;line-height:1.2;text-align:center;text-shadow:0 1px 3px rgba(0,0,0,.75);pointer-events:none}
 #camera-shutter.camera-shutter:active{transform:scale(.93);background:rgba(255,255,255,.42)!important}
 @media(max-width:420px){#camera-shutter.camera-shutter{width:72px!important;height:72px!important;min-width:72px!important;min-height:72px!important;flex-basis:72px!important}}
+
+/* NextERP Mobile – Auftragsnotizen */
+@media (max-width:800px){
+	.erp-order-notes{
+		margin-top:14px!important;
+		padding:16px!important;
+		border-radius:18px!important;
+	}
+
+	.erp-order-notes h2{
+		margin:0 0 14px!important;
+		font-size:20px!important;
+		line-height:1.25!important;
+	}
+
+	.erp-order-notes form{
+		display:flex!important;
+		flex-direction:column!important;
+		gap:8px!important;
+	}
+
+	.erp-order-notes label{
+		font-size:14px!important;
+		font-weight:700!important;
+		margin-top:4px!important;
+	}
+
+	.erp-order-notes select,
+	.erp-order-notes textarea{
+		box-sizing:border-box!important;
+		width:100%!important;
+		max-width:100%!important;
+		font-size:16px!important;
+		border-radius:12px!important;
+	}
+
+	.erp-order-notes select{
+		min-height:48px!important;
+		padding:0 12px!important;
+	}
+
+	.erp-order-notes textarea{
+		min-height:150px!important;
+		padding:12px!important;
+		resize:vertical!important;
+		line-height:1.45!important;
+	}
+
+	.erp-order-notes button[type="submit"]{
+		width:100%!important;
+		min-height:50px!important;
+		margin-top:6px!important;
+		border-radius:14px!important;
+		font-size:16px!important;
+		font-weight:700!important;
+		touch-action:manipulation!important;
+	}
+
+	.erp-order-note-list{
+		display:flex!important;
+		flex-direction:column!important;
+		gap:10px!important;
+		margin-top:20px!important;
+	}
+
+	.erp-order-note{
+		padding:13px!important;
+		border:1px solid var(--color-border, #d8d8d8)!important;
+		border-radius:14px!important;
+		overflow-wrap:anywhere!important;
+	}
+
+	.erp-order-note-head{
+		display:flex!important;
+		flex-direction:column!important;
+		gap:3px!important;
+		margin-bottom:8px!important;
+	}
+
+	.erp-order-note-head strong{
+		font-size:15px!important;
+	}
+
+	.erp-order-note-head span{
+		font-size:12px!important;
+		opacity:.7!important;
+	}
+
+	.erp-order-note-content{
+		font-size:15px!important;
+		line-height:1.5!important;
+		white-space:pre-wrap!important;
+	}
+}

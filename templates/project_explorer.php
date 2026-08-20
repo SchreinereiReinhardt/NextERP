@@ -7,7 +7,7 @@ $formatSize=static function(int $b):string{if($b<1024)return $b.' B';if($b<10485
 $isPreview=static fn(array $x):bool=>strtolower((string)$x['mime'])==='application/pdf'||str_starts_with(strtolower((string)$x['mime']),'image/');
 ?>
 <div id="app-content"><div id="app-content-wrapper"><?php print_unescaped($this->inc('_nav'));?><main class="erp-main erp-explorer-page">
-<header class="erp-project-hero"><div><span class="erp-record-kicker">Projektakte</span><h1><?php p($project['project_no'].' · '.$project['title']);?></h1><p class="erp-muted">Dateien und Ordner direkt in NextERP öffnen.</p></div><a class="button" href="<?php p($url->linkToRoute('reinhardterp.page.projectDetail',['id'=>$project['id']]).'#documents');?>">Zur Projektakte</a></header>
+<header class="erp-project-hero"><div><span class="erp-record-kicker">Projektakte</span><h1><?php p($project['project_no'].' · '.$project['title']);?></h1><p class="erp-muted">Dateien und Ordner direkt in Betrio öffnen.</p></div><a class="button" href="<?php p($url->linkToRoute('reinhardterp.page.projectDetail',['id'=>$project['id']]).'#documents');?>">Zur Projektakte</a></header>
 <nav class="erp-explorer-breadcrumb"><a href="<?php p($url->linkToRoute('reinhardterp.page.projectExplorer',['id'=>$project['id']]));?>">Projekt</a><?php foreach($parts as $part):$crumb=$crumb===''?$part:$crumb.'/'.$part;?> <span>›</span> <a href="<?php p($url->linkToRoute('reinhardterp.page.projectExplorer',['id'=>$project['id'],'path'=>$crumb]));?>"><?php p($part);?></a><?php endforeach;?></nav>
 <section class="erp-card erp-wide">
 <?php if($path!==''):?>

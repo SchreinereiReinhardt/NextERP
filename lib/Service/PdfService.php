@@ -10,7 +10,7 @@ final class PdfService {
  public function createReport(array $report,?array $project,?array $customer,array $hours,array $items,?array $logo=null,array $photos=[],array $company=[]):string{
   require_once __DIR__.'/../tfpdf/tfpdf.php';
   $pdf=new \tFPDF('P','mm','A4');$pdf->SetMargins(15,14,15);$pdf->SetAutoPageBreak(true,18);$pdf->AddPage();
-  $companyName=trim((string)($company['name']??'')) ?: 'NextERP';
+  $companyName=trim((string)($company['name']??'')) ?: 'Betrio';
 
   // Centered logo with sufficient top breathing room.
   if($logo&&isset($logo['content'],$logo['extension'])){

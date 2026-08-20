@@ -1,4 +1,4 @@
-# NextERP Release Checklist
+# Betrio Release Checklist
 
 This checklist is intended for maintainers before publishing a release.
 
@@ -14,7 +14,7 @@ This checklist is intended for maintainers before publishing a release.
 - [ ] Fresh install on a supported Nextcloud version.
 - [ ] Existing installation upgraded from the previous public release.
 - [ ] Customers, projects, times, materials, reports, signatures, settings and archives remain intact.
-- [ ] Nextcloud administrator can always open NextERP.
+- [ ] Nextcloud administrator can always open Betrio.
 - [ ] Setup wizard completes without manual source-code changes.
 
 ## Functional smoke test

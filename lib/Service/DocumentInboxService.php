@@ -408,7 +408,7 @@ final class DocumentInboxService {
         $period=(string)($filters['year']??'');
         if($period==='')$period='Auswahl';
         if((string)($filters['month']??'')!=='')$period.='-'.str_pad((string)$filters['month'],2,'0',STR_PAD_LEFT);
-        return ['name'=>'NextERP-Steuerbuero-'.$this->safe($period).'.zip','content'=>$content];
+        return ['name'=>'Betrio-Steuerbuero-'.$this->safe($period).'.zip','content'=>$content];
     }
 
     private function extractDocumentText(array $document): string {

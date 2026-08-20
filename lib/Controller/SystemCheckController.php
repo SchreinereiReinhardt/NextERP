@@ -32,10 +32,10 @@ final class SystemCheckController extends Controller {
         $this->permissions->assert('settings');
         $result = $this->checks->run();
         $lines = [
-            'NextERP Diagnosebericht',
+            'Betrio Diagnosebericht',
             '======================',
             'Erstellt: '.date('Y-m-d H:i:s'),
-            'NextERP: 1.4.13',
+            'Betrio: 1.4.13',
             'PHP: '.PHP_VERSION,
             'PHP SAPI: '.PHP_SAPI,
             'Betriebssystem: '.PHP_OS_FAMILY,
@@ -54,6 +54,6 @@ final class SystemCheckController extends Controller {
         $lines[] = '';
         $lines[] = 'Datenschutz: Dieser Bericht enthält bewusst keine Kundendaten, Projektdaten, Passwörter, Tokens, Dateiinhalte oder vollständigen Serverpfade.';
         $content = implode("\n", $lines)."\n";
-        return new DataDownloadResponse($content, 'NextERP-Diagnose-'.date('Ymd-His').'.txt', 'text/plain; charset=utf-8');
+        return new DataDownloadResponse($content, 'Betrio-Diagnose-'.date('Ymd-His').'.txt', 'text/plain; charset=utf-8');
     }
 }

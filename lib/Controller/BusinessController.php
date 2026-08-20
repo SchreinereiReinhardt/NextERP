@@ -23,8 +23,39 @@ final class BusinessController extends Controller {
  #[NoAdminRequired] public function updateOfferStatus(int $id,string $status):RedirectResponse{$this->permissions->assert('offers');if(!in_array($status,['draft','sent','accepted','rejected','expired'],true))throw new \InvalidArgumentException('Ungültiger Status.');$this->update('re_erp_offers',$id,['status'=>$status,'updated_at'=>date('Y-m-d H:i:s')]);return $this->go('reinhardterp.business.offerDetail',['id'=>$id]);}
  #[NoAdminRequired] public function createOrderFromOffer(int $id):RedirectResponse|\OCP\AppFramework\Http\NotFoundResponse{$this->permissions->assert('orders');$offer=$this->offer($id);if(!$offer)return new \OCP\AppFramework\Http\NotFoundResponse();$existing=$this->oneBy('re_erp_orders','offer_id',$id);if($existing)return $this->go('reinhardterp.business.orderDetail',['id'=>$existing['id']]);$now=date('Y-m-d H:i:s');$orderId=$this->insert('re_erp_orders',['order_no'=>$this->numbers->next('order'),'offer_id'=>$id,'customer_id'=>$offer['customer_id'],'project_id'=>$offer['project_id'],'title'=>$offer['title'],'order_date'=>date('Y-m-d'),'status'=>'open','net_amount'=>$offer['net_amount'],'gross_amount'=>$offer['gross_amount'],'created_by'=>$this->uid(),'created_at'=>$now,'updated_at'=>$now]);foreach($this->where('re_erp_offer_items','offer_id',$id,'position_no') as $i){$this->insert('re_erp_order_items',['order_id'=>$orderId,'position_no'=>$i['position_no'],'description'=>$i['description'],'quantity'=>$i['quantity'],'unit'=>$i['unit'],'unit_price'=>$i['unit_price'],'total_price'=>$i['total_price']]);}$this->update('re_erp_offers',$id,['status'=>'accepted','updated_at'=>$now]);return $this->go('reinhardterp.business.orderDetail',['id'=>$orderId]);}
  #[NoAdminRequired,NoCSRFRequired] public function orders():TemplateResponse{$this->permissions->assert('orders');return $this->page('orders',['orders'=>$this->ordersRows()]);}
- #[NoAdminRequired,NoCSRFRequired] public function orderDetail(int $id):TemplateResponse|\OCP\AppFramework\Http\NotFoundResponse{$this->permissions->assert('orders');$order=$this->order($id);if(!$order)return new \OCP\AppFramework\Http\NotFoundResponse();return $this->page('order_detail',['order'=>$order,'items'=>$this->where('re_erp_order_items','order_id',$id,'position_no')]);}
+ #[NoAdminRequired,NoCSRFRequired] public function orderDetail(int $id):TemplateResponse|\OCP\AppFramework\Http\NotFoundResponse{$this->permissions->assert('orders');$order=$this->order($id);if(!$order)return new \OCP\AppFramework\Http\NotFoundResponse();return $this->page('order_detail',['order'=>$order,'items'=>$this->where('re_erp_order_items','order_id',$id,'position_no'),'notes'=>$this->orderNotes($id)]);}
  #[NoAdminRequired] public function updateOrderStatus(int $id,string $status):RedirectResponse{$this->permissions->assert('orders');if(!in_array($status,['open','confirmed','production','installation','completed','cancelled'],true))throw new \InvalidArgumentException('Ungültiger Status.');$this->update('re_erp_orders',$id,['status'=>$status,'updated_at'=>date('Y-m-d H:i:s')]);return $this->go('reinhardterp.business.orderDetail',['id'=>$id]);}
+ #[NoAdminRequired] public function saveOrderNote(int $id,string $noteType,string $content):RedirectResponse|\OCP\AppFramework\Http\NotFoundResponse{
+	$this->permissions->assert('orders');
+
+	$order=$this->order($id);
+	if(!$order){
+		return new \OCP\AppFramework\Http\NotFoundResponse();
+	}
+
+	$allowed=['measurement','note','meeting','phone'];
+	if(!in_array($noteType,$allowed,true)){
+		throw new \InvalidArgumentException('Ungültige Notizart.');
+	}
+
+	$content=trim($content);
+	if($content===''){
+		throw new \InvalidArgumentException('Bitte einen Notiztext eingeben.');
+	}
+
+	$now=date('Y-m-d H:i:s');
+
+	$this->insert('re_erp_order_notes',[
+		'order_id'=>$id,
+		'note_type'=>$noteType,
+		'content'=>$content,
+		'created_by'=>$this->uid(),
+		'created_at'=>$now,
+		'updated_at'=>null,
+	]);
+
+	return $this->go('reinhardterp.business.orderDetail',['id'=>$id]);
+ }
  #[NoAdminRequired,NoCSRFRequired] public function inventory():TemplateResponse{$this->permissions->assert('inventory');return $this->page('inventory',['materials'=>$this->materialsWithMeta(),'movements'=>$this->stockRows(),'projects'=>$this->rows('re_erp_projects','project_no')]);}
  #[NoAdminRequired] public function saveStockMovement(int $materialId,string $movementType,float $quantity,?int $projectId=null,?string $note=null):RedirectResponse{$this->permissions->assert('inventory');if(!in_array($movementType,['in','out','adjustment'],true))throw new \InvalidArgumentException('Ungültige Lagerbewegung.');$m=$this->one('re_erp_materials',$materialId);if(!$m)throw new \InvalidArgumentException('Material nicht gefunden.');$qty=abs($quantity);$current=(float)($m['stock_quantity']??0);$new=$movementType==='in'?$current+$qty:($movementType==='out'?$current-$qty:$quantity);if($new<0)throw new \InvalidArgumentException('Lagerbestand darf nicht negativ werden.');$this->db->beginTransaction();try{$this->insert('re_erp_stock_movements',['material_id'=>$materialId,'project_id'=>$projectId&&$projectId>0?$projectId:null,'movement_type'=>$movementType,'quantity'=>$movementType==='out'?-1*$qty:($movementType==='in'?$qty:$quantity),'note'=>$note,'created_by'=>$this->uid(),'created_at'=>date('Y-m-d H:i:s')]);$this->update('re_erp_materials',$materialId,['stock_quantity'=>$new]);$this->db->commit();}catch(\Throwable $e){$this->db->rollBack();throw $e;}return $this->go('reinhardterp.business.inventory');}
  #[NoAdminRequired,NoCSRFRequired] public function aboutRelease():TemplateResponse{
@@ -57,11 +88,50 @@ final class BusinessController extends Controller {
   ]);
  }
 
+ #[NoAdminRequired] public function saveMobileProjectNote(int $id,string $noteType,string $content):RedirectResponse|\OCP\AppFramework\Http\NotFoundResponse{
+  $this->permissions->assert('mobile');
+  $this->permissions->assertProjectAccess($id);
+
+  $project=$this->one('re_erp_projects',$id);
+  if(!$project){
+   return new \OCP\AppFramework\Http\NotFoundResponse();
+  }
+
+  $allowed=['measurement','note','meeting','phone'];
+  if(!in_array($noteType,$allowed,true)){
+   throw new \InvalidArgumentException('Ungültige Notizart.');
+  }
+
+  $content=trim($content);
+  if($content===''){
+   throw new \InvalidArgumentException('Bitte einen Notiztext eingeben.');
+  }
+
+  $now=date('Y-m-d H:i:s');
+
+  $this->insert('re_erp_order_notes',[
+   'order_id'=>null,
+   'project_id'=>$id,
+   'note_type'=>$noteType,
+   'content'=>$content,
+   'created_by'=>$this->uid(),
+   'created_at'=>$now,
+   'updated_at'=>null,
+  ]);
+
+  return $this->go('reinhardterp.business.mobileProject',['id'=>$id]);
+ }
+
  #[NoAdminRequired,NoCSRFRequired] public function mobileProject(int $id):TemplateResponse{$this->addPwaHeaders();
   $this->permissions->assert('mobile');$uid=$this->uid();$this->permissions->assertProjectAccess($id);
   $project=$this->one('re_erp_projects',$id);if(!$project)throw new \InvalidArgumentException('Projekt nicht gefunden.');
   $customer=!empty($project['customer_id'])?$this->one('re_erp_customers',(int)$project['customer_id']):null;
-  return $this->page('mobile_project',['project'=>$project,'customer'=>$customer,'urlGenerator'=>$this->url]);
+  return $this->page('mobile_project',[
+   'project'=>$project,
+   'customer'=>$customer,
+   'notes'=>$this->projectNotes($id),
+   'urlGenerator'=>$this->url
+  ]);
  }
  #[NoAdminRequired,NoCSRFRequired] public function mobileMaterial(?int $projectId=null,?string $q=null):TemplateResponse{$this->addPwaHeaders();
   $this->permissions->assert('materials_use');$uid=$this->uid();
@@ -124,7 +194,7 @@ final class BusinessController extends Controller {
   Util::addHeader('meta',['name'=>'theme-color','content'=>'#1265d8']);
   Util::addHeader('meta',['name'=>'mobile-web-app-capable','content'=>'yes']);
   Util::addHeader('meta',['name'=>'apple-mobile-web-app-capable','content'=>'yes']);
-  Util::addHeader('meta',['name'=>'apple-mobile-web-app-title','content'=>'NextERP']);
+  Util::addHeader('meta',['name'=>'apple-mobile-web-app-title','content'=>'Betrio']);
   Util::addHeader('meta',['name'=>'apple-mobile-web-app-status-bar-style','content'=>'default']);
   Util::addHeader('link',['rel'=>'apple-touch-icon','href'=>$icon]);
  }
@@ -150,6 +220,25 @@ final class BusinessController extends Controller {
  private function offer(int $id):?array{$q=$this->db->getQueryBuilder();$q->select('o.*','c.name AS customer_name','p.project_no','p.title AS project_title')->from('re_erp_offers','o')->leftJoin('o','re_erp_customers','c',$q->expr()->eq('c.id','o.customer_id'))->leftJoin('o','re_erp_projects','p',$q->expr()->eq('p.id','o.project_id'))->where($q->expr()->eq('o.id',$q->createNamedParameter($id)));$r=$q->executeQuery()->fetchAssociative();if(!$r)return null;return $r;}
  private function ordersRows():array{$q=$this->db->getQueryBuilder();$q->select('o.*','c.name AS customer_name','p.project_no')->from('re_erp_orders','o')->leftJoin('o','re_erp_customers','c',$q->expr()->eq('c.id','o.customer_id'))->leftJoin('o','re_erp_projects','p',$q->expr()->eq('p.id','o.project_id'))->orderBy('o.order_date','DESC');return $q->executeQuery()->fetchAllAssociative();}
  private function order(int $id):?array{$q=$this->db->getQueryBuilder();$q->select('o.*','c.name AS customer_name','p.project_no','p.title AS project_title')->from('re_erp_orders','o')->leftJoin('o','re_erp_customers','c',$q->expr()->eq('c.id','o.customer_id'))->leftJoin('o','re_erp_projects','p',$q->expr()->eq('p.id','o.project_id'))->where($q->expr()->eq('o.id',$q->createNamedParameter($id)));$r=$q->executeQuery()->fetchAssociative();if(!$r)return null;return $r;}
+ private function projectNotes(int $projectId):array{
+  $q=$this->db->getQueryBuilder();
+  $q->select('*')
+   ->from('re_erp_order_notes')
+   ->where($q->expr()->eq('project_id',$q->createNamedParameter($projectId)))
+   ->orderBy('created_at','DESC')
+   ->addOrderBy('id','DESC');
+  return $q->executeQuery()->fetchAllAssociative();
+ }
+
+ private function orderNotes(int $orderId):array{
+	$q=$this->db->getQueryBuilder();
+	$q->select('*')
+		->from('re_erp_order_notes')
+		->where($q->expr()->eq('order_id',$q->createNamedParameter($orderId)))
+		->orderBy('created_at','DESC')
+		->addOrderBy('id','DESC');
+	return $q->executeQuery()->fetchAllAssociative();
+}
  private function materialsWithMeta():array{$q=$this->db->getQueryBuilder();$q->select('m.*','g.name AS group_name','s.name AS supplier_name')->from('re_erp_materials','m')->leftJoin('m','re_erp_material_groups','g',$q->expr()->eq('g.id','m.material_group_id'))->leftJoin('m','re_erp_suppliers','s',$q->expr()->eq('s.id','m.supplier_id'))->orderBy('m.name','ASC');return $q->executeQuery()->fetchAllAssociative();}
  private function stockRows():array{$q=$this->db->getQueryBuilder();$q->select('s.*','m.article_no','m.name AS material_name','m.unit','p.project_no')->from('re_erp_stock_movements','s')->leftJoin('s','re_erp_materials','m',$q->expr()->eq('m.id','s.material_id'))->leftJoin('s','re_erp_projects','p',$q->expr()->eq('p.id','s.project_id'))->orderBy('s.created_at','DESC')->setMaxResults(100);return $q->executeQuery()->fetchAllAssociative();}
  private function activeTimer(string $uid):?array{$q=$this->db->getQueryBuilder();$q->select('t.*','p.project_no','p.title')->from('re_erp_time_timers','t')->leftJoin('t','re_erp_projects','p',$q->expr()->eq('p.id','t.project_id'))->where($q->expr()->eq('t.user_id',$q->createNamedParameter($uid)))->andWhere($q->expr()->in('t.status',[$q->createNamedParameter('running'),$q->createNamedParameter('paused')]))->orderBy('t.id','DESC')->setMaxResults(1);$r=$q->executeQuery()->fetchAssociative();return $r?:null;}

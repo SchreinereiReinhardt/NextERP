@@ -15,10 +15,10 @@
         const appBase = '/index.php/apps/reinhardterp/';
         const mobileBase = appBase + 'mobile';
 
-        // Already inside a mobile NextERP route -> do nothing.
+        // Already inside a mobile Betrio route -> do nothing.
         if (path === mobileBase || path.startsWith(mobileBase + '/')) return;
 
-        // Only interfere with NextERP itself, never with another Nextcloud app.
+        // Only interfere with Betrio itself, never with another Nextcloud app.
         if (path.startsWith(appBase)) {
             window.location.replace(mobileBase + '?pwa=1');
         }

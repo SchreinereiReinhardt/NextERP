@@ -1,4 +1,4 @@
-# NextERP
+# Betrio
 
 Native Handwerker-ERP-App für Nextcloud.
 

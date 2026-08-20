@@ -26,6 +26,6 @@ abstract class AbstractNextErpWidget implements IAPIWidgetV2, IButtonWidget, IIc
     }
     public function load(): void {}
     public function getWidgetButtons(string $userId): array {
-        return [new WidgetButton(WidgetButton::TYPE_MORE, $this->getUrl() ?? '', 'NextERP öffnen')];
+        return [new WidgetButton(WidgetButton::TYPE_MORE, $this->getUrl() ?? '', 'Betrio öffnen')];
     }
 }

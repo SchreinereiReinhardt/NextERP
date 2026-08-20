@@ -9,7 +9,7 @@ $sw=$pwaUrl->linkToRoute('reinhardterp.page.pwaServiceWorker');
  if('serviceWorker' in navigator && window.isSecureContext){
   window.addEventListener('load',function(){
    navigator.serviceWorker.register(<?php echo json_encode($sw); ?>,{scope:'/'})
-    .catch(function(e){console.warn('NextERP PWA:',e);});
+    .catch(function(e){console.warn('Betrio PWA:',e);});
   });
  }
 })();

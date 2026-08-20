@@ -6,7 +6,7 @@ $linked = $_['linkedContacts'] ?? [];
 \OCP\Util::addScript('reinhardterp', 'customer_import');
 ?>
 <div id="app-content"><div class="erp-page erp-list-page">
-<div class="erp-head"><div><h1>Kunden aus Nextcloud importieren</h1><p class="erp-sub">Kontakte auswählen und als verknüpfte NextERP-Kunden übernehmen.</p></div><a class="button" href="<?php p($url->linkToRoute('reinhardterp.page.customers')); ?>">Zurück zu Kunden</a></div>
+<div class="erp-head"><div><h1>Kunden aus Nextcloud importieren</h1><p class="erp-sub">Kontakte auswählen und als verknüpfte Betrio-Kunden übernehmen.</p></div><a class="button" href="<?php p($url->linkToRoute('reinhardterp.page.customers')); ?>">Zurück zu Kunden</a></div>
 <?php if (empty($_['contactsEnabled'])): ?>
 <div class="erp-notice">Die Nextcloud-Kontakte-Schnittstelle ist nicht verfügbar.</div>
 <?php elseif (empty($_['contacts'])): ?>

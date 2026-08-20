@@ -1,5 +1,5 @@
 /**
- * NextERP Mobile Camera
+ * Betrio Mobile Camera
  *
  * Kept in an external file because Nextcloud's CSP blocks inline JavaScript.
  */

@@ -3,12 +3,12 @@
       xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
 
   <id>reinhardterp</id>
-  <name>NextERP</name>
+  <name>Betrio</name>
   <summary lang="de">ERP &amp; Projektmanagement für Handwerksunternehmen in Nextcloud</summary>
   <summary lang="en">ERP &amp; project management for trades and craft businesses in Nextcloud</summary>
 
   <description lang="de"><![CDATA[
-NextERP ist eine ERP- und Projektmanagement-Lösung speziell für Handwerksunternehmen direkt in Nextcloud.
+Betrio ist eine ERP- und Projektmanagement-Lösung speziell für Handwerksunternehmen direkt in Nextcloud.
 
 Die App verbindet kaufmännische und operative Abläufe mit der bestehenden Nextcloud-Umgebung – vom Kunden und Projekt über Angebote, Aufträge, Rapporte und Zeiterfassung bis hin zu Dokumenten, Material und mobilen Baustellenprozessen.
 
@@ -27,11 +27,11 @@ Funktionen:
 - Kamera- und Barcode-Funktionen für den Baustelleneinsatz
 - Integration in Nextcloud Files und bestehende Nextcloud-Strukturen
 
-NextERP wurde aus der täglichen Praxis eines Handwerksbetriebs entwickelt und richtet sich besonders an Handwerksunternehmen, die ihre betrieblichen Abläufe direkt in Nextcloud organisieren möchten.
+Betrio wurde aus der täglichen Praxis eines Handwerksbetriebs entwickelt und richtet sich besonders an Handwerksunternehmen, die ihre betrieblichen Abläufe direkt in Nextcloud organisieren möchten.
   ]]></description>
 
   <description lang="en"><![CDATA[
-NextERP is an ERP and project management solution specifically designed for trades and craft businesses and integrated directly into Nextcloud.
+Betrio is an ERP and project management solution specifically designed for trades and craft businesses and integrated directly into Nextcloud.
 
 It combines commercial and operational workflows with the existing Nextcloud environment – from customers and projects to quotations, orders, work reports, time tracking, documents, materials and mobile on-site processes.
 
@@ -50,7 +50,7 @@ Features:
 - Camera and barcode functions for on-site work
 - Integration with Nextcloud Files and existing Nextcloud structures
 
-NextERP was developed from the daily practice of a craft business and is especially aimed at trades and craft companies that want to manage their operational workflows directly in Nextcloud.
+Betrio was developed from the daily practice of a craft business and is especially aimed at trades and craft companies that want to manage their operational workflows directly in Nextcloud.
   ]]></description>
 
   <screenshot small-thumbnail="https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/img/app.png">https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/store/screenshots/01-nexterp-dashboard.png</screenshot>
@@ -81,7 +81,7 @@ NextERP was developed from the daily practice of a craft business and is especia
 
   <navigations>
     <navigation>
-      <name>NextERP</name>
+      <name>Betrio</name>
       <route>reinhardterp.page.index</route>
       <icon>app.png</icon>
       <order>45</order>

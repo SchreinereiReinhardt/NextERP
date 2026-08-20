@@ -1,4 +1,4 @@
-# NextERP Mobile API v1
+# Betrio Mobile API v1
 
 Basis-URL: `/index.php/apps/reinhardterp/api/mobile/v1`
 

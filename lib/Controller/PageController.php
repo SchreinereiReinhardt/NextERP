@@ -31,9 +31,9 @@ final class PageController extends Controller {
   $scope=preg_replace('~/mobile$~','/',$scopeBase);
   $data=[
    'id'=>$this->url->linkToRoute('reinhardterp.business.mobile'),
-   'name'=>'NextERP',
-   'short_name'=>'NextERP',
-   'description'=>'NextERP Mobile',
+   'name'=>'Betrio',
+   'short_name'=>'Betrio',
+   'description'=>'Betrio Mobile',
    'start_url'=>$start,
    'scope'=>$scope,
    'display'=>'standalone',
@@ -55,7 +55,7 @@ final class PageController extends Controller {
  #[NoAdminRequired,NoCSRFRequired] public function pwaServiceWorker():DataDisplayResponse{
   // Keep the service worker deliberately conservative: it enables installation,
   // but does not intercept navigation. This prevents stale/broken cached mobile
-  // pages from blocking NextERP after an update on Android/iOS.
+  // pages from blocking Betrio after an update on Android/iOS.
   $js="const CACHE='nexterp-mobile-v193';"
     ."self.addEventListener('install',e=>{self.skipWaiting();});"
     ."self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('nexterp-')).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});";
@@ -153,7 +153,7 @@ final class PageController extends Controller {
   Util::addHeader('meta',['name'=>'theme-color','content'=>'#1265d8']);
   Util::addHeader('meta',['name'=>'mobile-web-app-capable','content'=>'yes']);
   Util::addHeader('meta',['name'=>'apple-mobile-web-app-capable','content'=>'yes']);
-  Util::addHeader('meta',['name'=>'apple-mobile-web-app-title','content'=>'NextERP']);
+  Util::addHeader('meta',['name'=>'apple-mobile-web-app-title','content'=>'Betrio']);
   Util::addHeader('link',['rel'=>'apple-touch-icon','href'=>$icon]);
  }
  #[NoAdminRequired,NoCSRFRequired] public function mobileProjectDocuments(int $id):TemplateResponse{$this->addMobilePwaHeaders();

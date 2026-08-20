@@ -108,7 +108,7 @@ final class SystemCheckService {
         ];
 
         $jsonLoaded = extension_loaded('json');
-        $checks[] = $this->check('JSON', $jsonLoaded, $jsonLoaded ? 'geladen' : 'nicht geladen', $jsonLoaded ? null : 'Die PHP-JSON-Unterstützung aktivieren; sie ist für NextERP-API und Mobile erforderlich.');
+        $checks[] = $this->check('JSON', $jsonLoaded, $jsonLoaded ? 'geladen' : 'nicht geladen', $jsonLoaded ? null : 'Die PHP-JSON-Unterstützung aktivieren; sie ist für Betrio-API und Mobile erforderlich.');
 
         $memory = (string)ini_get('memory_limit');
         $memoryBytes = $this->iniBytes($memory);
@@ -132,10 +132,10 @@ final class SystemCheckService {
         } catch (\Throwable) {
         }
         if ($ncVersion === 'unbekannt') {
-            $checks[] = ['name' => 'Nextcloud-Version', 'status' => 'warning', 'message' => 'Version konnte nicht automatisch ermittelt werden', 'recommendation' => 'Nextcloud-Version mit sudo -u www-data php occ status prüfen. NextERP 1.4.13 unterstützt laut App-Metadaten Nextcloud 33–34.'];
+            $checks[] = ['name' => 'Nextcloud-Version', 'status' => 'warning', 'message' => 'Version konnte nicht automatisch ermittelt werden', 'recommendation' => 'Nextcloud-Version mit sudo -u www-data php occ status prüfen. Betrio 1.4.13 unterstützt laut App-Metadaten Nextcloud 33–34.'];
         } else {
             $ncOk = version_compare($ncVersion, '33.0.0', '>=') && version_compare($ncVersion, '35.0.0', '<');
-            $checks[] = $this->check('Nextcloud-Version', $ncOk, $ncVersion.' (unterstützt: 33–34)', $ncOk ? null : 'Eine von NextERP unterstützte Nextcloud-Version (33 oder 34) verwenden. Vor einem Nextcloud-Upgrade zuerst NextERP-Kompatibilität prüfen.');
+            $checks[] = $this->check('Nextcloud-Version', $ncOk, $ncVersion.' (unterstützt: 33–34)', $ncOk ? null : 'Eine von Betrio unterstützte Nextcloud-Version (33 oder 34) verwenden. Vor einem Nextcloud-Upgrade zuerst Betrio-Kompatibilität prüfen.');
         }
 
         foreach (['mbstring', 'gd', 'curl', 'dom', 'xml', 'zip', 'openssl', 'iconv'] as $extension) {
@@ -183,20 +183,20 @@ final class SystemCheckService {
             'recommendation' => $cronMode === 'cron' ? null : 'In Nextcloud unter Verwaltung → Grundeinstellungen „Cron“ wählen und cron.php systemseitig alle 5 Minuten als Webserver-Benutzer ausführen.',
         ];
         $erpEnabled = $this->permissions->isEnabled();
-        $checks[] = $this->check('ERP-Zugriff', $erpEnabled, 'Rolle: '.$this->permissions->role(), $erpEnabled ? null : 'Dem Benutzer in NextERP eine passende Rolle bzw. Berechtigung zuweisen.');
+        $checks[] = $this->check('ERP-Zugriff', $erpEnabled, 'Rolle: '.$this->permissions->role(), $erpEnabled ? null : 'Dem Benutzer in Betrio eine passende Rolle bzw. Berechtigung zuweisen.');
 
         $checks[] = [
             'name' => 'Administrator-Notfallzugang',
             'status' => $this->permissions->isNextcloudAdmin() ? 'ok' : 'info',
             'message' => $this->permissions->isNextcloudAdmin()
-                ? 'Dieses Nextcloud-Administratorkonto besitzt automatisch vollständigen NextERP-Adminzugriff'
-                : 'Nextcloud-Administratoren besitzen unabhängig von der NextERP-Rollentabelle vollständigen NextERP-Adminzugriff',
+                ? 'Dieses Nextcloud-Administratorkonto besitzt automatisch vollständigen Betrio-Adminzugriff'
+                : 'Nextcloud-Administratoren besitzen unabhängig von der Betrio-Rollentabelle vollständigen Betrio-Adminzugriff',
             'recommendation' => null,
         ];
         $checks[] = [
             'name' => 'Berechtigungsmodell',
             'status' => 'ok',
-            'message' => 'Nextcloud-Administratoren haben immer Adminzugriff; andere nicht konfigurierte Benutzer erhalten standardmäßig keinen NextERP-Zugriff',
+            'message' => 'Nextcloud-Administratoren haben immer Adminzugriff; andere nicht konfigurierte Benutzer erhalten standardmäßig keinen Betrio-Zugriff',
             'recommendation' => null,
         ];
         $checks[] = [
@@ -223,14 +223,14 @@ final class SystemCheckService {
             'name' => 'Datenbank-Migrationen',
             'status' => !empty($migrationFiles) ? 'ok' : 'warning',
             'message' => !empty($migrationFiles)
-                ? count($migrationFiles).' versionierte NextERP-Migrationen im Release vorhanden'
-                : 'Keine versionierten NextERP-Migrationen gefunden',
+                ? count($migrationFiles).' versionierte Betrio-Migrationen im Release vorhanden'
+                : 'Keine versionierten Betrio-Migrationen gefunden',
             'recommendation' => !empty($migrationFiles) ? null : 'Release-Paket prüfen. Für bestehende Installationen müssen notwendige Schemaänderungen als Nextcloud-Migrationen ausgeliefert werden.',
         ];
         $checks[] = [
             'name' => 'Backup vor Updates',
             'status' => 'info',
-            'message' => 'NextERP verwendet die Nextcloud-Datenbank, App-Konfiguration und Nextcloud-Dateispeicher; diese Bereiche müssen gemeinsam gesichert werden',
+            'message' => 'Betrio verwendet die Nextcloud-Datenbank, App-Konfiguration und Nextcloud-Dateispeicher; diese Bereiche müssen gemeinsam gesichert werden',
             'recommendation' => 'Vor Updates ein vollständiges Nextcloud-Backup inklusive Datenbank, config-Verzeichnis und Datenverzeichnis erstellen und die Wiederherstellung regelmäßig auf einer Testinstanz prüfen.',
         ];
         $checks[] = [

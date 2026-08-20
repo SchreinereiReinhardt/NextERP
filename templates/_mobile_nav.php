@@ -13,7 +13,7 @@ $navItem = static function (string $key, string $href, string $iconClass, string
     <?php
 };
 ?>
-<nav id="nexterp-mobile-bottom-nav" class="erp-mobile-bottom" aria-label="NextERP Mobile Navigation">
+<nav id="nexterp-mobile-bottom-nav" class="erp-mobile-bottom" aria-label="Betrio Mobile Navigation">
  <?php $navItem('today', $mobileBase, 'erp-icon-dashboard', 'Heute', $mobileActive); ?>
  <?php $navItem('projects', $mobileBase.'?view=projects', 'erp-icon-project', 'Projekte', $mobileActive); ?>
  <?php $navItem('time', $url->linkToRoute('reinhardterp.business.mobileTime', isset($mobileProjectId)?['projectId'=>(int)$mobileProjectId]:[]), 'erp-icon-time', 'Zeit', $mobileActive); ?>

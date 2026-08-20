@@ -93,7 +93,7 @@ $groups = [
             ['Einstellungen', 'reinhardterp.module.settings', 'settings', '/settings'],
             ['Systemprüfung', 'reinhardterp.systemCheck.index', 'settings', '/system-check'],
             ['Datenschutz', 'reinhardterp.business.privacy', 'document', '/privacy'],
-            ['Über NextERP & Release', 'reinhardterp.business.aboutRelease', 'settings', '/about-release'],
+            ['Über Betrio & Release', 'reinhardterp.business.aboutRelease', 'settings', '/about-release'],
         ],
     ],
 ];
@@ -107,7 +107,7 @@ $quickCreate = [
     ['Zeit buchen', 'reinhardterp.module.workdays', 'time'],
 ];
 ?>
-<nav id="app-navigation" class="erp-app-navigation" aria-label="NextERP Navigation">
+<nav id="app-navigation" class="erp-app-navigation" aria-label="Betrio Navigation">
     <div class="erp-nav-brand">
         <a href="<?php p($url->linkToRoute('reinhardterp.page.index')); ?>" class="erp-nav-home<?php if (str_ends_with(parse_url($currentPath, PHP_URL_PATH) ?? '', '/reinhardterp/')) { p(' is-active'); } ?>">
             <span class="erp-ui-icon erp-icon-dashboard erp-nav-home-icon" aria-hidden="true"></span><span>Dashboard</span>
@@ -162,12 +162,12 @@ $quickCreate = [
     <section class="erp-command-dialog" role="dialog" aria-modal="true" aria-labelledby="erpCommandTitle" data-search-url="<?php p($url->linkToRoute('reinhardterp.search.index')); ?>">
         <header>
             <span class="erp-ui-icon erp-icon-search erp-command-search-icon" aria-hidden="true"></span>
-            <input id="erpCommandInput" type="search" autocomplete="off" placeholder="Kunde, Projekt, Rapport oder Befehl suchen …" aria-label="NextERP durchsuchen">
+            <input id="erpCommandInput" type="search" autocomplete="off" placeholder="Kunde, Projekt, Rapport oder Befehl suchen …" aria-label="Betrio durchsuchen">
             <kbd>Esc</kbd>
         </header>
         <div class="erp-command-results" id="erpCommandResults">
             <p class="erp-command-hint">Mindestens zwei Zeichen eingeben. Mit ↑ ↓ auswählen, mit Enter öffnen.</p>
         </div>
-        <footer><span>NextERP Schnellsuche</span><span>Strg + K</span></footer>
+        <footer><span>Betrio Schnellsuche</span><span>Strg + K</span></footer>
     </section>
 </div>

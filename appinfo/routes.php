@@ -101,6 +101,8 @@ return ['routes'=>[
  ['name'=>'business#orders','url'=>'/orders','verb'=>'GET'],
  ['name'=>'business#orderDetail','url'=>'/orders/{id}','verb'=>'GET'],
  ['name'=>'business#updateOrderStatus','url'=>'/api/orders/{id}/status','verb'=>'POST'],
+ ['name'=>'business#saveOrderNote','url'=>'/api/orders/{id}/notes','verb'=>'POST'],
+
  ['name'=>'business#inventory','url'=>'/inventory','verb'=>'GET'],
  ['name'=>'business#saveStockMovement','url'=>'/api/inventory/movements','verb'=>'POST'],
  ['name'=>'business#documentation','url'=>'/documentation','verb'=>'GET'],
@@ -109,6 +111,7 @@ return ['routes'=>[
  ['name'=>'business#aboutRelease','url'=>'/about-release','verb'=>'GET'],
  ['name'=>'business#mobile','url'=>'/mobile','verb'=>'GET'],
  ['name'=>'business#mobileProject','url'=>'/mobile/project/{id}','verb'=>'GET','requirements'=>['id'=>'\\d+']],
+ ['name'=>'business#saveMobileProjectNote','url'=>'/mobile/project/{id}/notes','verb'=>'POST','requirements'=>['id'=>'\\d+']],
  ['name'=>'business#mobileMaterial','url'=>'/mobile/material','verb'=>'GET'],
  ['name'=>'business#saveMobileMaterial','url'=>'/mobile/material/use','verb'=>'POST'],
  ['name'=>'business#mobileTime','url'=>'/mobile/time','verb'=>'GET'],

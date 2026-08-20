@@ -28,7 +28,7 @@ $folders=[
 <?php if(!empty($_['error'])):?><div class="erp-notice erp-notice-warning"><?php p($_['error']);?></div><?php endif;?>
 
 <section class="erp-card erp-wide erp-finance-drop-card">
- <div class="erp-section-head"><div><h2>Belege einfach reinziehen</h2><p class="erp-muted">PDF oder Bild hier ablegen. NextERP übernimmt den Beleg in den Dokumenteneingang, analysiert ihn und öffnet direkt die Zuordnung.</p></div></div>
+ <div class="erp-section-head"><div><h2>Belege einfach reinziehen</h2><p class="erp-muted">PDF oder Bild hier ablegen. Betrio übernimmt den Beleg in den Dokumenteneingang, analysiert ihn und öffnet direkt die Zuordnung.</p></div></div>
  <form id="financeDropForm" class="erp-finance-dropzone" method="post" enctype="multipart/form-data" action="<?php p($url->linkToRoute('reinhardterp.document.upload')); ?>">
   <input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
   <input id="financeFileInput" type="file" name="document" accept="application/pdf,image/jpeg,image/png,image/webp" required>

@@ -12,6 +12,6 @@
 <div class="erp-mob2-row"><div><label>Pause (Min.)</label><input type="number" name="breakMinutes" min="0" value="0"></div><div><label>Stunden</label><input type="number" name="hours" min="0" step="0.25" placeholder="z. B. 7,5"></div></div>
 <label>Tätigkeit</label><textarea name="activity" required placeholder="Was wurde gemacht?"></textarea>
 <label>Notiz</label><textarea name="notes" placeholder="Optional"></textarea>
-<button class="erp-mob2-save" type="submit">Zeit speichern</button><div class="erp-mob2-note">Wenn Von/Bis ausgefüllt sind, kann NextERP die Stunden abzüglich Pause berechnen.</div>
+<button class="erp-mob2-save" type="submit">Zeit speichern</button><div class="erp-mob2-note">Wenn Von/Bis ausgefüllt sind, kann Betrio die Stunden abzüglich Pause berechnen.</div>
 </form></main></div>
 <?php $mobileActive='time'; $mobileProjectId=(int)($_['projectId']??0); require __DIR__.'/_mobile_nav.php'; ?>
