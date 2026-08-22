@@ -142,6 +142,7 @@ final class PageController extends Controller {
    'allowedProjectFolders'=>$allowedFolders,
    'isProjectSupervisor'=>$this->permissions->isProjectSupervisor(),
    'projectMaterials'=>$this->projectMaterials($id),
+   'projectNotes'=>$this->queryProjectNotes($id),
   ]);
  }
 
@@ -156,6 +157,58 @@ final class PageController extends Controller {
   Util::addHeader('meta',['name'=>'apple-mobile-web-app-title','content'=>'Betrio']);
   Util::addHeader('link',['rel'=>'apple-touch-icon','href'=>$icon]);
  }
+ #[NoAdminRequired] public function saveProjectNote(int $id,?int $noteId=null,?string $noteType=null,?string $title=null,?string $content=null):RedirectResponse{
+  $this->permissions->assertProjectAccess($id);
+  $content=trim((string)$content);
+  if($content==='')throw new \InvalidArgumentException('Bitte einen Notiztext eingeben.');
+  $rawType=trim((string)$noteType);
+  $type=match(mb_strtolower($rawType)){
+   'aufmaß','aufmass','measurement'=>'measurement',
+   'besprechung','meeting'=>'meeting',
+   'telefonnotiz','telefon','phone'=>'phone',
+   default=>'note',
+  };
+  $title=trim((string)$title);
+  $stored=$title!==''?$title."\n\n".$content:$content;
+  $now=date('Y-m-d H:i:s');
+  if($noteId!==null&&$noteId>0){
+   $existing=$this->queryProjectNote($id,$noteId);
+   if(!$existing)throw new \InvalidArgumentException('Notiz nicht gefunden.');
+   $qb=$this->db->getQueryBuilder();
+   $qb->update('re_erp_order_notes')
+    ->set('note_type',$qb->createNamedParameter($type))
+    ->set('content',$qb->createNamedParameter($stored))
+    ->set('updated_at',$qb->createNamedParameter($now))
+    ->where($qb->expr()->eq('id',$qb->createNamedParameter($noteId)))
+    ->andWhere($qb->expr()->eq('project_id',$qb->createNamedParameter($id)))
+    ->executeStatement();
+  }else{
+   $qb=$this->db->getQueryBuilder();
+   $qb->insert('re_erp_order_notes')->values([
+    'order_id'=>$qb->createNamedParameter(null),
+    'project_id'=>$qb->createNamedParameter($id),
+    'note_type'=>$qb->createNamedParameter($type),
+    'content'=>$qb->createNamedParameter($stored),
+    'created_by'=>$qb->createNamedParameter($this->users->getUser()?->getUID()??''),
+    'created_at'=>$qb->createNamedParameter($now),
+    'updated_at'=>$qb->createNamedParameter(null),
+   ])->executeStatement();
+  }
+  return new RedirectResponse($this->url->linkToRoute('reinhardterp.page.projectDetail',['id'=>$id]).'#notes');
+ }
+
+ #[NoAdminRequired] public function deleteProjectNote(int $id,int $noteId):RedirectResponse{
+  $this->permissions->assertProjectAccess($id);
+  if(!$this->queryProjectNote($id,$noteId))throw new \InvalidArgumentException('Notiz nicht gefunden.');
+  $qb=$this->db->getQueryBuilder();
+  $qb->delete('re_erp_order_notes')
+   ->where($qb->expr()->eq('id',$qb->createNamedParameter($noteId)))
+   ->andWhere($qb->expr()->eq('project_id',$qb->createNamedParameter($id)))
+   ->executeStatement();
+  return new RedirectResponse($this->url->linkToRoute('reinhardterp.page.projectDetail',['id'=>$id]).'#notes');
+ }
+
+
  #[NoAdminRequired,NoCSRFRequired] public function mobileProjectDocuments(int $id):TemplateResponse{$this->addMobilePwaHeaders();
   $this->permissions->assertProjectAccess($id);$p=$this->queryProject($id);$owner=(string)($p['created_by']??'');if($owner==='')$owner=$this->users->getUser()?->getUID()??'';
   $allowed=$this->permissions->projectFolders($id);$documents=$this->filterDocumentsByFolders($this->documentsForUser($owner,(string)($p['folder_path']??''),100,4),$p['folder_path']??'',$allowed);
@@ -261,6 +314,20 @@ final class PageController extends Controller {
  private function queryProjects(int $customerId):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_projects')->where($qb->expr()->eq('customer_id',$qb->createNamedParameter($customerId)))->orderBy('created_at','DESC');return $qb->executeQuery()->fetchAllAssociative();}
  private function queryProject(int $id):array{$qb=$this->db->getQueryBuilder();$qb->select('p.*','c.name AS customer_name','c.customer_no')->from('re_erp_projects','p')->leftJoin('p','re_erp_customers','c',$qb->expr()->eq('c.id','p.customer_id'))->where($qb->expr()->eq('p.id',$qb->createNamedParameter($id)));$r=$qb->executeQuery()->fetchAssociative();if(!$r)throw new \OCP\AppFramework\Http\NotFoundResponse();return $r;}
  private function queryReportsByCustomer(int $id):array{$qb=$this->db->getQueryBuilder();$qb->select('r.*','p.project_no','p.title AS project_title')->from('re_erp_reports','r')->leftJoin('r','re_erp_projects','p',$qb->expr()->eq('p.id','r.project_id'))->where($qb->expr()->eq('p.customer_id',$qb->createNamedParameter($id)))->andWhere($qb->expr()->eq('r.archived',$qb->createNamedParameter(0)))->orderBy('r.report_date','DESC');return $qb->executeQuery()->fetchAllAssociative();}
+ private function queryProjectNotes(int $projectId):array{
+  $qb=$this->db->getQueryBuilder();
+  $qb->select('*')->from('re_erp_order_notes')
+   ->where($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))
+   ->orderBy('created_at','DESC')->addOrderBy('id','DESC');
+  return $qb->executeQuery()->fetchAllAssociative();
+ }
+ private function queryProjectNote(int $projectId,int $noteId):array|false{
+  $qb=$this->db->getQueryBuilder();
+  $qb->select('*')->from('re_erp_order_notes')
+   ->where($qb->expr()->eq('id',$qb->createNamedParameter($noteId)))
+   ->andWhere($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)));
+  return $qb->executeQuery()->fetchAssociative();
+ }
  private function queryReportsByProject(int $id):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_reports')->where($qb->expr()->eq('project_id',$qb->createNamedParameter($id)))->andWhere($qb->expr()->eq('archived',$qb->createNamedParameter(0)))->orderBy('report_date','DESC');return $qb->executeQuery()->fetchAllAssociative();}
  private function queryTimes(int $id):array{$qb=$this->db->getQueryBuilder();$qb->select('e.*','w.work_date','w.user_id')->from('re_erp_workday_entries','e')->leftJoin('e','re_erp_workdays','w',$qb->expr()->eq('w.id','e.workday_id'))->where($qb->expr()->eq('e.project_id',$qb->createNamedParameter($id)))->orderBy('w.work_date','DESC');return $qb->executeQuery()->fetchAllAssociative();}
 

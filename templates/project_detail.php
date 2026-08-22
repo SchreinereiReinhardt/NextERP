@@ -6,7 +6,7 @@ $fileUrl=static function(string $path)use($filesBase):string{$path=trim($path,'/
 $formatSize=static function(int $b):string{if($b<1024)return $b.' B';if($b<1048576)return number_format($b/1024,1,',','.').' KB';return number_format($b/1048576,1,',','.').' MB';};
 $totalHours=array_sum(array_map(static fn($x)=>(float)$x['hours'],$times)); $statuses=['Anfrage','Angebot','Auftrag','Fertigung','Montage','Abnahme','Abrechnung','Abgeschlossen'];
 $currentStatus=(string)($project['status']??'Anfrage');$idx=array_search(strtolower($currentStatus),array_map('strtolower',$statuses),true);$progress=$idx===false?0:(int)round(($idx/(count($statuses)-1))*100);
-$cockpit=$cockpit??[];$projectCosts=$projectCosts??[];$offers=$offers??[];$orders=$orders??[];$projectEvents=$projectEvents??[];$documentRecords=$documentRecords??[];
+$cockpit=$cockpit??[];$projectCosts=$projectCosts??[];$offers=$offers??[];$orders=$orders??[];$projectEvents=$projectEvents??[];$documentRecords=$documentRecords??[];$projectNotes=$projectNotes??[];
 $money=static fn($v):string=>number_format((float)$v,2,',','.').' €';
 $memberMap=[];foreach(($projectMembers??[]) as $m)$memberMap[(string)$m['user_id']]=$m;
 $openProjectFile=static fn(string $path):string=>$url->linkToRoute('reinhardterp.page.projectFile',['id'=>$project['id'],'path'=>$path]);
@@ -14,7 +14,7 @@ $folderLabels=['00_Eingang'=>'Eingang','01_Aufmass'=>'Aufmaß','02_Planung'=>'Pl
 ?>
 <div id="app-content"><div id="app-content-wrapper"><?php print_unescaped($this->inc('_nav')); ?><main class="erp-main erp-project-center">
 <header class="erp-project-hero"><div class="erp-project-identity"><span class="erp-record-kicker">Digitale Projektakte · <?=p($project['project_no'])?></span><h1><?=p($project['title'])?></h1><p><a href="<?=p($url->linkToRoute('reinhardterp.page.customerDetail',['id'=>$project['customer_id']]))?>"><?=p($project['customer_no'].' '.$project['customer_name'])?></a> · <strong><?=p($currentStatus)?></strong></p><div class="erp-project-progress"><i style="width:<?=p($progress)?>%"></i></div></div><div class="erp-project-hero-actions"><?php if($projectPath!==''):?><a class="button primary" href="<?=p($url->linkToRoute('reinhardterp.page.projectExplorer',['id'=>$project['id']]))?>"><span class="erp-ui-icon erp-icon-folder"></span>Projektordner</a><?php endif;?><?php if($projectPath!==''&&!empty($isProjectSupervisor)):?><a class="button" target="_blank" rel="noopener" href="<?=p($folderUrl($projectPath))?>">In Nextcloud öffnen</a><?php endif;?><a class="button" href="<?=p($url->linkToRoute('reinhardterp.module.reports',['projectId'=>$project['id']]))?>">+ Rapport</a><a class="button" href="<?=p($url->linkToRoute('reinhardterp.module.workdays'))?>">+ Zeit</a><?php if(!empty($isProjectSupervisor)):?><a class="button" href="<?=p($url->linkToRoute('reinhardterp.page.projectForm',['id'=>$project['id']]))?>">Bearbeiten</a><?php endif;?></div></header>
-<nav class="erp-project-center-nav" aria-label="Projektcenter"><a href="#permissions">Freigaben</a><a href="#overview">Übersicht</a><?php if(!empty($isProjectSupervisor)):?><a href="#commercial">Angebote & Aufträge</a><?php endif;?><a href="#appointments">Termine</a><a href="#reports">Rapporte</a><a href="#time">Zeiten</a><a href="#material">Material</a><a href="#photos">Fotos</a><a href="#documents">Dokumente</a><?php if(!empty($isProjectSupervisor)):?><a href="#costs">Kosten</a><?php endif;?><a href="#timeline">Timeline</a></nav>
+<nav class="erp-project-center-nav" aria-label="Projektcenter"><a href="#permissions">Freigaben</a><a href="#overview">Übersicht</a><?php if(!empty($isProjectSupervisor)):?><a href="#commercial">Angebote & Aufträge</a><?php endif;?><a href="#appointments">Termine</a><a href="#reports">Rapporte</a><a href="#time">Zeiten</a><a href="#material">Material</a><a href="#notes">Notizen</a><a href="#photos">Fotos</a><a href="#documents">Dokumente</a><?php if(!empty($isProjectSupervisor)):?><a href="#costs">Kosten</a><?php endif;?><a href="#timeline">Timeline</a></nav>
 <section id="overview" class="erp-project-center-metrics"><article><span>Fortschritt</span><strong><?=p($progress)?> %</strong><small><?=p($currentStatus)?></small></article><article><span>Arbeitszeit</span><strong><?=p(number_format($totalHours,2,',','.'))?> h</strong><small><?=count($times)?> Buchungen</small></article><article><span>Rapporte</span><strong><?=count($reports)?></strong><small><?=count(array_filter($reports,static fn($r)=>empty($r['locked'])))?> offen</small></article><article><span>Projektwert</span><strong><?=p($money($projectCosts['projectValue']??0))?></strong><small><?=($projectCosts['orderValue']??0)>0?'Aufträge':'Angebote'?></small></article><article><span>Dokumente</span><strong><?=count($documents)?></strong><small><?=count($documentRecords)?> klassifiziert</small></article></section>
 <section class="erp-card erp-permissions-compact" id="permissions"><div class="erp-permission-summary"><div><h2>Mitarbeiter & Freigaben</h2><?php if(!empty($canManageAssignments)):?><?php $assignedSummaries=[];foreach(($assignmentUsers??[]) as $u){$uid=(string)$u['uid'];if(isset($memberMap[$uid])){$folders=$memberMap[$uid]['folders']??[];$assignedSummaries[]=(string)$u['displayName'].' · '.count($folders).' Ordner';}}?><p class="erp-muted"><?php p(!empty($assignedSummaries)?implode(' · ',$assignedSummaries):'Noch keinem Monteur zugewiesen.'); ?></p><?php else:?><p class="erp-muted">Deine Projektfreigaben</p><?php endif;?></div><?php if(!empty($canManageAssignments)):?><button type="button" class="button erp-permission-toggle" aria-expanded="false" aria-controls="erp-permission-editor">Bearbeiten</button><?php endif;?></div>
 <?php if(!empty($canManageAssignments)):?>
@@ -34,6 +34,55 @@ $folderLabels=['00_Eingang'=>'Eingang','01_Aufmass'=>'Aufmaß','02_Planung'=>'Pl
 </div>
 <div class="erp-project-center-grid">
 <section class="erp-card" id="material"><div class="erp-section-head"><div><h2>Material</h2><p class="erp-muted">In Rapporten erfasster Projektverbrauch.</p></div><a class="button" href="<?=p($url->linkToRoute('reinhardterp.module.materials'))?>">Materialstamm</a></div><?php if(!$projectMaterials):?><p class="erp-muted">Noch kein Material erfasst.</p><?php else:?><div class="erp-material-stream"><?php foreach($projectMaterials as $item):?><article><span><strong><?=p($item['description'])?></strong><small><?=p($item['report_no'])?> · <?=p(date('d.m.Y',strtotime((string)$item['report_date'])))?></small></span><em><?=p(number_format((float)$item['quantity'],3,',','.'))?> <?=p($item['unit']??'')?></em></article><?php endforeach;?></div><?php endif;?></section>
+<section class="erp-card" id="notes">
+ <div class="erp-section-head">
+  <div><h2>Projektnotizen</h2><p class="erp-muted">Notizen aus Betrio Mobile und der Projektakte.</p></div>
+ </div>
+ <form method="post" action="<?=p($url->linkToRoute('reinhardterp.page.saveProjectNote',['id'=>$project['id']]))?>" class="erp-form-grid">
+  <input type="hidden" name="requesttoken" value="<?=p(\OCP\Util::callRegister())?>">
+  <label>Notizart
+   <select name="noteType">
+    <option value="note">Notiz</option>
+    <option value="measurement">Aufmaß</option>
+    <option value="meeting">Besprechung</option>
+    <option value="phone">Telefonnotiz</option>
+   </select>
+  </label>
+  <label>Titel<input type="text" name="title" maxlength="255" placeholder="Optionaler Titel"></label>
+  <label class="erp-form-wide">Notiz<textarea name="content" rows="4" required placeholder="Notiz eingeben"></textarea></label>
+  <div class="erp-form-wide"><button class="button primary" type="submit">Notiz speichern</button></div>
+ </form>
+ <?php if(empty($projectNotes)):?>
+  <p class="erp-muted">Noch keine Projektnotizen vorhanden.</p>
+ <?php else:?>
+  <div class="erp-stack">
+   <?php foreach($projectNotes as $note):
+    $raw=(string)($note['content']??'');$parts=preg_split("/\R\R/",$raw,2);$noteTitle=count($parts)>1?trim((string)$parts[0]):'';$noteBody=count($parts)>1?(string)$parts[1]:$raw;
+    $type=(string)($note['note_type']??'note');$typeLabel=['measurement'=>'Aufmaß','meeting'=>'Besprechung','phone'=>'Telefonnotiz','note'=>'Notiz'][$type]??'Notiz';
+   ?>
+   <article class="erp-card erp-note-card">
+    <div class="erp-section-head"><div><strong><?=p($noteTitle!==''?$noteTitle:$typeLabel)?></strong><small class="erp-muted"><?=p($typeLabel)?> · <?=p((string)($note['created_at']??''))?><?php if(!empty($note['created_by'])):?> · <?=p((string)$note['created_by'])?><?php endif;?></small></div></div>
+    <form method="post" action="<?=p($url->linkToRoute('reinhardterp.page.saveProjectNote',['id'=>$project['id']]))?>" class="erp-form-grid">
+     <input type="hidden" name="requesttoken" value="<?=p(\OCP\Util::callRegister())?>">
+     <input type="hidden" name="noteId" value="<?=p((int)$note['id'])?>">
+     <label>Notizart<select name="noteType">
+      <?php foreach(['note'=>'Notiz','measurement'=>'Aufmaß','meeting'=>'Besprechung','phone'=>'Telefonnotiz'] as $value=>$label):?>
+       <option value="<?=p($value)?>"<?=$type===$value?' selected':''?>><?=p($label)?></option>
+      <?php endforeach;?>
+     </select></label>
+     <label>Titel<input type="text" name="title" maxlength="255" value="<?=p($noteTitle)?>"></label>
+     <label class="erp-form-wide">Notiz<textarea name="content" rows="4" required><?=p($noteBody)?></textarea></label>
+     <div class="erp-form-wide"><button class="button" type="submit">Änderungen speichern</button></div>
+    </form>
+    <form method="post" action="<?=p($url->linkToRoute('reinhardterp.page.deleteProjectNote',['id'=>$project['id'],'noteId'=>(int)$note['id']]))?>" onsubmit="return confirm('Diese Projektnotiz wirklich löschen?');">
+     <input type="hidden" name="requesttoken" value="<?=p(\OCP\Util::callRegister())?>">
+     <button class="button" type="submit">Löschen</button>
+    </form>
+   </article>
+   <?php endforeach;?>
+  </div>
+ <?php endif;?>
+</section>
 <section class="erp-card" id="photos"><div class="erp-section-head"><div><h2>Fotos</h2><p class="erp-muted">Bilder aus der digitalen Projektakte.</p></div><?php if($projectPath!==''&&!empty($isProjectSupervisor)):?><a class="button" target="_blank" rel="noopener" href="<?=p($folderUrl($projectPath.'/07_Fotos'))?>">Fotoordner</a><?php endif;?></div><?php if(empty($cockpit['photos'])):?><p class="erp-muted">Noch keine Bilder.</p><?php else:?><div class="erp-photo-strip"><?php foreach($cockpit['photos'] as $photo):?><a target="_blank" rel="noopener" href="<?=p($openProjectFile($photo['path']))?>"><span>🖼️</span><strong><?=p($photo['name'])?></strong><small><?=p(date('d.m.Y',(int)$photo['mtime']))?></small></a><?php endforeach;?></div><?php endif;?></section>
 </div>
 <section class="erp-card erp-document-center" id="documents"><div class="erp-section-head"><div><h2>Dokumenteingang</h2><p class="erp-muted">PDF, Angebot, Auftrag, Rechnung, Zeichnung oder Foto direkt dem Projekt zuordnen.</p></div><?php if($projectPath!==''&&!empty($isProjectSupervisor)):?><a class="button" target="_blank" rel="noopener" href="<?=p($folderUrl($projectPath))?>">Alle Dateien</a><?php endif;?></div><?php if($projectPath!==''):?><form class="erp-document-intake" method="post" enctype="multipart/form-data" action="<?=p($url->linkToRoute('reinhardterp.page.uploadProjectDocument',['id'=>$project['id']]))?>"><input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']);?>"><input type="file" name="document" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.dwg,.dxf" required><select name="documentType"><?php $uploadTypes=['inbox'=>['00_Eingang','Ungeprüfter Eingang'],'offer'=>['10_Angebote','Angebot'],'order'=>['11_Auftraege','Auftrag'],'invoice'=>['09_Rechnung','Rechnung'],'report'=>['06_Rapporte','Rapport'],'drawing'=>['03_Zeichnungen','Zeichnung'],'photo'=>['07_Fotos','Foto'],'material'=>['04_Material','Material'],'other'=>['12_Sonstiges','Sonstiges']];foreach($uploadTypes as $key=>$meta):if(!empty($isProjectSupervisor)||in_array($meta[0],$allowedProjectFolders??[],true)):?><option value="<?=p($key)?>"><?=p($meta[1])?></option><?php endif;endforeach;?></select><button class="button primary">Dem Projekt zuordnen</button></form><?php endif;?><?php if(!$documents):?><p class="erp-muted">Noch keine Projektdateien.</p><?php else:?><div class="erp-document-list"><?php foreach(array_slice($documents,0,16) as $doc):?><a class="erp-document-row" target="_blank" rel="noopener" href="<?=p($openProjectFile($doc['path']))?>"><span class="erp-file-icon"><?=str_starts_with((string)$doc['mime'],'image/')?'🖼️':((string)$doc['mime']==='application/pdf'?'📄':'📎')?></span><span class="erp-file-main"><strong><?=p($doc['name'])?></strong><small><?=p(str_replace($projectPath.'/','',$doc['path']))?></small></span><span class="erp-file-meta"><?=p($formatSize((int)$doc['size']))?><br><?=p(date('d.m.Y H:i',(int)$doc['mtime']))?></span><span class="button">Öffnen</span></a><?php endforeach;?></div><?php endif;?></section>

@@ -23,6 +23,7 @@ final class MobileService {
   private NumberService $numbers,
   private FolderService $folders,
   private PdfService $pdf,
+  private PermissionService $permissions,
  ){}
  public function login(string $username,string $password,?string $deviceName=null):array{
   $username=trim($username);
@@ -52,8 +53,28 @@ final class MobileService {
  public function bootstrap(string $uid):array{return ['user'=>$this->userPayload($this->requiredUser($uid)),'role'=>$this->role($uid),'permissions'=>$this->permissions($uid),'documentTypes'=>['offer','order','incoming_invoice','outgoing_invoice','delivery_note','credit_note','bank_statement','report','drawing','photo','other'],'projectStates'=>['anfrage','angebot','auftrag','fertigung','montage','abnahme','abrechnung','abgeschlossen'],'materialGroups'=>$this->simpleList('re_erp_material_groups','id','name','active'),'serverVersion'=>$this->version(),'apiVersion'=>1];}
  public function dashboard(string $uid):array{
   $today=date('Y-m-d');
-  return ['projectsToday'=>$this->countProjectsToday($uid,$today),'tasks'=>$this->countFutureEvents($today),'documents'=>$this->countWhere('re_erp_documents','status','new'),'reportsOpen'=>$this->countWhere('re_erp_reports','locked',0),'todayHours'=>$this->todayHours($uid,$today),'appointments'=>$this->appointments($today,8),'recentProjects'=>$this->projects($uid,8)];
+  return ['projectsToday'=>$this->countProjectsToday($uid,$today),'tasks'=>$this->countFutureEvents($today),'documents'=>$this->countWhere('re_erp_documents','status','new'),'reportsOpen'=>$this->countOpenReports($uid),'todayHours'=>$this->todayHours($uid,$today),'appointments'=>$this->appointments($today,8),'recentProjects'=>$this->projects($uid,8)];
  }
+ public function openReports(string $uid):array{
+  $role=$this->role($uid);$qb=$this->db->getQueryBuilder();
+  $qb->select('r.id','r.project_id','r.report_no','r.title','r.report_date','r.status','r.created_at','p.project_no','p.title AS project_title','p.customer_id','c.name AS customer_name')
+   ->from('re_erp_reports','r')->innerJoin('r','re_erp_projects','p',$qb->expr()->eq('p.id','r.project_id'))
+   ->leftJoin('p','re_erp_customers','c',$qb->expr()->eq('c.id','p.customer_id'))
+   ->where($qb->expr()->eq('r.locked',$qb->createNamedParameter(0)))
+   ->andWhere($qb->expr()->eq('r.archived',$qb->createNamedParameter(0)))
+   ->andWhere($qb->expr()->eq('p.is_archived',$qb->createNamedParameter(0)));
+  if(!in_array($role,['administrator','admin','office','manager'],true)){
+   $qb->innerJoin('p','re_erp_project_users','pu',$qb->expr()->andX($qb->expr()->eq('pu.project_id','p.id'),$qb->expr()->eq('pu.user_id',$qb->createNamedParameter($uid))));
+  }
+  $qb->orderBy('r.report_date','DESC')->addOrderBy('r.id','DESC')->setMaxResults(200);
+  return array_map(static fn(array $r):array=>[
+   'id'=>(int)$r['id'],'projectId'=>(int)$r['project_id'],'customerId'=>(int)($r['customer_id']??0),
+   'reportNo'=>(string)($r['report_no']??''),'title'=>(string)($r['title']??''),'reportDate'=>(string)($r['report_date']??''),
+   'status'=>(string)($r['status']??'Entwurf'),'projectNo'=>(string)($r['project_no']??''),'projectName'=>(string)($r['project_title']??''),
+   'customer'=>(string)($r['customer_name']??''),'createdAt'=>(string)($r['created_at']??'')
+  ],$qb->executeQuery()->fetchAllAssociative());
+ }
+
  public function customers(string $uid):array{
   $q=$this->db->getQueryBuilder();
   $q->select('*')->from('re_erp_customers')->where($q->expr()->eq('is_archived',$q->createNamedParameter(0)))->orderBy('name','ASC')->setMaxResults(500);
@@ -71,7 +92,7 @@ final class MobileService {
   $number=$this->numbers->next('customer');
   $street=trim((string)($data['street']??''));$postal=trim((string)($data['postalCode']??''));$city=trim((string)($data['city']??''));$country=trim((string)($data['country']??''));
   $address=trim(implode("\n",array_filter([$street,trim($postal.' '.$city),$country],static fn(string $v):bool=>$v!=='')));
-  $folder=$this->folders->ensureCustomerFolder($number,$name);$now=date('Y-m-d H:i:s');
+  $folder=$this->folders->ensureCustomerFolderForUser($uid,$number,$name);$now=date('Y-m-d H:i:s');
   $q=$this->db->getQueryBuilder();$q->insert('re_erp_customers')->values([
    'customer_no'=>$q->createNamedParameter($number),'name'=>$q->createNamedParameter($name),'folder_path'=>$q->createNamedParameter($folder),
    'contact_name'=>$q->createNamedParameter($this->nullString($data['contactName']??null)),'phone'=>$q->createNamedParameter($this->nullString($data['phone']??null)),
@@ -84,14 +105,32 @@ final class MobileService {
   return ['id'=>(int)$this->db->lastInsertId('*PREFIX*re_erp_customers'),'customerNo'=>$number,'name'=>$name,'contactName'=>(string)($data['contactName']??''),'phone'=>(string)($data['phone']??''),'mobile'=>(string)($data['mobile']??''),'email'=>(string)($data['email']??''),'street'=>$street,'postalCode'=>$postal,'city'=>$city,'country'=>$country,'notes'=>(string)($data['notes']??'')];
  }
 
+ public function updateCustomer(string $uid,int $id,array $data):array{
+  $this->assertMasterDataWrite($uid);
+  $name=trim((string)($data['name']??''));if($name==='')throw new \InvalidArgumentException('Kundenname ist erforderlich.');
+  $q=$this->db->getQueryBuilder();$q->select('*')->from('re_erp_customers')->where($q->expr()->eq('id',$q->createNamedParameter($id)));$old=$q->executeQuery()->fetchAssociative();
+  if(!$old)throw new \InvalidArgumentException('Kunde wurde nicht gefunden.');
+  $street=trim((string)($data['street']??''));$postal=trim((string)($data['postalCode']??''));$city=trim((string)($data['city']??''));$country=trim((string)($data['country']??''));
+  $address=trim(implode("\n",array_filter([$street,trim($postal.' '.$city),$country],static fn(string $v):bool=>$v!=='')));
+  $u=$this->db->getQueryBuilder();$u->update('re_erp_customers')
+   ->set('name',$u->createNamedParameter($name))->set('contact_name',$u->createNamedParameter($this->nullString($data['contactName']??null)))
+   ->set('phone',$u->createNamedParameter($this->nullString($data['phone']??null)))->set('mobile',$u->createNamedParameter($this->nullString($data['mobile']??null)))
+   ->set('email',$u->createNamedParameter($this->nullString($data['email']??null)))->set('street',$u->createNamedParameter($this->nullString($street)))
+   ->set('postal_code',$u->createNamedParameter($this->nullString($postal)))->set('city',$u->createNamedParameter($this->nullString($city)))
+   ->set('country',$u->createNamedParameter($this->nullString($country)))->set('address',$u->createNamedParameter($this->nullString($address)))
+   ->set('notes',$u->createNamedParameter($this->nullString($data['notes']??null)))->set('updated_at',$u->createNamedParameter(date('Y-m-d H:i:s')))
+   ->where($u->expr()->eq('id',$u->createNamedParameter($id)))->executeStatement();
+  return ['id'=>$id,'customerNo'=>(string)$old['customer_no'],'name'=>$name,'contactName'=>(string)($data['contactName']??''),'phone'=>(string)($data['phone']??''),'mobile'=>(string)($data['mobile']??''),'email'=>(string)($data['email']??''),'street'=>$street,'postalCode'=>$postal,'city'=>$city,'country'=>$country,'notes'=>(string)($data['notes']??'')];
+ }
+
  public function createProject(string $uid,array $data):array{
   $this->assertMasterDataWrite($uid);
   $customerId=(int)($data['customerId']??0);$title=trim((string)($data['title']??''));
   if($customerId<=0||$title==='')throw new \InvalidArgumentException('Kunde und Projektname sind erforderlich.');
   $allowed=['Anfrage','Angebot','Auftrag','Fertigung','Montage','Abnahme','Abrechnung','Abgeschlossen'];$status=(string)($data['status']??'Anfrage');if(!in_array($status,$allowed,true))$status='Anfrage';
   $cq=$this->db->getQueryBuilder();$cq->select('*')->from('re_erp_customers')->where($cq->expr()->eq('id',$cq->createNamedParameter($customerId)));$customer=$cq->executeQuery()->fetchAssociative();if(!$customer)throw new \InvalidArgumentException('Kunde wurde nicht gefunden.');
-  $projectNo=$this->numbers->next('project');$customerFolder=(string)($customer['folder_path']??'');if($customerFolder==='')$customerFolder=$this->folders->ensureCustomerFolder((string)$customer['customer_no'],(string)$customer['name']);
-  $projectFolder=$this->folders->ensureProjectFolder($customerFolder,$projectNo,$title);$now=date('Y-m-d H:i:s');
+  $projectNo=$this->numbers->next('project');$customerFolder=(string)($customer['folder_path']??'');if($customerFolder==='')$customerFolder=$this->folders->ensureCustomerFolderForUser($uid,(string)$customer['customer_no'],(string)$customer['name']);
+  $projectFolder=$this->folders->ensureProjectFolderForUser($uid,$customerFolder,$projectNo,$title);$now=date('Y-m-d H:i:s');
   $q=$this->db->getQueryBuilder();$q->insert('re_erp_projects')->values([
    'customer_id'=>$q->createNamedParameter($customerId),'project_no'=>$q->createNamedParameter($projectNo),'title'=>$q->createNamedParameter($title),'status'=>$q->createNamedParameter($status),
    'start_date'=>$q->createNamedParameter($this->dateOrNull($data['startDate']??null)),'due_date'=>$q->createNamedParameter($this->dateOrNull($data['dueDate']??null)),
@@ -112,6 +151,38 @@ final class MobileService {
  private function nullString(mixed $value):?string{$value=trim((string)$value);return $value===''?null:$value;}
  private function dateOrNull(mixed $value):?string{$value=trim((string)$value);if($value==='')return null;$date=\DateTime::createFromFormat('!Y-m-d',$value);if($date===false)throw new \InvalidArgumentException('Ungültiges Datum.');return $date->format('Y-m-d');}
 
+ public function updateProject(string $uid,int $id,array $data):array{
+  $this->assertMasterDataWrite($uid);
+  $this->assertProjectAccess($uid,$id);
+  $qb=$this->db->getQueryBuilder();
+  $qb->select('*')->from('re_erp_projects')->where($qb->expr()->eq('id',$qb->createNamedParameter($id)));
+  $project=$qb->executeQuery()->fetchAssociative();
+  if(!$project)throw new \InvalidArgumentException('Projekt wurde nicht gefunden.');
+
+  $title=trim((string)($data['title']??$project['title']??''));
+  if($title==='')throw new \InvalidArgumentException('Projektname ist erforderlich.');
+  $allowed=['Anfrage','Angebot','Auftrag','Fertigung','Montage','Abnahme','Abrechnung','Abgeschlossen'];
+  $status=trim((string)($data['status']??$project['status']??'Anfrage'));
+  if(!in_array($status,$allowed,true))throw new \InvalidArgumentException('Ungültiger Projektstatus.');
+
+  $startDate=$this->dateOrNull($data['startDate']??($project['start_date']??null));
+  $dueDate=$this->dateOrNull($data['dueDate']??($project['due_date']??null));
+  $description=$this->nullString($data['description']??($project['description']??null));
+
+  $u=$this->db->getQueryBuilder();
+  $u->update('re_erp_projects')
+   ->set('title',$u->createNamedParameter($title))
+   ->set('status',$u->createNamedParameter($status))
+   ->set('start_date',$u->createNamedParameter($startDate))
+   ->set('due_date',$u->createNamedParameter($dueDate))
+   ->set('description',$u->createNamedParameter($description))
+   ->set('updated_at',$u->createNamedParameter(date('Y-m-d H:i:s')))
+   ->where($u->expr()->eq('id',$u->createNamedParameter($id)))
+   ->executeStatement();
+
+  return $this->project($uid,$id);
+ }
+
  public function projects(string $uid,int $limit=100):array{
   $role=$this->role($uid);$qb=$this->db->getQueryBuilder();$qb->select('p.*','c.name AS customer_name','c.phone AS customer_phone','c.mobile AS customer_mobile','c.email AS customer_email','c.street','c.postal_code','c.city')->from('re_erp_projects','p')->leftJoin('p','re_erp_customers','c',$qb->expr()->eq('c.id','p.customer_id'));
   $qb->where($qb->expr()->eq('p.is_archived',$qb->createNamedParameter(0)));
@@ -123,6 +194,109 @@ final class MobileService {
   $this->assertProjectAccess($uid,$id);$qb=$this->db->getQueryBuilder();$qb->select('p.*','c.name AS customer_name','c.contact_name','c.phone','c.mobile','c.email','c.street','c.postal_code','c.city','c.country')->from('re_erp_projects','p')->leftJoin('p','re_erp_customers','c',$qb->expr()->eq('c.id','p.customer_id'))->where($qb->expr()->eq('p.id',$qb->createNamedParameter($id)));$p=$qb->executeQuery()->fetchAssociative();if(!$p)throw new \RuntimeException('Projekt nicht gefunden.');
   $out=$this->projectSummary($p);$out['description']=$p['description']??null;$out['documents']=$this->projectDocuments($uid,$id);$out['photos']=$this->projectPhotos($uid,$id);$out['material']=$this->projectMaterial($id);$out['appointments']=$this->projectEvents($id);$out['reports']=$this->projectReports($id);return $out;
  }
+ public function projectNotes(string $uid,int $projectId):array{
+  $this->assertProjectAccess($uid,$projectId);
+  $qb=$this->db->getQueryBuilder();
+  $qb->select('*')->from('re_erp_order_notes')
+   ->where($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))
+   ->orderBy('created_at','DESC')->addOrderBy('id','DESC')->setMaxResults(200);
+  return array_map(static fn(array $row):array=>[
+   'id'=>(int)$row['id'],
+   'projectId'=>(int)$row['project_id'],
+   'noteType'=>(string)($row['note_type']??'note'),
+   'content'=>(string)($row['content']??''),
+   'createdBy'=>(string)($row['created_by']??''),
+   'createdAt'=>(string)($row['created_at']??''),
+   'updatedAt'=>(string)($row['updated_at']??''),
+  ],$qb->executeQuery()->fetchAllAssociative());
+ }
+
+ public function updateProjectNote(string $uid,int $projectId,int $noteId,array $data):array{
+  $this->assertProjectAccess($uid,$projectId);
+  $existing=$this->noteRow($projectId,$noteId);
+  if(!$existing)throw new \RuntimeException('Notiz nicht gefunden.');
+  $content=trim((string)($data['content']??''));
+  if($content==='')throw new \InvalidArgumentException('Bitte einen Notiztext eingeben.');
+  $rawType=trim((string)($data['noteType']??($existing['note_type']??'note')));
+  $type=match(mb_strtolower($rawType)){
+   'aufmaß','aufmass','measurement'=>'measurement',
+   'besprechung','meeting'=>'meeting',
+   'telefonnotiz','telefon','phone'=>'phone',
+   default=>'note',
+  };
+  $title=trim((string)($data['title']??''));
+  $storedContent=$title!==''?$title."\n\n".$content:$content;
+  $now=date('Y-m-d H:i:s');
+  $qb=$this->db->getQueryBuilder();
+  $qb->update('re_erp_order_notes')
+   ->set('note_type',$qb->createNamedParameter($type))
+   ->set('content',$qb->createNamedParameter($storedContent))
+   ->set('updated_at',$qb->createNamedParameter($now))
+   ->where($qb->expr()->eq('id',$qb->createNamedParameter($noteId)))
+   ->andWhere($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))
+   ->executeStatement();
+  return ['id'=>$noteId,'projectId'=>$projectId,'noteType'=>$type,'title'=>$title,'content'=>$content,'updatedAt'=>$now];
+ }
+
+ public function deleteProjectNote(string $uid,int $projectId,int $noteId):array{
+  $this->assertProjectAccess($uid,$projectId);
+  $existing=$this->noteRow($projectId,$noteId);
+  if(!$existing)throw new \RuntimeException('Notiz nicht gefunden.');
+  $qb=$this->db->getQueryBuilder();
+  $qb->delete('re_erp_order_notes')
+   ->where($qb->expr()->eq('id',$qb->createNamedParameter($noteId)))
+   ->andWhere($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))
+   ->executeStatement();
+  return ['deleted'=>true,'id'=>$noteId,'projectId'=>$projectId];
+ }
+
+ private function noteRow(int $projectId,int $noteId):array|false{
+  $qb=$this->db->getQueryBuilder();
+  $qb->select('*')->from('re_erp_order_notes')
+   ->where($qb->expr()->eq('id',$qb->createNamedParameter($noteId)))
+   ->andWhere($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)));
+  return $qb->executeQuery()->fetchAssociative();
+ }
+
+ public function createProjectNote(string $uid,int $projectId,array $data):array{
+  $this->assertProjectAccess($uid,$projectId);
+  $content=trim((string)($data['content']??''));
+  if($content==='')throw new \InvalidArgumentException('Bitte einen Notiztext eingeben.');
+
+  $rawType=trim((string)($data['noteType']??'note'));
+  $type=match(mb_strtolower($rawType)){
+   'aufmaß','aufmass','measurement'=>'measurement',
+   'besprechung','meeting'=>'meeting',
+   'telefonnotiz','telefon','phone'=>'phone',
+   default=>'note',
+  };
+
+  $title=trim((string)($data['title']??''));
+  $storedContent=$title!==''?$title."\n\n".$content:$content;
+  $now=date('Y-m-d H:i:s');
+
+  $q=$this->db->getQueryBuilder();
+  $q->insert('re_erp_order_notes')->values([
+   'order_id'=>$q->createNamedParameter(null),
+   'project_id'=>$q->createNamedParameter($projectId),
+   'note_type'=>$q->createNamedParameter($type),
+   'content'=>$q->createNamedParameter($storedContent),
+   'created_by'=>$q->createNamedParameter($uid),
+   'created_at'=>$q->createNamedParameter($now),
+   'updated_at'=>$q->createNamedParameter(null),
+  ])->executeStatement();
+
+  return [
+   'id'=>(int)$this->db->lastInsertId('*PREFIX*re_erp_order_notes'),
+   'projectId'=>$projectId,
+   'noteType'=>$type,
+   'title'=>$title,
+   'content'=>$content,
+   'createdBy'=>$uid,
+   'createdAt'=>$now,
+  ];
+ }
+
  public function projectDocuments(string $uid,int $id):array{
   $this->assertProjectAccess($uid,$id);
   $project=$this->projectRow($id);
@@ -168,6 +342,40 @@ final class MobileService {
   return array_slice($documents,0,200);
  }
  public function projectPhotos(string $uid,int $id):array{return array_values(array_filter($this->projectDocuments($uid,$id),static fn(array $d):bool=>str_starts_with((string)($d['mime_type']??''),'image/')||(string)($d['document_type']??'')==='photo'));}
+ public function projectDocumentContent(string $uid,int $projectId,string $filePath):array{
+  $this->assertProjectAccess($uid,$projectId);
+  $project=$this->projectRow($projectId);
+  $base=trim((string)($project['folder_path']??''),'/');
+  $path=trim($filePath,'/');
+  if($base===''||$path===''||($path!==$base&&!str_starts_with($path,$base.'/')))throw new \RuntimeException('Ungültiger Dokumentpfad.');
+  $relative=$path===$base?'':substr($path,strlen($base)+1);
+  if($relative==='')throw new \RuntimeException('Ungültiger Dokumentpfad.');
+  $visible=false;
+  foreach($this->projectDocuments($uid,$projectId) as $document){
+   if(trim((string)($document['file_path']??''),'/')===$path){$visible=true;break;}
+  }
+  if(!$visible)throw new \RuntimeException('Keine Berechtigung für dieses Dokument.');
+  $node=$this->rootFolder->getUserFolder($uid);
+  foreach(explode('/',$path) as $part){if($part==='')continue;$node=$node->get($part);}
+  if(!$node instanceof File)throw new \RuntimeException('Dokumentdatei nicht gefunden.');
+  $name=$node->getName();
+  $extension=strtolower(pathinfo($name,PATHINFO_EXTENSION));
+  $mime=match($extension){
+   'pdf'=>'application/pdf',
+   'jpg','jpeg'=>'image/jpeg',
+   'png'=>'image/png',
+   'webp'=>'image/webp',
+   'gif'=>'image/gif',
+   'txt','md'=>'text/plain',
+   'csv'=>'text/csv',
+   'doc'=>'application/msword',
+   'docx'=>'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+   'xls'=>'application/vnd.ms-excel',
+   'xlsx'=>'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+   default=>$node->getMimeType()?:'application/octet-stream',
+  };
+  return ['content'=>$node->getContent(),'mime'=>$mime,'name'=>$name];
+ }
  public function projectPhotoContent(string $uid,int $projectId,int $photoId):array{
   $this->assertProjectAccess($uid,$projectId);
   $q=$this->db->getQueryBuilder();
@@ -468,10 +676,10 @@ final class MobileService {
    $stem=pathinfo($name,PATHINFO_FILENAME);
    $name=$this->safeFile(date('Y-m-d_H-i-s').'_'.$category.'_'.$stem.($extension!==''?'.'.$extension:''));
   }
-  $content=file_get_contents((string)$file['tmp_name']);
-  if($content===false)throw new \RuntimeException('Upload konnte nicht gelesen werden.');
-  $node=$target->newFile($name,$content);
-  $path=$base.'/'.$sub.'/'.$name;
+  $targetPath=$this->folders->ensureFolderPathForUser($uid,$base,$sub);
+  $path=$this->folders->writeFromLocalFileForUser($uid,$targetPath,$name,(string)$file['tmp_name']);
+  $node=$this->rootFolder->getUserFolder($uid)->get($path);
+  if(!$node instanceof File)throw new \RuntimeException('Upload wurde nicht als Datei gespeichert.');
   $q=$this->db->getQueryBuilder();
   $q->insert('re_erp_project_documents')->values([
    'project_id'=>$q->createNamedParameter($projectId),
@@ -504,6 +712,17 @@ final class MobileService {
  private function version():string{return (string)$this->config->getAppValue('reinhardterp','installed_version','0.66.0');}
  private function simpleList(string $table,string $id,string $label,string $active):array{$q=$this->db->getQueryBuilder();$q->select($id,$label)->from($table)->where($q->expr()->eq($active,$q->createNamedParameter(1)))->orderBy($label,'ASC');return $q->executeQuery()->fetchAllAssociative();}
  private function countWhere(string $table,string $column,mixed $value):int{$q=$this->db->getQueryBuilder();$q->select($q->func()->count('*','c'))->from($table)->where($q->expr()->eq($column,$q->createNamedParameter($value)));return (int)$q->executeQuery()->fetchOne();}
+ private function countOpenReports(string $uid):int{
+  $projects=$this->projects($uid,250);
+  $ids=array_values(array_filter(array_map(static fn(array $p):int=>(int)($p['id']??0),$projects),static fn(int $id):bool=>$id>0));
+  if(!$ids)return 0;
+  $qb=$this->db->getQueryBuilder();
+  $qb->select($qb->func()->count('*','c'))->from('re_erp_reports')
+   ->where($qb->expr()->in('project_id',array_map(fn(int $id)=>$qb->createNamedParameter($id),$ids)))
+   ->andWhere($qb->expr()->eq('locked',$qb->createNamedParameter(0)))
+   ->andWhere($qb->expr()->eq('archived',$qb->createNamedParameter(0)));
+  return (int)$qb->executeQuery()->fetchOne();
+ }
  private function countProjectsToday(string $uid,string $today):int{$projects=$this->projects($uid,250);return count(array_filter($projects,static fn(array $p):bool=>(string)($p['startDate']??'')<=$today&&((string)($p['dueDate']??'')===''||(string)$p['dueDate']>=$today)));}
  private function countFutureEvents(string $today):int{$q=$this->db->getQueryBuilder();$q->select($q->func()->count('*','c'))->from('re_erp_team_events')->where($q->expr()->gte('start_at',$q->createNamedParameter($today.' 00:00:00')))->andWhere($q->expr()->eq('is_deleted',$q->createNamedParameter(0)));return (int)$q->executeQuery()->fetchOne();}
  private function todayHours(string $uid,string $today):float{$q=$this->db->getQueryBuilder();$q->select($q->func()->sum('e.hours','s'))->from('re_erp_workday_entries','e')->innerJoin('e','re_erp_workdays','w',$q->expr()->eq('w.id','e.workday_id'))->where($q->expr()->eq('w.user_id',$q->createNamedParameter($uid)))->andWhere($q->expr()->eq('w.work_date',$q->createNamedParameter($today)));return (float)($q->executeQuery()->fetchOne()?:0);}
