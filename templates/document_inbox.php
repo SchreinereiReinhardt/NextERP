@@ -13,7 +13,7 @@ $processingLabels=['all'=>'Alle','new'=>'Neu','review'=>'In Prüfung','assigned'
 .erp-document-categories a strong{white-space:nowrap}
 </style>
 <style>
-/* Betrio 1.1.0 – Belege Button-Breiten Hotfix */
+/* Belege: Button-Breiten */
 .erp-document-categories{
     display:flex!important;
     flex-wrap:wrap!important;

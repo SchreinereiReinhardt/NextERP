@@ -9,12 +9,13 @@ use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IDBConnection;
+use OCP\IConfig;
 use OCP\IRequest;
 use OCP\IURLGenerator;
 use OCP\IUserSession;
 use OCP\Util;
 final class BusinessController extends Controller {
- public function __construct(string $appName,IRequest $request,private IDBConnection $db,private IURLGenerator $url,private IUserSession $session,private PermissionService $permissions,private NumberService $numbers){parent::__construct($appName,$request);}
+ public function __construct(string $appName,IRequest $request,private IDBConnection $db,private IURLGenerator $url,private IUserSession $session,private PermissionService $permissions,private NumberService $numbers,private IConfig $config){parent::__construct($appName,$request);}
  #[NoAdminRequired,NoCSRFRequired] public function crm():TemplateResponse{$this->permissions->assert('crm');return $this->page('crm',['communications'=>$this->communications(),'customers'=>$this->rows('re_erp_customers','name'),'projects'=>$this->rows('re_erp_projects','project_no'),'dueFollowUps'=>$this->dueFollowUps()]);}
  #[NoAdminRequired] public function saveCommunication(int $customerId,string $type,string $subject,?string $details=null,?int $projectId=null,?string $contactAt=null,?string $followUpAt=null):RedirectResponse{$this->permissions->assert('crm');if(trim($subject)==='')throw new \InvalidArgumentException('Betreff fehlt.');$this->insert('re_erp_communications',['customer_id'=>$customerId,'project_id'=>$projectId&&$projectId>0?$projectId:null,'type'=>$type,'subject'=>trim($subject),'details'=>$details,'contact_at'=>$this->dt($contactAt)??date('Y-m-d H:i:s'),'follow_up_at'=>$this->dt($followUpAt),'created_by'=>$this->uid(),'created_at'=>date('Y-m-d H:i:s')]);return $this->go('reinhardterp.business.crm');}
  #[NoAdminRequired,NoCSRFRequired] public function offers():TemplateResponse{$this->permissions->assert('offers');return $this->page('offers',['offers'=>$this->offersRows(),'customers'=>$this->rows('re_erp_customers','name'),'projects'=>$this->rows('re_erp_projects','project_no')]);}
@@ -188,7 +189,7 @@ final class BusinessController extends Controller {
   return $this->go('reinhardterp.business.mobileReport',['id'=>$id]);
  }
  private function addPwaHeaders():void{
-  $manifest=$this->url->linkToRoute('reinhardterp.page.pwaManifest').'?v=180-pwa';
+  $manifest=$this->url->linkToRoute('reinhardterp.page.pwaManifest').'?v=betrio';
   $icon=$this->url->linkToRoute('reinhardterp.page.pwaIcon',['size'=>'192']);
   Util::addHeader('link',['rel'=>'manifest','href'=>$manifest]);
   Util::addHeader('meta',['name'=>'theme-color','content'=>'#1265d8']);
@@ -204,7 +205,7 @@ final class BusinessController extends Controller {
  }
  private function offlineOpDone(?string $clientOperationId):bool{$f=$this->offlineOpMarker($clientOperationId);return $f!==null&&is_file($f);}
  private function markOfflineOpDone(?string $clientOperationId):void{$f=$this->offlineOpMarker($clientOperationId);if($f!==null)@file_put_contents($f,(string)time(),LOCK_EX);}
- private function page(string $template,array $data):TemplateResponse{return new TemplateResponse($this->appName,$template,$data);}
+ private function page(string $template,array $data):TemplateResponse{$data['appVersion']=$this->config->getAppValue($this->appName,'installed_version','unbekannt');return new TemplateResponse($this->appName,$template,$data);}
  private function go(string $route,array $params=[]):RedirectResponse{return new RedirectResponse($this->url->linkToRoute($route,$params));}
  private function uid():string{return $this->session->getUser()?->getUID()??'';}
  private function dt(?string $v):?string{if(!$v)return null;$t=strtotime($v);return $t===false?null:date('Y-m-d H:i:s',$t);}

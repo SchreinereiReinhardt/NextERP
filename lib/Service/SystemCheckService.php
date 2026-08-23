@@ -132,7 +132,7 @@ final class SystemCheckService {
         } catch (\Throwable) {
         }
         if ($ncVersion === 'unbekannt') {
-            $checks[] = ['name' => 'Nextcloud-Version', 'status' => 'warning', 'message' => 'Version konnte nicht automatisch ermittelt werden', 'recommendation' => 'Nextcloud-Version mit sudo -u www-data php occ status prüfen. Betrio 1.4.13 unterstützt laut App-Metadaten Nextcloud 33–34.'];
+            $checks[] = ['name' => 'Nextcloud-Version', 'status' => 'warning', 'message' => 'Version konnte nicht automatisch ermittelt werden', 'recommendation' => 'Nextcloud-Version mit sudo -u www-data php occ status prüfen. Laut den aktuellen Betrio-App-Metadaten werden Nextcloud 33–34 unterstützt.'];
         } else {
             $ncOk = version_compare($ncVersion, '33.0.0', '>=') && version_compare($ncVersion, '35.0.0', '<');
             $checks[] = $this->check('Nextcloud-Version', $ncOk, $ncVersion.' (unterstützt: 33–34)', $ncOk ? null : 'Eine von Betrio unterstützte Nextcloud-Version (33 oder 34) verwenden. Vor einem Nextcloud-Upgrade zuerst Betrio-Kompatibilität prüfen.');

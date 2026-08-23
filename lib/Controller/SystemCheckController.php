@@ -10,6 +10,7 @@ use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\IRequest;
+use OCP\IConfig;
 
 final class SystemCheckController extends Controller {
     public function __construct(
@@ -17,6 +18,7 @@ final class SystemCheckController extends Controller {
         IRequest $request,
         private SystemCheckService $checks,
         private PermissionService $permissions,
+        private IConfig $config,
     ) {
         parent::__construct($appName, $request);
     }
@@ -35,7 +37,7 @@ final class SystemCheckController extends Controller {
             'Betrio Diagnosebericht',
             '======================',
             'Erstellt: '.date('Y-m-d H:i:s'),
-            'Betrio: 1.4.13',
+            'Betrio: '.$this->config->getAppValue($this->appName, 'installed_version', 'unbekannt'),
             'PHP: '.PHP_VERSION,
             'PHP SAPI: '.PHP_SAPI,
             'Betriebssystem: '.PHP_OS_FAMILY,

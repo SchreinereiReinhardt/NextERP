@@ -26,7 +26,7 @@ use OCA\ReinhardtERP\Service\NextcloudIntegrationService;
 final class PageController extends Controller {
  public function __construct(string $appName,IRequest $request,private CustomerMapper $customers,private ProjectMapper $projects,private IUserSession $users,private IDBConnection $db,private PermissionService $permissions,private FolderService $folders,private IURLGenerator $url,private ActivityService $activities,private NextcloudIntegrationService $integration,private IUserManager $userManager,private IConfig $config){parent::__construct($appName,$request);}
  #[NoAdminRequired,NoCSRFRequired] public function pwaManifest():DataDisplayResponse{
-  $start=$this->url->linkToRoute('reinhardterp.business.mobile').'?pwa=1&v=192-pwa';
+  $start=$this->url->linkToRoute('reinhardterp.business.mobile').'?pwa=1&v=betrio';
   $scopeBase=$this->url->linkToRoute('reinhardterp.business.mobile');
   $scope=preg_replace('~/mobile$~','/',$scopeBase);
   $data=[
@@ -56,9 +56,9 @@ final class PageController extends Controller {
   // Keep the service worker deliberately conservative: it enables installation,
   // but does not intercept navigation. This prevents stale/broken cached mobile
   // pages from blocking Betrio after an update on Android/iOS.
-  $js="const CACHE='nexterp-mobile-v193';"
+  $js="const CACHE='betrio-mobile-v1';"
     ."self.addEventListener('install',e=>{self.skipWaiting();});"
-    ."self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('nexterp-')).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});";
+    ."self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>(k.startsWith('nexterp-')||k.startsWith('betrio-mobile-'))&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});";
   return new DataDisplayResponse($js,200,['Content-Type'=>'application/javascript; charset=utf-8','Cache-Control'=>'no-store, no-cache, must-revalidate, max-age=0','Service-Worker-Allowed'=>'/']);
  }
  #[NoAdminRequired,NoCSRFRequired] public function pwaIcon(string $size):DataDisplayResponse{
@@ -80,6 +80,8 @@ final class PageController extends Controller {
    'mobileUrl'=>$this->url->linkToRouteAbsolute('reinhardterp.business.mobile'),
    'calendars'=>$this->integration->availableCalendars(),
    'selectedCalendarName'=>$this->integration->selectedCalendarName(),
+   'appVersion'=>$this->config->getAppValue($this->appName,'installed_version','unbekannt'),
+   'urlGenerator'=>$this->url,
   ]);
  }
  #[NoAdminRequired] public function saveSetupWizard():RedirectResponse{
@@ -148,7 +150,7 @@ final class PageController extends Controller {
 
 
  private function addMobilePwaHeaders():void{
-  $manifest=$this->url->linkToRoute('reinhardterp.page.pwaManifest').'?v=190-camera';
+  $manifest=$this->url->linkToRoute('reinhardterp.page.pwaManifest').'?v=betrio';
   $icon=$this->url->linkToRoute('reinhardterp.page.pwaIcon',['size'=>'192']);
   Util::addHeader('link',['rel'=>'manifest','href'=>$manifest]);
   Util::addHeader('meta',['name'=>'theme-color','content'=>'#1265d8']);

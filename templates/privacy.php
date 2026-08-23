@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 /** @var array $_ */
-$url = $_['urlGenerator'] ?? \OC::$server->get(\OCP\IURLGenerator::class);
+$url = $_['urlGenerator'];
 ?>
 <?php include __DIR__.'/_nav.php'; ?>
 <main id="app-content"><div class="erp-page erp-privacy-page">
-<section class="erp-doc-hero"><span class="erp-doc-chip">Betrio 1.4.5</span><h1>Datenschutz & Datenverarbeitung</h1><p>Technische Datenschutzinformationen für Administratoren und Betreiber von Betrio. Diese Seite beschreibt die Datenverarbeitung der Software und unterstützt bei der eigenen Datenschutzdokumentation.</p></section>
+<section class="erp-doc-hero"><span class="erp-doc-chip">Betrio <?php p($_['appVersion']); ?></span><h1>Datenschutz & Datenverarbeitung</h1><p>Technische Datenschutzinformationen für Administratoren und Betreiber von Betrio. Diese Seite beschreibt die Datenverarbeitung der Software und unterstützt bei der eigenen Datenschutzdokumentation.</p></section>
 <div class="erp-privacy-notice"><strong>Wichtig:</strong> Der Betreiber der jeweiligen Nextcloud-Instanz ist für seine konkrete Nutzung, Rechtsgrundlagen, Informationspflichten, Aufbewahrungsfristen und Löschkonzepte verantwortlich. Diese technische Dokumentation ersetzt keine individuelle rechtliche Prüfung.</div>
 <section class="erp-doc-section"><h2>Grundprinzip</h2><p>Betrio wird innerhalb der jeweiligen Nextcloud-Installation betrieben. Geschäftsdaten werden in der Nextcloud-Umgebung des Betreibers verarbeitet. Betrio benötigt für den normalen ERP-Betrieb keinen zentralen Betrio-Cloud-Dienst des Entwicklers.</p><p>Ob zusätzliche Datenübermittlungen stattfinden, hängt von der Konfiguration der Nextcloud und von zusätzlich installierten oder angebundenen Diensten ab. Diese müssen vom Betreiber separat bewertet werden.</p></section>
 <section class="erp-doc-section"><h2>Verarbeitete Datenkategorien</h2><table class="erp-privacy-table"><thead><tr><th>Bereich</th><th>Typische Daten</th><th>Zweck</th></tr></thead><tbody>
