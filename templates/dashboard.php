@@ -36,5 +36,5 @@ $roleLabel=$roleNames[$role]??'Betrio';
 <?php if($can['invoices']??false): ?><a href="<?=p($url->linkToRoute('reinhardterp.document.finance'))?>"><span class="erp-ui-icon erp-icon-statistics"></span><strong>Finanzen</strong></a><?php endif; ?>
 <?php if($can['inventory']??false): ?><a href="<?=p($url->linkToRoute('reinhardterp.business.inventory'))?>"><span class="erp-ui-icon erp-icon-material"></span><strong>Lager</strong></a><?php endif; ?>
 </div></section></div>
-<section class="erp-card erp-activity-card erp-dashboard-activity"><div class="erp-section-head"><div><h2><span class="erp-ui-icon erp-icon-activity erp-section-icon"></span>Letzte Aktivitäten</h2><p class="erp-muted">Neueste Änderungen in Betrio</p></div></div><?php print_unescaped($this->inc('_activity_timeline',['activities'=>$activities])); ?></section>
+<section class="erp-card erp-activity-card erp-dashboard-activity"><div class="erp-section-head"><div><h2><span class="erp-ui-icon erp-icon-activity erp-section-icon"></span>Letzte Aktivitäten</h2><p class="erp-muted">Neueste Änderungen in Betrio</p></div></div><?php print_unescaped($this->inc('_activity_timeline',['activities'=>array_slice($activities,0,6),'compact'=>true])); ?></section>
 </main></div></div>

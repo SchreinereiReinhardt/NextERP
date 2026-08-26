@@ -789,3 +789,281 @@
     .erp-dashboard-v2 .erp-attention-item strong{font-size:16px!important}
     .erp-dashboard-v2 .erp-dashboard-projects strong{font-size:16px!important}
 }
+
+/* Betrio UX 1 – kontextbezogene Schnellaktionen */
+.erp-field-label-action{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px}
+.erp-field-label-action label{margin:0}
+.erp-field-label-action a{font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap}
+.erp-masterdata-create{scroll-margin-top:18px}
+.erp-masterdata-create:target{outline:2px solid var(--color-primary-element);outline-offset:2px}
+.erp-masterdata-create:target>summary{background:var(--color-primary-element-light)}
+
+/* Betrio 1.9.41 UX: Projektakte fokussieren */
+.erp-project-more,.erp-project-nav-more{position:relative}
+.erp-project-more>summary,.erp-project-nav-more>summary{list-style:none;cursor:pointer}
+.erp-project-more>summary::-webkit-details-marker,.erp-project-nav-more>summary::-webkit-details-marker{display:none}
+.erp-project-more-menu,.erp-project-nav-more>div{position:absolute;right:0;top:calc(100% + 6px);z-index:40;min-width:210px;padding:6px;background:var(--color-main-background);border:1px solid var(--color-border);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.14)}
+.erp-project-more-menu a,.erp-project-nav-more>div a{display:block;padding:9px 11px;border-radius:7px;color:var(--color-main-text);text-decoration:none;white-space:nowrap}
+.erp-project-more-menu a:hover,.erp-project-nav-more>div a:hover{background:var(--color-background-dark)}
+.erp-project-nav-more>summary{padding:7px 10px;border-radius:8px;white-space:nowrap;font-size:12px;font-weight:650;color:var(--color-main-text)}
+.erp-project-nav-more>summary:hover{background:var(--color-background-dark)}
+.erp-project-nav-more>div{left:auto;right:0}
+@media(max-width:700px){.erp-project-more-menu,.erp-project-nav-more>div{right:auto;left:0}.erp-project-center-nav{overflow:visible;flex-wrap:wrap}.erp-project-hero-actions{width:100%}}
+
+/* UX 1.9.42: aktive Projektbereiche */
+.erp-project-center-nav a.is-active{background:var(--color-primary-element);color:var(--color-primary-element-text);box-shadow:0 5px 16px color-mix(in srgb,var(--color-primary-element) 22%,transparent)}
+.erp-project-center [hidden]{display:none!important}
+
+
+/* Betrio 1.9.43 – echte Bildvorschauen in der Projektakte */
+.erp-photo-strip a{grid-template-columns:112px minmax(0,1fr);min-height:92px}
+.erp-photo-strip a>.erp-photo-thumb{position:relative;grid-row:1/3;width:112px;height:74px;overflow:hidden;border-radius:8px;background:var(--color-background-dark);display:flex;align-items:center;justify-content:center}
+.erp-photo-thumb .erp-photo-fallback{position:absolute;font-size:22px}
+.erp-photo-thumb img{position:relative;z-index:1;width:100%;height:100%;object-fit:cover;display:block}
+.erp-file-image-thumb{position:relative;width:52px;height:40px;overflow:hidden;border-radius:6px;background:var(--color-background-dark);display:flex;align-items:center;justify-content:center}
+.erp-file-image-thumb>span{position:absolute;font-size:18px}
+.erp-file-image-thumb>img{position:relative;z-index:1;width:100%;height:100%;object-fit:cover;display:block}
+.erp-document-row:has(.erp-file-image-thumb){grid-template-columns:58px minmax(0,1fr) 125px auto}
+@media(max-width:760px){.erp-photo-strip a{grid-template-columns:92px minmax(0,1fr)}.erp-photo-strip a>.erp-photo-thumb{width:92px;height:64px}.erp-document-row:has(.erp-file-image-thumb){grid-template-columns:52px minmax(0,1fr) auto}}
+
+
+/* Betrio 1.9.44 – Projekt-Menüs immer vor dem Inhalt anzeigen */
+.erp-project-center-nav{overflow:visible;z-index:1000;isolation:isolate}
+.erp-project-center-nav .erp-project-nav-more{position:relative;z-index:1001}
+.erp-project-center-nav .erp-project-nav-more[open]{z-index:1002}
+.erp-project-center-nav .erp-project-nav-more>div{z-index:1003}
+.erp-project-hero{position:relative;z-index:30;overflow:visible}
+.erp-project-hero-actions{position:relative;z-index:31;overflow:visible}
+.erp-project-hero-actions .erp-project-more{z-index:32}
+.erp-project-hero-actions .erp-project-more[open]{z-index:1002}
+.erp-project-hero-actions .erp-project-more-menu{z-index:1003}
+@media(max-width:900px){.erp-project-center-nav{flex-wrap:wrap}}
+
+
+/* Betrio 1.9.49 – Kundenübersicht im kompakten Projektstil */
+.erp-list-page>.erp-head{padding:20px 22px;margin-bottom:14px;border:1px solid var(--color-border);border-radius:16px;background:linear-gradient(135deg,var(--color-main-background),var(--color-background-dark))}
+.erp-list-page>.erp-head h1{font-size:28px;margin:0 0 4px}.erp-list-page>.erp-head .erp-sub{margin:0}
+.erp-customer-filter{padding:14px 16px;margin-bottom:14px;gap:10px}.erp-customer-search-wrap input{height:40px}.erp-alpha-filter button{height:30px;min-width:30px;border-radius:15px}.erp-alpha-filter button:first-child{min-width:48px}
+.erp-customer-list{border:1px solid var(--color-border);border-radius:14px;background:var(--color-main-background);overflow:visible}
+.erp-customer-list-head{display:grid;grid-template-columns:minmax(280px,1.45fr) minmax(180px,.8fr) minmax(230px,1fr) 140px 176px;gap:14px;padding:10px 16px;border-bottom:1px solid var(--color-border);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-maxcontrast)}
+.erp-customer-row{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;border-bottom:1px solid var(--color-border);min-height:74px}.erp-customer-row:last-child{border-bottom:0}.erp-customer-row:hover{background:var(--color-background-hover)}
+.erp-customer-row-main{display:grid;grid-template-columns:minmax(280px,1.45fr) minmax(180px,.8fr) minmax(230px,1fr) 140px;gap:14px;align-items:center;min-width:0;padding:11px 8px 11px 16px;color:var(--color-main-text);text-decoration:none}
+.erp-customer-ident{display:grid;grid-template-columns:38px minmax(0,1fr);gap:11px;align-items:center;min-width:0}.erp-customer-mini-avatar{display:grid;place-items:center;width:36px;height:36px;border-radius:10px;background:var(--color-primary-element-light);color:var(--color-primary-element);font-weight:800}.erp-customer-ident small,.erp-customer-contact small{display:block;margin-bottom:2px;font-size:10px;color:var(--color-text-maxcontrast)}.erp-customer-ident strong,.erp-customer-contact strong,.erp-customer-contact em{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.erp-customer-ident strong{font-size:15px}.erp-customer-contact strong{font-size:13px;font-weight:650}.erp-customer-contact em{margin-top:2px;font-size:11px;font-style:normal;color:var(--color-text-maxcontrast)}
+.erp-muted-chip{display:inline-flex;padding:4px 8px;border-radius:99px;background:var(--color-background-dark);font-size:11px;color:var(--color-text-maxcontrast)}
+.erp-customer-row-actions{display:flex;gap:7px;align-items:center;padding-right:14px}.erp-customer-row-actions .button{margin:0;min-height:34px}.erp-row-more{position:relative}.erp-row-more>summary{list-style:none;cursor:pointer}.erp-row-more>summary::-webkit-details-marker{display:none}.erp-row-more-menu{position:absolute;z-index:1000;right:0;top:calc(100% + 6px);width:180px;padding:6px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-main-background);box-shadow:0 12px 32px rgba(0,0,0,.16)}.erp-row-more-menu a,.erp-row-more-menu button{display:block;width:100%;padding:9px 10px;border:0;border-radius:7px;background:transparent;color:var(--color-main-text);font:inherit;text-align:left;text-decoration:none;cursor:pointer}.erp-row-more-menu a:hover,.erp-row-more-menu button:hover{background:var(--color-background-hover)}.erp-row-more-menu form{margin:0}
+@media(max-width:1150px){.erp-customer-list-head{display:none}.erp-customer-row-main{grid-template-columns:minmax(240px,1.3fr) minmax(170px,.8fr) minmax(190px,1fr)}.erp-customer-nc{display:none}}
+@media(max-width:820px){.erp-customer-row{grid-template-columns:1fr}.erp-customer-row-main{grid-template-columns:1fr 1fr;padding-right:16px}.erp-customer-row-main>.erp-customer-contact:nth-of-type(2){display:none}.erp-customer-row-actions{padding:0 16px 12px 65px}.erp-list-page>.erp-head{flex-direction:column}.erp-list-page>.erp-head .erp-actions{width:100%}}
+@media(max-width:560px){.erp-customer-row-main{grid-template-columns:1fr}.erp-customer-row-main>.erp-customer-contact{display:none}.erp-customer-row-actions{padding-left:16px}.erp-alpha-filter{gap:4px}}
+
+/* Betrio 1.9.51 – Kundenakte als kompakter Workspace mit Tabs */
+.erp-customer-tabs{position:sticky;top:0;z-index:60;display:flex;gap:4px;align-items:center;overflow-x:auto;margin:0 0 14px;padding:7px 8px;border:1px solid var(--color-border);border-radius:13px;background:var(--color-main-background);box-shadow:0 4px 16px rgba(0,0,0,.035)}
+.erp-customer-tabs button{flex:0 0 auto;min-height:36px;padding:0 13px;border:0;border-radius:9px;background:transparent;color:var(--color-main-text);font-weight:650;cursor:pointer}
+.erp-customer-tabs button:hover{background:var(--color-background-hover)}
+.erp-customer-tabs button.is-active{background:var(--color-primary-element);color:var(--color-primary-element-text);box-shadow:0 5px 14px rgba(0,0,0,.10)}
+.erp-customer-panel{display:none!important}.erp-customer-panel.is-active{display:block!important}
+.erp-customer-layout.is-overview-hidden{display:none}
+.erp-customer-overview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}.erp-customer-overview-grid>.erp-card{margin:0;min-height:150px}.erp-customer-overview-grid .erp-section-head{align-items:flex-start}.erp-customer-overview-grid .button{margin:0}
+.erp-overview-contact{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:8px 0 0}.erp-overview-contact div{min-width:0}.erp-overview-contact dt{font-size:11px;color:var(--color-text-maxcontrast);margin-bottom:4px}.erp-overview-contact dd{margin:0;font-weight:650;overflow-wrap:anywhere}
+.erp-customer-layout:not(.is-overview-hidden){grid-template-columns:1fr}.erp-customer-layout:not(.is-overview-hidden) .erp-customer-main,.erp-customer-layout:not(.is-overview-hidden) .erp-customer-sidebar{display:contents}.erp-customer-layout:not(.is-overview-hidden) .erp-customer-panel.is-active{width:100%;margin:0 0 14px}
+.erp-customer-project-card footer strong{display:inline-flex;align-items:center;min-height:34px;padding:0 13px;border-radius:9px;background:var(--color-primary-element);color:var(--color-primary-element-text);font-size:13px}
+@media(max-width:900px){.erp-customer-overview-grid{grid-template-columns:1fr}.erp-overview-contact{grid-template-columns:1fr}.erp-customer-tabs{border-radius:10px}.erp-customer-tabs button{padding:0 10px}}
+
+
+/* Betrio 1.9.52 – Feinschliff Kundenakte */
+.erp-customer-overview-grid .erp-compact-links a{align-items:center;min-height:68px;padding:12px 14px}
+.erp-customer-overview-grid .erp-compact-links strong{font-size:16px;line-height:1.25;font-weight:700;color:var(--color-main-text)}
+.erp-customer-overview-grid .erp-compact-links small{margin-top:4px;font-size:11px}
+.erp-customer-overview-grid .erp-compact-links b{align-self:flex-start;padding:4px 8px;border-radius:99px;background:var(--color-background-dark);font-weight:650}
+.erp-overview-contact{grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin-top:12px;border:1px solid var(--color-border);border-radius:10px;overflow:hidden}
+.erp-overview-contact div{padding:12px 14px;border-right:1px solid var(--color-border)}
+.erp-overview-contact div:last-child{border-right:0}
+.erp-overview-contact dt{margin-bottom:5px;font-size:10px;text-transform:uppercase;letter-spacing:.035em}
+.erp-overview-contact dd{font-size:14px;line-height:1.35}
+.erp-overview-contact a{color:var(--color-main-text);text-decoration:none}.erp-overview-contact a:hover{text-decoration:underline;color:var(--color-primary-element)}
+@media(max-width:900px){.erp-overview-contact{grid-template-columns:1fr}.erp-overview-contact div{border-right:0;border-bottom:1px solid var(--color-border)}.erp-overview-contact div:last-child{border-bottom:0}}
+
+/* Betrio 1.9.53 – CRM UX */
+.erp-crm-page .erp-project-hero{margin-bottom:14px}
+.erp-crm-tabs{margin-bottom:14px}
+.erp-crm-tabs .erp-tab-count{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;margin-left:6px;padding:0 6px;border-radius:999px;background:rgba(0,0,0,.08);font-size:11px;font-weight:700}
+.erp-crm-tabs .active .erp-tab-count{background:rgba(255,255,255,.28)}
+.erp-crm-kpis{margin-bottom:14px}
+.erp-crm-kpis small{display:block;margin-top:4px;color:var(--color-text-maxcontrast);font-size:12px;font-weight:400}
+.erp-crm-overview-grid{align-items:start}
+.erp-crm-activity-list{display:flex;flex-direction:column;gap:0}
+.erp-crm-activity-row{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid var(--color-border)}
+.erp-crm-activity-row:last-child{border-bottom:0}
+.erp-crm-type-icon{display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:12px;background:var(--color-background-hover);color:var(--color-primary-element);font-size:18px;font-weight:700}
+.erp-crm-activity-main{display:flex;min-width:0;flex-direction:column;gap:3px}
+.erp-crm-activity-main strong{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.erp-crm-activity-main span{color:var(--color-text-maxcontrast);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.erp-crm-activity-meta{display:flex;align-items:flex-end;flex-direction:column;gap:5px;text-align:right}
+.erp-crm-activity-meta small{color:var(--color-text-maxcontrast)}
+.erp-crm-followup-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:12px 0;border-bottom:1px solid var(--color-border)}
+.erp-crm-followup-row:last-child{border-bottom:0}
+.erp-crm-followup-row strong,.erp-crm-followup-row span{grid-column:1}
+.erp-crm-followup-row small{grid-column:2;grid-row:1 / span 2;align-self:center;color:var(--color-text-maxcontrast)}
+.erp-crm-form-card{max-width:1100px}
+.erp-crm-form-actions{margin-top:18px}
+.erp-crm-followup-list,.erp-crm-history{display:flex;flex-direction:column;gap:10px}
+.erp-crm-followup-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:start;padding:18px;border:1px solid var(--color-border);border-radius:14px;background:var(--color-main-background)}
+.erp-crm-followup-card h3{margin:7px 0 3px;font-size:18px}
+.erp-crm-followup-card p,.erp-crm-followup-card small{margin:0;color:var(--color-text-maxcontrast)}
+.erp-crm-followup-card time{font-weight:700;white-space:nowrap}
+.erp-crm-history-row{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:14px;padding:16px;border:1px solid var(--color-border);border-radius:14px;background:var(--color-main-background)}
+.erp-crm-history-content{min-width:0}
+.erp-crm-history-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.erp-crm-history-head strong{font-size:16px}
+.erp-crm-history-content p{margin:4px 0;color:var(--color-text-maxcontrast)}
+.erp-crm-history-details{margin:9px 0;line-height:1.45;white-space:pre-wrap}
+.erp-crm-history-content small{color:var(--color-text-maxcontrast)}
+.erp-crm-history-row time{color:var(--color-text-maxcontrast);white-space:nowrap;font-size:12px}
+.erp-empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:180px;gap:5px;color:var(--color-text-maxcontrast)}
+.erp-empty-state strong{color:var(--color-main-text);font-size:18px}
+@media (max-width:900px){.erp-crm-activity-row,.erp-crm-history-row{grid-template-columns:40px minmax(0,1fr)}.erp-crm-activity-meta,.erp-crm-history-row time{grid-column:2;align-items:flex-start;text-align:left}.erp-crm-followup-card{grid-template-columns:1fr}.erp-crm-followup-card time{white-space:normal}.erp-crm-followup-row{grid-template-columns:1fr}.erp-crm-followup-row small{grid-column:1;grid-row:auto}}
+
+
+/* Betrio 1.9.54 – Dashboard kompakter */
+.erp-dashboard-v2{max-width:1320px;margin:0 auto;padding-bottom:28px}
+.erp-dashboard-v2 .erp-head{margin-bottom:14px}
+.erp-dashboard-v2 .erp-kpis{margin-bottom:14px}
+.erp-dashboard-v2 .erp-attention-card{margin-bottom:14px;padding:16px}
+.erp-dashboard-v2 .erp-dashboard-events{padding:16px;margin-bottom:14px;min-height:0}
+.erp-dashboard-v2-layout{gap:14px}
+.erp-dashboard-v2-layout>.erp-card{padding:16px}
+.erp-dashboard-v2 .erp-dashboard-projects>a{padding:9px 12px}
+.erp-dashboard-v2 .erp-quick-grid a{min-height:50px;padding:10px 12px}
+.erp-dashboard-activity{margin-top:14px!important;padding:16px!important}
+.erp-dashboard-activity .erp-timeline-compact{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:28px;row-gap:0}
+.erp-dashboard-activity .erp-timeline-compact .erp-timeline-item{padding:8px 0 10px;grid-template-columns:28px minmax(0,1fr);border-bottom:1px solid var(--color-border)}
+.erp-dashboard-activity .erp-timeline-compact .erp-timeline-item::before{display:none}
+.erp-dashboard-activity .erp-timeline-compact .erp-timeline-icon{width:26px;height:26px}
+.erp-dashboard-activity .erp-timeline-compact .erp-timeline-content{padding-top:1px}
+.erp-dashboard-activity .erp-timeline-compact .erp-timeline-head strong{font-size:15px!important;line-height:1.25!important}
+.erp-dashboard-activity .erp-timeline-compact .erp-timeline-head time{white-space:nowrap;font-size:10px}
+.erp-dashboard-activity .erp-timeline-compact .erp-timeline-content p{font-size:12px;margin:2px 0;line-height:1.3}
+.erp-dashboard-activity .erp-timeline-compact .erp-timeline-content small{font-size:10px}
+@media(max-width:900px){.erp-dashboard-activity .erp-timeline-compact{grid-template-columns:1fr}}
+
+/* Betrio 1.9.55 – Mitarbeiter / Zeiterfassung / Teamplanung Workspace */
+.erp-team-workspace{max-width:1400px;margin:0 auto;padding-bottom:28px}.erp-team-tabs a{display:inline-flex;align-items:center;min-height:36px;padding:0 13px;border-radius:9px;color:var(--color-main-text);font-weight:650;text-decoration:none;white-space:nowrap}.erp-team-tabs a:hover{background:var(--color-background-hover)}.erp-team-tabs a.is-active{background:var(--color-primary-element);color:var(--color-primary-element-text)}
+.erp-team-kpis{margin:0 0 14px}.erp-team-kpis small{display:block;margin-top:4px;font-size:11px;color:var(--color-text-maxcontrast)}.erp-team-hint{margin-bottom:14px!important}.erp-team-list{border:1px solid var(--color-border);border-radius:14px;background:var(--color-main-background);overflow:hidden}.erp-team-list-head,.erp-team-row{display:grid;grid-template-columns:minmax(250px,1.2fr) minmax(300px,1.15fr) minmax(330px,1.2fr) 100px;gap:12px;align-items:center}.erp-team-list-head{padding:10px 16px;border-bottom:1px solid var(--color-border);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-maxcontrast)}.erp-team-row{padding:11px 16px;border-bottom:1px solid var(--color-border)}.erp-team-row:last-child{border-bottom:0}.erp-team-row:hover{background:var(--color-background-hover)}.erp-team-person{display:grid;grid-template-columns:38px minmax(0,1fr);gap:11px;align-items:center;min-width:0}.erp-team-person strong,.erp-team-person small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.erp-team-person strong{font-size:15px}.erp-team-person small{margin-top:3px;color:var(--color-text-maxcontrast);font-size:11px}.erp-team-access,.erp-team-rate{display:grid;grid-template-columns:1fr 1.35fr;gap:8px}.erp-team-rate{grid-template-columns:1.35fr 1fr}.erp-team-row select,.erp-team-row input{width:100%;min-width:0;margin:0}.erp-team-row>.button{margin:0}.erp-team-price{display:flex;gap:12px;align-items:center;margin-top:14px!important;padding:13px 16px!important}.erp-team-price span{color:var(--color-text-maxcontrast);font-size:12px}.erp-team-workspace>.erp-head{padding:18px 20px;margin-bottom:14px;border:1px solid var(--color-border);border-radius:16px;background:linear-gradient(135deg,var(--color-main-background),var(--color-background-dark))}.erp-team-workspace>.erp-head h1{font-size:28px}.erp-team-workspace .erp-inline-form{padding:14px;border:1px solid var(--color-border);border-radius:14px;background:var(--color-main-background)}
+@media(max-width:1050px){.erp-team-list-head{display:none}.erp-team-row{grid-template-columns:1fr 1fr}.erp-team-row>.button{justify-self:end}.erp-team-person{grid-column:1/-1}}@media(max-width:700px){.erp-team-row{grid-template-columns:1fr}.erp-team-access,.erp-team-rate{grid-template-columns:1fr}.erp-team-row>.button{justify-self:stretch}.erp-team-price{align-items:flex-start;flex-direction:column}}
+
+
+/* Betrio 1.9.56 – Zeiterfassung kompakt */
+.erp-workdays-v2{max-width:1400px;margin:0 auto;padding-bottom:28px}.erp-workdays-v2>h1{margin-bottom:2px}.erp-workdays-v2>.erp-sub{margin-top:0;margin-bottom:12px}.erp-workdays-v2 .erp-time-toolbar{display:flex;align-items:center;gap:8px;margin:0 0 12px;flex-wrap:wrap}.erp-workdays-v2 .erp-time-toolbar strong{padding:0 8px;font-size:17px}.erp-workdays-v2 .erp-time-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:12px}.erp-workdays-v2 .erp-time-summary .erp-card{min-height:82px;padding:14px 16px}.erp-workdays-v2 .erp-time-summary .erp-card strong{font-size:25px}.erp-work-mode-tabs{display:flex;gap:6px;margin:4px 0 10px;padding:5px;border:1px solid var(--color-border);border-radius:12px;background:var(--color-main-background);width:max-content}.erp-work-mode-tabs .button{margin:0;min-height:36px}.erp-work-panel{display:none}.erp-work-panel.is-active{display:block}.erp-work-panel>h2{margin:8px 0 9px;font-size:20px}.erp-workdays-v2 .erp-form-card{padding:16px;margin-bottom:14px;border-radius:14px}.erp-workdays-v2 .erp-form-grid{gap:10px 12px}.erp-workdays-v2 .erp-form-grid label{margin-bottom:4px}.erp-workdays-v2 .erp-form-grid textarea{min-height:74px}.erp-workdays-v2 [data-work-panel="manual"] .erp-form-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.erp-workdays-v2 [data-work-panel="manual"] .erp-span-2{grid-column:span 2}.erp-workdays-v2 [data-work-panel="manual"] textarea[name="activity"]{min-height:96px}.erp-workdays-v2 [data-work-panel="manual"] textarea[name="notes"]{min-height:58px}.erp-workdays-v2 .erp-material-entry-list{margin-bottom:10px}.erp-workdays-history{margin-top:14px;padding:16px;border:1px solid var(--color-border);border-radius:14px;background:var(--color-main-background)}.erp-workdays-history .erp-section-head{margin-bottom:10px}.erp-workdays-history h2{margin:0 0 2px;font-size:20px}.erp-workdays-history .erp-table{margin:0}.erp-workdays-history table{font-size:13px}.erp-workdays-history th{font-size:11px;text-transform:uppercase;letter-spacing:.03em}.erp-workdays-history td{padding-top:10px;padding-bottom:10px}.erp-workdays-v2 .erp-timer-card{padding:12px 14px;margin-bottom:10px}.erp-workdays-v2 .erp-timer-card p{margin:3px 0}.erp-workdays-v2 h3{margin:10px 0 3px;font-size:16px}
+@media(max-width:1100px){.erp-workdays-v2 [data-work-panel="manual"] .erp-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:700px){.erp-workdays-v2 [data-work-panel="manual"] .erp-form-grid{grid-template-columns:1fr}.erp-workdays-v2 [data-work-panel="manual"] .erp-span-2{grid-column:auto}.erp-work-mode-tabs{width:100%}.erp-work-mode-tabs .button{flex:1}.erp-workdays-v2 .erp-time-toolbar strong{width:100%;order:-1;padding:0}}
+
+/* Betrio 1.9.57 – Lagerbestand UX */
+.erp-inventory-page{max-width:1500px}
+.erp-inventory-page .erp-page-head{padding:18px 22px;margin:0 0 14px;border:1px solid var(--color-border,#d8dde5);border-radius:16px;background:linear-gradient(110deg,var(--color-main-background,#fff),var(--color-background-dark,#f5f7f9));align-items:center}
+.erp-inventory-page .erp-page-head h1{margin:0 0 3px;font-size:27px}.erp-inventory-page .erp-page-head .button{border-radius:12px;font-weight:700}
+.erp-inventory-page .erp-material-summary{margin:0 0 14px}.erp-inventory-page .erp-stat{min-height:96px;padding:16px 18px;border-radius:14px;transition:border-color .15s,box-shadow .15s,transform .15s}.erp-inventory-page button.erp-stat:hover{transform:translateY(-1px);border-color:#9ccbea}.erp-inventory-page .erp-stat strong{font-size:26px;color:#071a50}.erp-inventory-page .erp-stat.inventory-filter[data-filter="low"]{background:#fffaf0}.erp-inventory-page .erp-stat.inventory-filter[data-filter="out"]{background:#fff6f6}
+.erp-inventory-workspace{border:1px solid var(--color-border,#d8dde5);border-radius:16px;background:var(--color-main-background,#fff);overflow:hidden;margin-bottom:14px}.erp-inventory-toolbar{display:flex;gap:12px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--color-border,#e2e6eb)}.erp-inventory-search-wrap{position:relative;flex:1}.erp-inventory-search-wrap input{width:100%;padding-left:38px!important}.erp-inventory-search-wrap:before{content:'⌕';position:absolute;left:14px;top:50%;transform:translateY(-52%);font-size:21px;color:var(--color-text-maxcontrast,#777);pointer-events:none}.erp-inventory-count{white-space:nowrap;color:var(--color-text-maxcontrast,#666);font-size:13px}.erp-inventory-page .erp-table{margin:0;border:0;border-radius:0;overflow:auto}.erp-inventory-page .erp-table table{margin:0}.erp-inventory-page .erp-table th{font-size:11px;text-transform:uppercase;letter-spacing:.035em;color:var(--color-text-maxcontrast,#666);background:var(--color-background-dark,#f7f8fa);padding:11px 12px}.erp-inventory-page .erp-table td{padding:12px;border-top:1px solid var(--color-border,#e4e7eb);vertical-align:middle}.erp-inventory-page #inventory-table-body tr{transition:background .12s}.erp-inventory-page #inventory-table-body tr:hover{background:color-mix(in srgb,var(--color-primary-element,#0082c9) 5%,transparent)}.erp-inventory-article{display:flex;flex-direction:column;gap:2px}.erp-inventory-article strong{color:#071a50}.erp-inventory-article small{color:var(--color-text-maxcontrast,#777)}.erp-stock-number{font-weight:700}.erp-stock-number.stock-out{color:#a42323}.erp-stock-number.stock-low{color:#805500}
+.erp-inventory-actions{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(360px,.75fr);gap:14px;margin-top:14px}.erp-inventory-card{border:1px solid var(--color-border,#d8dde5);border-radius:16px;background:var(--color-main-background,#fff);overflow:hidden}.erp-inventory-card-head{padding:16px 18px 12px}.erp-inventory-card-head h2{font-size:19px;margin:0 0 4px}.erp-inventory-card-head p{margin:0;color:var(--color-text-maxcontrast,#666);font-size:13px}.erp-inventory-movement-form{padding:0 18px 18px}.erp-inventory-movement-form .erp-form-grid{gap:12px}.erp-inventory-movement-form label{font-size:12px;font-weight:700;color:#071a50}.erp-inventory-movement-form input,.erp-inventory-movement-form select{width:100%}.erp-inventory-movement-form .button.primary{margin-top:12px;border-radius:11px;font-weight:700}.erp-movement-history summary{list-style:none;display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:16px 18px;font-weight:700}.erp-movement-history summary::-webkit-details-marker{display:none}.erp-movement-history summary:after{content:'›';font-size:22px;transform:rotate(90deg);transition:transform .15s}.erp-movement-history[open] summary:after{transform:rotate(-90deg)}.erp-movement-history .erp-table{border-top:1px solid var(--color-border,#e4e7eb)}.erp-movement-type{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:700;background:#e8f2ff;color:#0d5aa7}.erp-movement-type.out{background:#fff1cc;color:#805500}.erp-movement-type.adjustment{background:#eeeef4;color:#555}
+@media(max-width:1050px){.erp-inventory-actions{grid-template-columns:1fr}}@media(max-width:700px){.erp-inventory-toolbar{flex-direction:column;align-items:stretch}.erp-inventory-count{text-align:right}.erp-inventory-page .erp-page-head{padding:15px}.erp-inventory-page .erp-table th,.erp-inventory-page .erp-table td{padding:9px}.erp-inventory-actions{display:block}.erp-inventory-card{margin-bottom:12px}}
+
+/* Betrio 1.9.58 – Materialstamm UX */
+.erp-material-v2{max-width:1500px}.erp-material-v2 .erp-material-head{padding:18px 22px;margin:0 0 14px;border:1px solid var(--color-border,#d8dde5);border-radius:16px;background:linear-gradient(110deg,var(--color-main-background,#fff),var(--color-background-dark,#f5f7f9));align-items:center}.erp-material-v2 .erp-eyebrow{margin:0 0 3px;font-size:10px;font-weight:800;letter-spacing:.09em;color:var(--color-text-maxcontrast,#777)}.erp-material-v2 .erp-material-head h1{margin:0 0 3px;font-size:27px}.erp-material-v2 .erp-material-summary{margin:0 0 14px}.erp-material-v2 .erp-stat{min-height:92px;padding:15px 18px}.erp-material-v2 .erp-stat small{display:block;margin-top:4px;color:var(--color-text-maxcontrast,#777);font-size:11px}.erp-material-v2 .erp-material-warning{background:#fffaf0}.erp-material-workspace{border:1px solid var(--color-border,#d8dde5);border-radius:16px;background:var(--color-main-background,#fff);overflow:hidden;margin-bottom:14px}.erp-material-workspace-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;padding:16px 18px 8px}.erp-material-workspace-head h2{margin:0 0 3px;font-size:20px}.erp-material-workspace-head p{margin:0;color:var(--color-text-maxcontrast,#666);font-size:13px}.erp-material-workspace-head>span{white-space:nowrap;color:var(--color-text-maxcontrast,#666);font-size:13px}.erp-material-v2 .erp-material-toolbar{margin:0;padding:8px 18px 14px}.erp-material-v2 .erp-material-table{margin:0;border:0;border-top:1px solid var(--color-border,#e3e7ec);border-radius:0;overflow:auto}.erp-material-v2 .erp-material-table th{font-size:11px;text-transform:uppercase;letter-spacing:.035em;color:var(--color-text-maxcontrast,#666);background:var(--color-background-dark,#f7f8fa);padding:11px 12px}.erp-material-v2 .erp-material-table td{padding:12px;border-top:1px solid var(--color-border,#e5e8ec);vertical-align:middle}.erp-material-v2 #material-table-body tr{transition:background .12s}.erp-material-v2 #material-table-body tr:hover{background:color-mix(in srgb,var(--color-primary-element,#0082c9) 5%,transparent)}.erp-material-article{display:flex;flex-direction:column;gap:2px}.erp-material-article strong,.erp-material-name{color:#071a50}.erp-material-article small{font-size:10px;color:var(--color-text-maxcontrast,#777)}.erp-material-create,.erp-material-masterdata .erp-form-card{margin-bottom:14px;border-radius:16px}.erp-material-create>summary,.erp-material-masterdata summary{display:flex;align-items:center;justify-content:space-between;list-style:none;padding:15px 18px;cursor:pointer}.erp-material-create>summary::-webkit-details-marker,.erp-material-masterdata summary::-webkit-details-marker{display:none}.erp-material-create>summary span,.erp-material-masterdata summary span{display:flex;flex-direction:column;gap:2px}.erp-material-create>summary small,.erp-material-masterdata summary small{font-size:11px;font-weight:400;color:var(--color-text-maxcontrast,#777)}.erp-material-create>summary:after,.erp-material-masterdata summary:after{content:'›';font-size:22px;transform:rotate(90deg);transition:transform .15s}.erp-material-create[open]>summary:after,.erp-material-masterdata details[open] summary:after{transform:rotate(-90deg)}.erp-material-create form,.erp-material-masterdata form{padding:0 18px 18px}.erp-material-v2 .erp-material-form-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 12px}.erp-material-v2 .erp-material-form-grid .erp-span-2{grid-column:span 2}.erp-material-v2 .erp-material-form-grid label{font-size:12px;font-weight:700}.erp-material-masterdata{margin-bottom:22px}.erp-material-v2 .erp-chip-list{padding:0 18px 18px;margin-top:0}
+@media(max-width:1100px){.erp-material-v2 .erp-material-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:700px){.erp-material-workspace-head{align-items:flex-start;flex-direction:column}.erp-material-v2 .erp-material-form-grid{grid-template-columns:1fr}.erp-material-v2 .erp-material-form-grid .erp-span-2{grid-column:auto}}
+
+/* Betrio 1.9.59 – Material actions */
+.erp-material-actions{display:flex;gap:8px;align-items:center;white-space:nowrap}.erp-material-actions form{margin:0}.erp-danger-button{color:var(--color-error,#c00)!important}.erp-material-table th:last-child,.erp-material-table td:last-child{text-align:right}
+
+/* Betrio 1.9.61 – Lieferanten UX */
+.erp-suppliers-v2{max-width:1500px}.erp-supplier-head{padding:18px 22px;margin:0 0 14px;border:1px solid var(--color-border,#d8dde5);border-radius:16px;background:linear-gradient(110deg,var(--color-main-background,#fff),var(--color-background-dark,#f5f7f9));align-items:center}.erp-suppliers-v2 .erp-eyebrow{margin:0 0 3px;font-size:10px;font-weight:800;letter-spacing:.09em;color:var(--color-text-maxcontrast,#777)}.erp-supplier-head h1{margin:0 0 3px;font-size:27px}.erp-supplier-workspace{border:1px solid var(--color-border,#d8dde5);border-radius:16px;background:var(--color-main-background,#fff);overflow:hidden}.erp-supplier-search{display:flex;gap:10px;padding:14px 16px;border-bottom:1px solid var(--color-border,#e3e7ec)}.erp-supplier-search input{flex:1}.erp-supplier-table{display:flex;flex-direction:column}.erp-supplier-row{display:grid;grid-template-columns:minmax(220px,1.5fr) minmax(150px,1fr) minmax(190px,1.1fr) minmax(180px,1fr) minmax(150px,.8fr) 28px;gap:14px;align-items:center;padding:13px 16px;border-top:1px solid var(--color-border,#e5e8ec);color:var(--color-main-text,#222);text-decoration:none}.erp-supplier-row:hover{background:color-mix(in srgb,var(--color-primary-element,#0082c9) 5%,transparent)}.erp-supplier-labels{border-top:0;background:var(--color-background-dark,#f7f8fa);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.035em;color:var(--color-text-maxcontrast,#666)}.erp-supplier-labels:hover{background:var(--color-background-dark,#f7f8fa)}.erp-supplier-main,.erp-supplier-contact{display:flex;flex-direction:column;gap:2px;min-width:0}.erp-supplier-main strong{color:#071a50;font-size:15px}.erp-supplier-row small{color:var(--color-text-maxcontrast,#777);font-size:11px;overflow:hidden;text-overflow:ellipsis}.erp-row-arrow{font-size:24px;color:var(--color-text-maxcontrast,#777);text-align:right}.erp-supplier-tabs{margin-bottom:14px}.erp-supplier-form-card{border-radius:16px}.erp-supplier-form-card form{padding-top:4px}.erp-supplier-form-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 12px}.erp-supplier-form-grid .erp-span-2{grid-column:span 2}.erp-supplier-form-grid label{font-size:12px;font-weight:700}.erp-supplier-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.erp-supplier-overview .erp-card{margin:0}.erp-supplier-overview dl,.erp-supplier-detail-grid dl{display:grid;grid-template-columns:130px 1fr;gap:8px 12px;margin:0}.erp-supplier-overview dt,.erp-supplier-detail-grid dt{color:var(--color-text-maxcontrast,#666);font-size:12px}.erp-supplier-overview dd,.erp-supplier-detail-grid dd{margin:0;font-weight:600}.erp-supplier-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}.erp-note-box{white-space:pre-wrap;padding:14px;border-radius:12px;background:var(--color-background-dark,#f7f8fa)}
+@media(max-width:1150px){.erp-supplier-row{grid-template-columns:1.4fr 1fr 1.1fr .8fr 28px}.erp-supplier-row>span:nth-child(4),.erp-supplier-labels>span:nth-child(4){display:none}.erp-supplier-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.erp-supplier-overview{grid-template-columns:1fr 1fr}.erp-supplier-overview .erp-card:last-child{grid-column:1/-1}}@media(max-width:760px){.erp-supplier-head{padding:15px}.erp-supplier-search{flex-direction:column}.erp-supplier-labels{display:none}.erp-supplier-row{grid-template-columns:1fr 28px;gap:6px}.erp-supplier-row>span:not(.erp-supplier-main):not(.erp-row-arrow){grid-column:1}.erp-supplier-form-grid{grid-template-columns:1fr}.erp-supplier-form-grid .erp-span-2{grid-column:auto}.erp-supplier-overview,.erp-supplier-detail-grid{grid-template-columns:1fr}.erp-supplier-overview .erp-card:last-child{grid-column:auto}}
+
+
+/* Betrio 1.9.62 - Rapport UX large refresh */
+.erp-eyebrow{display:block;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--color-text-maxcontrast);margin-bottom:5px}
+.erp-reports-page .erp-report-list-head,.erp-report-workspace .erp-report-detail-head{padding:20px 22px;border:1px solid var(--color-border);border-radius:18px;background:linear-gradient(135deg,var(--color-main-background) 0%,var(--color-background-dark) 100%)}
+.erp-report-list-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:14px 0}
+.erp-report-list-kpis>div{padding:14px 16px;border:1px solid var(--color-border);border-radius:14px;background:var(--color-main-background);display:flex;flex-direction:column;gap:4px;min-height:66px}
+.erp-report-list-kpis span{font-size:12px;color:var(--color-text-maxcontrast)}
+.erp-report-list-kpis strong{font-size:19px;color:var(--color-main-text)}
+.erp-report-create-start{padding:14px 16px!important;margin-top:12px}
+.erp-report-create-title{display:flex;justify-content:space-between;gap:16px;align-items:baseline;margin-bottom:9px}
+.erp-report-create-title strong{font-size:18px}.erp-report-create-title span{font-size:12px;color:var(--color-text-maxcontrast)}
+.erp-report-create-card{border-radius:16px!important}
+.erp-report-create-card textarea{min-height:88px!important}
+.erp-report-table{margin-top:14px}.erp-report-table table{border-collapse:separate;border-spacing:0 7px;background:transparent}
+.erp-report-table thead th{border-bottom:0;padding-bottom:6px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--color-text-maxcontrast)}
+.erp-report-table tbody tr{background:var(--color-main-background);box-shadow:0 1px 0 var(--color-border)}
+.erp-report-table tbody td{padding-top:13px!important;padding-bottom:13px!important}
+.erp-report-status{border-radius:999px!important;padding:5px 10px!important;font-weight:700!important}
+.erp-report-status-unterschrieben{background:#dff4e5!important;color:#17672d!important}
+.erp-report-status-fur-rechnung,.erp-report-status-fuer-rechnung{background:#e4efff!important;color:#174b8e!important}
+.erp-report-status-entwurf{background:#fff1c9!important;color:#765400!important}
+.erp-report-workspace{scroll-behavior:smooth}
+.erp-report-workspace .erp-kpis{margin:14px 0;gap:12px}
+.erp-report-workspace .erp-kpis>div{border:1px solid var(--color-border);border-radius:14px;background:var(--color-main-background);padding:14px 16px}
+.erp-report-tabs{position:sticky;top:0;z-index:30;margin:12px 0 14px;background:var(--color-main-background);box-shadow:0 8px 18px rgba(0,0,0,.04)}
+.erp-report-tabs a{padding:10px 14px}
+.erp-anchor-target{scroll-margin-top:82px}
+.erp-report-main-card{padding:18px!important;border-radius:16px!important}
+.erp-report-main-card .erp-form-grid{grid-template-columns:minmax(180px,.7fr) minmax(220px,1.3fr)}
+.erp-report-main-card textarea[name="description"]{min-height:150px!important}
+.erp-report-main-card textarea[name="customerNote"]{min-height:80px!important}
+.erp-section-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:12px}
+.erp-section-heading h2{margin:0!important}.erp-section-value{white-space:nowrap;font-size:18px;color:var(--color-primary-element)}
+.erp-report-work-grid{align-items:start;gap:14px;margin-top:14px}
+.erp-report-work-grid>.erp-card{border-radius:16px;min-width:0}
+.erp-report-time-card textarea{min-height:88px!important}
+.erp-report-material-card .erp-material-entry-list{margin-top:8px}
+.erp-report-import-card{padding:16px!important;margin-top:12px!important}
+.erp-report-import-card.is-empty{display:grid;grid-template-columns:minmax(220px,.8fr) 1.4fr;align-items:center;gap:16px}
+.erp-report-import-card.is-empty h2{margin:0}.erp-report-import-card.is-empty p{margin:0}
+.erp-report-summary-card{margin-top:14px!important;background:linear-gradient(135deg,var(--color-main-background),var(--color-background-dark))}
+.erp-report-summary-card .erp-kpis{margin-bottom:0}
+.erp-report-signature-card{margin-top:14px!important;border:1px solid color-mix(in srgb,var(--color-primary-element) 30%,var(--color-border));border-radius:16px!important}
+.erp-report-signature-card .signature-wrap{background:#fff;border:1px dashed #9aa4b2;border-radius:12px;overflow:hidden;margin-top:10px}
+.erp-report-attachments-card{margin-top:14px!important;border-radius:16px!important}
+.erp-report-attachments-card input[type="file"]{padding:8px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-background-dark)}
+.erp-report-attachments-card>p:last-child{padding:10px 12px;border-radius:10px;background:var(--color-background-dark);word-break:break-all;font-size:12px}
+.erp-status-actions{margin:10px 0 0!important;justify-content:flex-end}
+@media(max-width:900px){.erp-report-list-kpis{grid-template-columns:1fr}.erp-report-create-title{display:block}.erp-report-create-title span{display:block;margin-top:3px}.erp-report-main-card .erp-form-grid{grid-template-columns:1fr}.erp-report-import-card.is-empty{display:block}.erp-report-tabs{overflow-x:auto;white-space:nowrap}.erp-report-list-head,.erp-report-detail-head{border-radius:14px!important}}
+
+/* Betrio 1.9.63 - Rapport-Erstellablauf wieder sichtbar */
+.erp-report-wizard-steps{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 12px}
+.erp-report-wizard-steps span{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;background:var(--color-background-dark);font-size:12px;font-weight:700}
+.erp-report-wizard-steps b{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--color-main-background);border:1px solid var(--color-border)}
+.erp-report-wizard-steps .is-active{background:color-mix(in srgb,var(--color-primary-element) 14%,var(--color-main-background));color:var(--color-primary-element)}
+.erp-report-wizard-current,.erp-report-create-placeholder{margin:12px 0;padding:13px 16px;border:1px solid var(--color-border);border-radius:14px;background:var(--color-main-background);display:flex;gap:10px;align-items:baseline}
+.erp-report-create-placeholder{background:var(--color-background-dark);flex-direction:column;align-items:flex-start}
+.erp-report-create-placeholder span,.erp-report-wizard-current{font-size:13px;color:var(--color-text-maxcontrast)}
+.erp-report-wizard-current strong{color:var(--color-main-text)}
+@media(max-width:700px){.erp-report-wizard-current{display:block}.erp-report-wizard-current strong{display:block;margin-bottom:4px}}
+
+
+/* Betrio 1.9.64 - Rapportseiten nutzen die volle Arbeitsbreite */
+.erp-reports-page,
+.erp-report-workspace{
+    width:100%;
+    max-width:none!important;
+    box-sizing:border-box;
+    margin-left:0;
+    margin-right:0;
+}
+.erp-reports-page .erp-project-loader,
+.erp-reports-page .erp-report-create-card,
+.erp-reports-page .erp-report-table,
+.erp-report-workspace .erp-report-main-card,
+.erp-report-workspace .erp-report-work-grid,
+.erp-report-workspace .erp-report-import-card,
+.erp-report-workspace .erp-report-summary-card,
+.erp-report-workspace .erp-report-signature-card,
+.erp-report-workspace .erp-report-attachments-card{
+    width:100%;
+    max-width:none!important;
+    box-sizing:border-box;
+}
+.erp-reports-page .erp-project-loader{max-width:none!important}
+.erp-report-workspace .erp-two-col.erp-report-work-grid{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    width:100%;
+}
+@media(max-width:900px){
+    .erp-report-workspace .erp-two-col.erp-report-work-grid{grid-template-columns:1fr}
+}

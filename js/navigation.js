@@ -1,16 +1,23 @@
 (() => {
-    const storageKey = 'nexterp.navigation.openGroups';
+    const storageKey = 'nexterp.navigation.openGroup';
     const groups = [...document.querySelectorAll('.erp-nav-group[data-nav-key]')];
 
-    let stored = [];
-    try { stored = JSON.parse(localStorage.getItem(storageKey) || '[]'); } catch (_) {}
+    let stored = '';
+    try { stored = localStorage.getItem(storageKey) || ''; } catch (_) {}
+
+    const activeGroup = groups.find((group) => group.open);
+    if (!activeGroup && stored) {
+        const remembered = groups.find((group) => group.dataset.navKey === stored);
+        if (remembered) remembered.open = true;
+    }
 
     groups.forEach((group) => {
-        const key = group.dataset.navKey;
-        if (!group.open && stored.includes(key)) group.open = true;
         group.addEventListener('toggle', () => {
-            const openKeys = groups.filter((item) => item.open).map((item) => item.dataset.navKey);
-            localStorage.setItem(storageKey, JSON.stringify(openKeys));
+            if (!group.open) return;
+            groups.forEach((other) => {
+                if (other !== group && other.open) other.open = false;
+            });
+            try { localStorage.setItem(storageKey, group.dataset.navKey || ''); } catch (_) {}
         });
     });
 

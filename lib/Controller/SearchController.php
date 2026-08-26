@@ -104,6 +104,38 @@ final class SearchController extends Controller {
             }
         }
 
+        if ($this->permissions->can('documents')) {
+            $qb = $this->db->getQueryBuilder();
+            $rows = $qb->select('d.id', 'd.original_name', 'd.document_no', 'd.suggested_document_no', 'd.document_type', 'd.processing_status', 'c.name AS customer_name', 'p.project_no', 's.name AS supplier_name')
+                ->from('re_erp_documents', 'd')
+                ->leftJoin('d', 're_erp_customers', 'c', $qb->expr()->eq('c.id', 'd.customer_id'))
+                ->leftJoin('d', 're_erp_projects', 'p', $qb->expr()->eq('p.id', 'd.project_id'))
+                ->leftJoin('d', 're_erp_suppliers', 's', $qb->expr()->eq('s.id', 'd.supplier_id'))
+                ->where($qb->expr()->orX(
+                    $qb->expr()->iLike('d.original_name', $qb->createNamedParameter($like)),
+                    $qb->expr()->iLike('d.file_name', $qb->createNamedParameter($like)),
+                    $qb->expr()->iLike('d.document_no', $qb->createNamedParameter($like)),
+                    $qb->expr()->iLike('d.suggested_document_no', $qb->createNamedParameter($like)),
+                    $qb->expr()->iLike('c.name', $qb->createNamedParameter($like)),
+                    $qb->expr()->iLike('p.project_no', $qb->createNamedParameter($like)),
+                    $qb->expr()->iLike('s.name', $qb->createNamedParameter($like))
+                ))
+                ->orderBy('d.created_at', 'DESC')
+                ->setMaxResults(6)
+                ->executeQuery()->fetchAllAssociative();
+            foreach ($rows as $row) {
+                $number = (string)($row['document_no'] ?: ($row['suggested_document_no'] ?? ''));
+                $context = array_filter([(string)($row['customer_name'] ?? ''), (string)($row['project_no'] ?? ''), (string)($row['supplier_name'] ?? '')]);
+                $results[] = [
+                    'type' => 'Beleg',
+                    'icon' => '📄',
+                    'title' => trim(($number !== '' ? $number . ' · ' : '') . (string)$row['original_name']),
+                    'subtitle' => implode(' · ', $context),
+                    'url' => $this->url->linkToRoute('reinhardterp.document.review', ['id' => (int)$row['id']]),
+                ];
+            }
+        }
+
         return new JSONResponse(['results' => array_slice($results, 0, 15)]);
     }
 }

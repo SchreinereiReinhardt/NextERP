@@ -42,7 +42,10 @@ script('reinhardterp', 'customers');
     <div class="erp-filter-summary"><strong id="erpCustomerVisibleCount"><?php p(count($_['customers'])); ?></strong> von <?php p(count($_['customers'])); ?> Kunden sichtbar</div>
 </section>
 
-<div class="erp-record-grid erp-customer-grid" id="erpCustomerGrid">
+<div class="erp-customer-list" id="erpCustomerGrid">
+<div class="erp-customer-list-head" aria-hidden="true">
+    <span>Kunde</span><span>Ansprechpartner</span><span>Kontakt</span><span>Nextcloud</span><span></span>
+</div>
 <?php foreach ($_['customers'] as $c):
     $name = trim((string)$c->getName());
     $initial = mb_strtoupper(mb_substr($name, 0, 1));
@@ -57,22 +60,27 @@ script('reinhardterp', 'customers');
             ? $url->linkTo('mail', 'compose') . '?uri=' . rawurlencode('mailto:' . $email)
             : 'mailto:' . $email;
     }
+    $detailHref = $url->linkToRoute('reinhardterp.page.customerDetail',['id'=>$c->getId()]);
 ?>
-<article class="erp-record-card erp-customer-card" data-letter="<?php p($alpha); ?>" data-search="<?php p($search); ?>">
-<div class="erp-record-card-head"><div><span class="erp-record-kicker">Kunde <?php p($c->getCustomerNo()); ?></span><h2><a href="<?php p($url->linkToRoute('reinhardterp.page.customerDetail',['id'=>$c->getId()])); ?>"><?php p($name); ?></a></h2></div><span class="erp-avatar-placeholder"><?php p($initial); ?></span></div>
-<div class="erp-record-card-body"><dl class="erp-data-list">
-<div><dt>Ansprechpartner</dt><dd><?php p($c->getContactName() ?: '—'); ?></dd></div>
-<div><dt>Telefon</dt><dd><?php if ($c->getPhone()): ?><a href="tel:<?php p($c->getPhone()); ?>"><?php p($c->getPhone()); ?></a><?php else: ?>—<?php endif; ?></dd></div>
-<div><dt>Mobil</dt><dd><?php if ($c->getMobile()): ?><a href="tel:<?php p($c->getMobile()); ?>">📱 <?php p($c->getMobile()); ?></a><?php else: ?>—<?php endif; ?></dd></div>
-<div><dt>E-Mail</dt><dd><?php if ($email): ?><a class="erp-mail-link" href="<?php p($mailHref); ?>"<?php if ($mailEnabled): ?> title="In Nextcloud Mail schreiben"<?php endif; ?>>✉ <?php p($email); ?></a><?php else: ?>—<?php endif; ?></dd></div>
-<div><dt>Nextcloud</dt><dd><?php if ($c->getNcContactId()): ?><span class="erp-sync-chip">✓ verbunden</span><?php else: ?>nicht verbunden<?php endif; ?></dd></div>
-</dl></div>
-<div class="erp-record-card-actions">
-<a class="button primary" href="<?php p($url->linkToRoute('reinhardterp.page.customerDetail',['id'=>$c->getId()])); ?>">Kundenakte öffnen</a>
-<?php if ($email): ?><a class="button" href="<?php p($mailHref); ?>"<?php if ($mailEnabled): ?> title="Neue Nachricht in Nextcloud Mail"<?php endif; ?>>✉ Mail</a><?php endif; ?>
-<a class="button" href="<?php p($url->linkToRoute('reinhardterp.page.customerForm',['id'=>$c->getId()])); ?>">Bearbeiten</a>
-<form method="post" action="<?php p($url->linkToRoute('reinhardterp.customer.archive',['id'=>$c->getId()])); ?>"><input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>"><button class="button">Archivieren</button></form>
-</div>
+<article class="erp-customer-row erp-customer-card" data-letter="<?php p($alpha); ?>" data-search="<?php p($search); ?>">
+    <a class="erp-customer-row-main" href="<?php p($detailHref); ?>" aria-label="Kundenakte <?php p($name); ?> öffnen">
+        <span class="erp-customer-ident"><span class="erp-customer-mini-avatar"><?php p($initial); ?></span><span><small>Kunde <?php p($c->getCustomerNo()); ?></small><strong><?php p($name); ?></strong></span></span>
+        <span class="erp-customer-contact"><small>Ansprechpartner</small><strong><?php p($c->getContactName() ?: '—'); ?></strong></span>
+        <span class="erp-customer-contact"><small>Kontakt</small><strong><?php p($c->getPhone() ?: ($c->getMobile() ?: '—')); ?></strong><?php if ($email): ?><em><?php p($email); ?></em><?php endif; ?></span>
+        <span class="erp-customer-nc"><?php if ($c->getNcContactId()): ?><span class="erp-sync-chip">✓ verbunden</span><?php else: ?><span class="erp-muted-chip">nicht verbunden</span><?php endif; ?></span>
+    </a>
+    <div class="erp-customer-row-actions">
+        <a class="button primary" href="<?php p($detailHref); ?>">Öffnen</a>
+        <details class="erp-row-more">
+            <summary class="button" aria-label="Weitere Aktionen">Mehr</summary>
+            <div class="erp-row-more-menu">
+                <a href="<?php p($url->linkToRoute('reinhardterp.page.customerForm',['id'=>$c->getId()])); ?>">Bearbeiten</a>
+                <?php if ($email): ?><a href="<?php p($mailHref); ?>">Mail schreiben</a><?php endif; ?>
+                <?php if ($c->getPhone()): ?><a href="tel:<?php p($c->getPhone()); ?>">Anrufen</a><?php elseif ($c->getMobile()): ?><a href="tel:<?php p($c->getMobile()); ?>">Anrufen</a><?php endif; ?>
+                <form method="post" action="<?php p($url->linkToRoute('reinhardterp.customer.archive',['id'=>$c->getId()])); ?>"><input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>"><button type="submit">Archivieren</button></form>
+            </div>
+        </details>
+    </div>
 </article>
 <?php endforeach; ?>
 </div>

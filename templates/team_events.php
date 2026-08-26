@@ -4,11 +4,12 @@ use OCP\IURLGenerator;
 $url = \OC::$server->get(IURLGenerator::class);
 \OCP\Util::addScript('reinhardterp', 'team_events');
 ?>
-<div id="app-content"><div class="erp-page">
+<div id="app-content"><div class="erp-page erp-team-workspace">
 <div class="erp-head"><div><h1>Teamkalender</h1><p class="erp-sub">Der ausgewählte Nextcloud-Kalender ist die führende Quelle. Termine vom Handy werden beim Öffnen und über „Jetzt synchronisieren“ nach Betrio übernommen.</p></div><div class="erp-actions">
 <a class="button" href="<?php p($url->linkToRoute('reinhardterp.module.settings')); ?>">Kalender auswählen</a>
 <?php if (!empty($_['calendarConfigured'])): ?><form method="post" action="<?php p($url->linkToRoute('reinhardterp.integration.syncCalendar')); ?>"><input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>"><button class="button primary" type="submit">Jetzt synchronisieren</button></form><?php endif; ?>
 </div></div>
+<nav class="erp-customer-tabs erp-team-tabs"><a href="<?php p($url->linkToRoute('reinhardterp.module.users')); ?>">Übersicht</a><a href="<?php p($url->linkToRoute('reinhardterp.module.timeEvaluation')); ?>">Zeiterfassung</a><a class="is-active" href="<?php p($url->linkToRoute('reinhardterp.module.teamEvents')); ?>">Teamkalender</a></nav>
 <?php if (!empty($_['error'])): ?><div class="erp-notice erp-wide"><strong>Termin konnte nicht gespeichert werden.</strong> <?php p($_['error']); ?></div><?php endif; ?>
 <?php if (!empty($_['success'])): ?><div class="erp-integration-state is-connected erp-wide"><span>✓ Erfolgreich</span><strong><?php p($_['success']); ?></strong></div><?php endif; ?>
 <?php if (!empty($_['calendarConfigured'])): ?>

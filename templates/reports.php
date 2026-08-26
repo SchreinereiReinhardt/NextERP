@@ -1,19 +1,23 @@
 <?php
 require __DIR__.'/_nav.php';
-use OCP\IURLGenerator;
-$url=\OC::$server->get(IURLGenerator::class);
+$url=$_['urlGenerator'];
 $selectedProjectId=(int)($_['selectedProjectId']??0);
 $availableEntries=$_['availableEntries']??[];
 $availableMaterials=$_['availableMaterials']??[];
 $isArchive=!empty($_['archiveMode']);
 ?>
-<div id="app-content"><div class="erp-page">
-<div class="erp-head"><div><h1><?php p($isArchive?'Rapportarchiv':'Rapporte'); ?></h1><p class="erp-sub"><?php p($isArchive?'Archivierte Rapporte bleiben vollständig erhalten und können wiederhergestellt werden.':'Projekt wählen, offene Zeiten markieren und direkt in den neuen Rapport übernehmen.'); ?></p></div></div>
+<div id="app-content"><div class="erp-page erp-reports-page">
+<div class="erp-head erp-report-list-head"><div><span class="erp-eyebrow">BETRIO · RAPPORTWESEN</span><h1><?php p($isArchive?'Rapportarchiv':'Rapporte'); ?></h1><p class="erp-sub"><?php p($isArchive?'Archivierte Rapporte bleiben vollständig erhalten und können wiederhergestellt werden.':'Projekt wählen, offene Zeiten markieren und direkt in den neuen Rapport übernehmen.'); ?></p></div></div>
 <nav class="erp-project-tabs" aria-label="Rapportansicht"><a class="<?php p(!$isArchive?'is-active':''); ?>" href="<?php p($url->linkToRoute('reinhardterp.module.reports')); ?>">Aktive Rapporte <strong><?php p((string)($_['activeCount']??0)); ?></strong></a><a class="<?php p($isArchive?'is-active':''); ?>" href="<?php p($url->linkToRoute('reinhardterp.module.reports').'?archive=1'); ?>">Archiv <strong><?php p((string)($_['archiveCount']??0)); ?></strong></a></nav>
+<div class="erp-report-list-kpis">
+ <div><span>Aktiv</span><strong><?php p((string)($_['activeCount']??0)); ?></strong></div>
+ <div><span>Archiv</span><strong><?php p((string)($_['archiveCount']??0)); ?></strong></div>
+ <div><span>Arbeitsablauf</span><strong><?php p($isArchive?'Archiv prüfen':'Projekt → Zeiten → Rapport'); ?></strong></div>
+</div>
 
 <?php if(!$isArchive): ?>
-<form class="erp-form-card erp-project-loader" method="get" action="<?php p($url->linkToRoute('reinhardterp.module.reports')); ?>">
- <label>Projekt für neuen Rapport</label>
+<form class="erp-form-card erp-project-loader erp-report-create-start" method="get" action="<?php p($url->linkToRoute('reinhardterp.module.reports')); ?>">
+ <div class="erp-report-create-title"><strong>Neuen Rapport erstellen</strong><span>1. Projekt wählen · 2. Rapportdaten erfassen · 3. Zeiten und Material übernehmen</span></div><div class="erp-report-wizard-steps"><span class="is-active"><b>1</b> Projekt</span><span><b>2</b> Rapportdaten</span><span><b>3</b> Zeiten &amp; Material</span></div><label>Projekt
  <div class="erp-project-select-row">
   <select name="projectId" required>
    <option value="">Projekt wählen</option>
@@ -26,7 +30,8 @@ $isArchive=!empty($_['archiveMode']);
 </form>
 
 <?php if($selectedProjectId>0): ?>
-<form class="erp-form-card" method="post" action="<?php p($url->linkToRoute('reinhardterp.module.saveReport')); ?>" id="new-report-form">
+<div class="erp-report-wizard-current"><strong>Projekt geladen.</strong> Rapportdaten, Zeiten und Material können jetzt vollständig erfasst werden.</div>
+<form class="erp-form-card erp-report-create-card" method="post" action="<?php p($url->linkToRoute('reinhardterp.module.saveReport')); ?>" id="new-report-form">
  <input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
  <input type="hidden" name="projectId" value="<?php p($selectedProjectId); ?>">
  <div class="erp-form-grid">
@@ -81,12 +86,14 @@ $isArchive=!empty($_['archiveMode']);
  </section>
  <button class="button primary">Rapport anlegen und Auswahl übernehmen</button>
 </form>
+<?php else: ?>
+<div class="erp-report-create-placeholder"><strong>Kompletter Rapport-Dialog</strong><span>Bitte zuerst oben ein Projekt auswählen. Danach erscheinen Datum, Titel, Tätigkeitsbeschreibung, offene Zeiten und offenes Material direkt hier auf derselben Seite.</span></div>
 <?php endif; ?>
 
 <?php endif; ?>
 
-<div class="erp-table"><table><thead><tr><th>Nr.</th><th>Datum</th><th>Projekt</th><th>Titel</th><th>Status</th><th></th></tr></thead><tbody>
-<?php foreach($_['rows'] as $report): ?><tr><td><?php p($report['report_no']); ?></td><td><?php p($report['report_date']); ?></td><td class="erp-report-project"><?php if(!empty($report['project_link_id'])): ?><a href="<?php p($url->linkToRoute('reinhardterp.page.projectDetail',['id'=>$report['project_link_id']])); ?>"><strong><?php p($report['project_no']??''); ?></strong><?php if(!empty($report['project_title'])): ?><br><span><?php p($report['project_title']); ?></span><?php endif; ?></a><?php else: ?><span class="erp-muted">Kein Projekt</span><?php endif; ?><?php if(!empty($report['customer_name'])): ?><br><small><?php p($report['customer_name']); ?></small><?php endif; ?></td><td><strong><?php p($report['title']); ?></strong></td><td><span class="erp-badge"><?php p($report['status']); ?></span></td><td><div class="erp-row-actions"><a class="button" href="<?php p($url->linkToRoute('reinhardterp.module.reportDetail',['id'=>$report['id']])); ?>">Öffnen</a><?php if($isArchive): ?><form method="post" action="<?php p($url->linkToRoute('reinhardterp.module.restoreReport',['id'=>$report['id']])); ?>"><input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>"><button class="button" type="submit">Wiederherstellen</button></form><?php if(!empty($_['canDeleteReports'])): ?><form method="post" action="<?php p($url->linkToRoute('reinhardterp.module.deleteReport',['id'=>$report['id']])); ?>" onsubmit="return confirm('Rapport wirklich ENDGÜLTIG löschen? Zeiten und Material werden wieder zur Übernahme freigegeben.');"><input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>"><button class="button" type="submit">Endgültig löschen</button></form><?php endif; ?><?php else: ?><form method="post" action="<?php p($url->linkToRoute('reinhardterp.module.archiveReport',['id'=>$report['id']])); ?>" onsubmit="return confirm('Rapport wirklich archivieren?');"><input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>"><button class="button" type="submit">Archivieren</button></form><?php endif; ?></div></td></tr><?php endforeach; ?>
+<div class="erp-table erp-report-table"><table><thead><tr><th>Nr.</th><th>Datum</th><th>Projekt</th><th>Titel</th><th>Status</th><th></th></tr></thead><tbody>
+<?php foreach($_['rows'] as $report): ?><tr><td><?php p($report['report_no']); ?></td><td><?php p($report['report_date']); ?></td><td class="erp-report-project"><?php if(!empty($report['project_link_id'])): ?><a href="<?php p($url->linkToRoute('reinhardterp.page.projectDetail',['id'=>$report['project_link_id']])); ?>"><strong><?php p($report['project_no']??''); ?></strong><?php if(!empty($report['project_title'])): ?><br><span><?php p($report['project_title']); ?></span><?php endif; ?></a><?php else: ?><span class="erp-muted">Kein Projekt</span><?php endif; ?><?php if(!empty($report['customer_name'])): ?><br><small><?php p($report['customer_name']); ?></small><?php endif; ?></td><td><strong><?php p($report['title']); ?></strong></td><td><span class="erp-badge erp-report-status erp-report-status-<?=p(strtolower(preg_replace('/[^a-z0-9]+/i','-',(string)$report['status'])))?>"><?php p($report['status']); ?></span></td><td><div class="erp-row-actions"><a class="button" href="<?php p($url->linkToRoute('reinhardterp.module.reportDetail',['id'=>$report['id']])); ?>">Öffnen</a><?php if($isArchive): ?><form method="post" action="<?php p($url->linkToRoute('reinhardterp.module.restoreReport',['id'=>$report['id']])); ?>"><input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>"><button class="button" type="submit">Wiederherstellen</button></form><?php if(!empty($_['canDeleteReports'])): ?><form method="post" action="<?php p($url->linkToRoute('reinhardterp.module.deleteReport',['id'=>$report['id']])); ?>" onsubmit="return confirm('Rapport wirklich ENDGÜLTIG löschen? Zeiten und Material werden wieder zur Übernahme freigegeben.');"><input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>"><button class="button" type="submit">Endgültig löschen</button></form><?php endif; ?><?php else: ?><form method="post" action="<?php p($url->linkToRoute('reinhardterp.module.archiveReport',['id'=>$report['id']])); ?>" onsubmit="return confirm('Rapport wirklich archivieren?');"><input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>"><button class="button" type="submit">Archivieren</button></form><?php endif; ?></div></td></tr><?php endforeach; ?>
 </tbody></table></div>
 </div></div>
 <script>

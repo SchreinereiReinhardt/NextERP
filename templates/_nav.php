@@ -105,6 +105,7 @@ $quickCreate = [
     ['Beleg importieren', 'reinhardterp.document.index', 'documents'],
     ['Neuer Termin', 'reinhardterp.module.teamEvents', 'calendar'],
     ['Zeit buchen', 'reinhardterp.module.workdays', 'time'],
+    ['Neues Material', 'reinhardterp.module.materials', 'materials'],
 ];
 ?>
 <nav id="app-navigation" class="erp-app-navigation" aria-label="Betrio Navigation">

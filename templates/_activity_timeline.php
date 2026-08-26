@@ -14,7 +14,7 @@ $activityIcons = [
 <?php if (empty($activities)): ?>
     <p class="erp-muted">Noch keine Aktivitäten vorhanden.</p>
 <?php else: ?>
-    <div class="erp-timeline">
+    <div class="erp-timeline<?= !empty($compact) ? ' erp-timeline-compact' : '' ?>">
         <?php foreach ($activities as $activity): ?>
             <article class="erp-timeline-item">
                 <div class="erp-timeline-icon"><span class="erp-ui-icon erp-icon-<?= p($activityIcons[$activity['action']] ?? 'activity') ?>" aria-hidden="true"></span></div>

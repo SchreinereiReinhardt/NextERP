@@ -63,6 +63,7 @@ return ['routes'=>[
  ['name'=>'module#deleteReportFile','url'=>'/api/reports/{reportId}/files/{id}/delete','verb'=>'POST'],
  ['name'=>'module#materials','url'=>'/materials','verb'=>'GET'],
  ['name'=>'module#saveMaterial','url'=>'/api/materials','verb'=>'POST'],
+ ['name'=>'module#deleteMaterial','url'=>'/api/materials/{id}/delete','verb'=>'POST'],
  ['name'=>'module#saveMaterialGroup','url'=>'/api/material-groups','verb'=>'POST'],
  ['name'=>'module#saveSupplier','url'=>'/api/suppliers','verb'=>'POST'],
  ['name'=>'module#suppliers','url'=>'/suppliers','verb'=>'GET'],

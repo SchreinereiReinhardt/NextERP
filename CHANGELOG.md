@@ -1,3 +1,9 @@
+## 1.9.52
+- Kundenakte: Projekttitel in der Übersicht kompakter und einheitlicher gestaltet.
+- Kontaktbereich verdichtet und sauber ausgerichtet.
+- Telefon- und E-Mail-Verknüpfungen optisch verbessert; tel:/mailto: bleiben direkt nutzbar.
+- Responsive Darstellung des Kontaktbereichs verbessert.
+
 ## 1.9.11 – Mobile Projektakten Explorer
 
 - Mobile Dokumentansicht nicht mehr als flache, durcheinander wirkende Dateiliste.
