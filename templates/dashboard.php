@@ -1,5 +1,6 @@
 <?php
 style('reinhardterp','style');
+script('reinhardterp','dashboard');
 $url=\OC::$server->get(\OCP\IURLGenerator::class);
 $can=$can??[];
 $roleNames=['admin'=>'Administration','office'=>'Büro','manager'=>'Projektleitung','employee'=>'Monteur','time'=>'Zeiterfassung'];
@@ -17,6 +18,14 @@ $roleLabel=$roleNames[$role]??'Betrio';
 <?php if($can['reports']??false): ?><a class="erp-kpi-card" href="<?=p($url->linkToRoute('reinhardterp.module.reports'))?>"><span class="erp-kpi-icon"><i class="erp-ui-icon erp-icon-report"></i></span><span>Offene Rapporte</span><strong><?=p($openReportCount)?></strong><small>Rapporte prüfen</small></a><?php endif; ?>
 <?php if($can['time']??false): ?><a class="erp-kpi-card" href="<?=p($url->linkToRoute('reinhardterp.module.workdays'))?>"><span class="erp-kpi-icon"><i class="erp-ui-icon erp-icon-time"></i></span><span><?=p(in_array($role,['employee','time'],true)?'Meine Stunden heute':'Stunden heute')?></span><strong><?=p(number_format((float)$todayHours,2,',','.'))?></strong><small>Zeiterfassung</small></a><?php endif; ?>
 </div>
+<section class="erp-card erp-android-app-card" id="betrio-android-app-card">
+<button type="button" class="erp-android-app-dismiss" id="betrio-android-app-dismiss" aria-label="Hinweis ausblenden" title="Hinweis ausblenden">×</button>
+<a class="erp-android-app-link" href="https://play.google.com/store/apps/details?id=de.nexterp.mobile" target="_blank" rel="noopener noreferrer">
+<img src="<?=p($url->imagePath('reinhardterp','logo.png'))?>" alt="Betrio Mobile">
+<span><strong>Betrio Mobile für Android</strong><small>Bei Google Play öffnen</small></span>
+<span class="erp-android-app-cta">Google Play öffnen ›</span>
+</a>
+</section>
 <section class="erp-card erp-attention-card"><div class="erp-section-head"><div><h2><span class="erp-ui-icon erp-icon-activity erp-section-icon"></span>Jetzt wichtig</h2><p class="erp-muted">Automatisch aus den vorhandenen ERP-Daten ermittelt</p></div></div><div class="erp-attention-grid">
 <?php foreach($attention as $item): $href=!empty($item['route'])?$url->linkToRoute($item['route']):''; ?>
 <?php if($href!==''): ?><a class="erp-attention-item erp-attention-<?=p($item['kind'])?>" href="<?=p($href)?>"><?php else: ?><div class="erp-attention-item erp-attention-<?=p($item['kind'])?>"><?php endif; ?>

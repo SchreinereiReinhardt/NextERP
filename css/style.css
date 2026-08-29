@@ -1067,3 +1067,21 @@
 @media(max-width:900px){
     .erp-report-workspace .erp-two-col.erp-report-work-grid{grid-template-columns:1fr}
 }
+
+
+/* Betrio Mobile – Google Play Hinweis im Dashboard */
+.erp-android-app-card{padding:0;overflow:hidden}
+.erp-android-app-link{display:flex;align-items:center;gap:18px;padding:16px 20px;text-decoration:none;color:inherit}
+.erp-android-app-link:hover{background:var(--color-background-hover,rgba(127,127,127,.08))}
+.erp-android-app-link img{width:64px;height:64px;object-fit:contain;border-radius:14px;flex:0 0 64px}
+.erp-android-app-link span:nth-child(2){display:flex;flex-direction:column;gap:4px;min-width:0}
+.erp-android-app-link strong{font-size:17px}
+.erp-android-app-link small{color:var(--color-text-maxcontrast,#6b7280);font-size:14px}
+.erp-android-app-cta{margin-left:auto;font-weight:600;white-space:nowrap;color:var(--color-primary-element,#00679e)}
+@media(max-width:700px){.erp-android-app-link{align-items:flex-start;flex-wrap:wrap}.erp-android-app-cta{margin-left:82px}.erp-android-app-link img{width:56px;height:56px;flex-basis:56px}}
+
+.erp-android-app-card{position:relative}
+.erp-android-app-dismiss{position:absolute;top:8px;right:8px;z-index:2;width:32px;height:32px;min-width:32px;padding:0;border:0;border-radius:50%;background:var(--color-background-hover,rgba(127,127,127,.10));color:var(--color-text-maxcontrast,#6b7280);font-size:24px;line-height:30px;cursor:pointer}
+.erp-android-app-dismiss:hover{background:var(--color-background-dark,rgba(127,127,127,.18));color:var(--color-main-text,#222)}
+.erp-android-app-card.erp-android-app-hidden{display:none}
+.erp-android-app-link{padding-right:52px}
