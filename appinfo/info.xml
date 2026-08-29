@@ -52,7 +52,7 @@ Features:
 
 Betrio was developed from the daily practice of a craft business and is especially aimed at trades and craft companies that want to manage their operational workflows directly in Nextcloud.
   ]]></description>
-<version>1.9.64</version>
+<version>1.9.65</version>
   <licence>AGPL-3.0-or-later</licence>
 
   <author homepage="https://www.schreinerei-reinhardt.de">André Reinhardt</author>
@@ -77,7 +77,7 @@ Betrio was developed from the daily practice of a craft business and is especial
 
   <dependencies>
     <php min-version="8.2" />
-    <nextcloud min-version="33" max-version="34" />
+    <nextcloud min-version="33" max-version="35" />
     <backend>caldav</backend>
   </dependencies>
 
