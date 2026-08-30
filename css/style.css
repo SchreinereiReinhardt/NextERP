@@ -1085,3 +1085,170 @@
 .erp-android-app-dismiss:hover{background:var(--color-background-dark,rgba(127,127,127,.18));color:var(--color-main-text,#222)}
 .erp-android-app-card.erp-android-app-hidden{display:none}
 .erp-android-app-link{padding-right:52px}
+
+/* Betrio 2.0 – Angebotseditor */
+.erp-offers-v2 .erp-offer-create{padding:0;overflow:hidden;border-radius:16px}.erp-offer-create>summary{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 18px;cursor:pointer;list-style:none}.erp-offer-create>summary::-webkit-details-marker{display:none}.erp-offer-create>form{padding:0 18px 18px}.erp-offer-items-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:22px 0 10px}.erp-offer-items-head h2{margin:0 0 2px}.erp-offer-items{display:flex;flex-direction:column;gap:8px}.erp-offer-item{display:grid;grid-template-columns:34px minmax(260px,1fr) 100px 100px 130px 120px 34px;gap:10px;align-items:end;padding:12px;border:1px solid var(--color-border);border-radius:12px;background:var(--color-main-background)}.erp-offer-item label{font-size:11px!important;margin:0 0 4px!important}.erp-offer-item textarea,.erp-offer-item input{margin:0!important}.erp-offer-item textarea{min-height:58px;resize:vertical}.erp-offer-pos{align-self:center;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--color-background-dark);font-weight:700;color:#071a50}.erp-offer-line-total strong{font-size:14px!important;white-space:nowrap;margin:0!important;min-height:36px;display:flex!important;align-items:center}.erp-icon-button{border:0;background:transparent;font-size:22px;line-height:1;cursor:pointer;color:var(--color-text-maxcontrast);height:36px;border-radius:8px}.erp-icon-button:hover{background:var(--color-background-hover);color:var(--color-error)}.erp-icon-button:disabled{opacity:.25;cursor:default}.erp-offer-bottom{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:22px;margin-top:18px}.erp-offer-bottom textarea{width:100%;min-height:100px}.erp-offer-totals{border:1px solid var(--color-border);border-radius:12px;padding:12px 16px;background:var(--color-background-dark)}.erp-offer-totals>div{display:flex;justify-content:space-between;gap:16px;padding:7px 0}.erp-offer-totals strong{font-size:14px!important;margin:0!important}.erp-offer-totals .erp-offer-grand{border-top:2px solid var(--color-border);margin-top:4px;padding-top:11px}.erp-offer-totals .erp-offer-grand strong{font-size:18px!important}.erp-input-suffix{display:flex;align-items:center;gap:7px}.erp-input-suffix input{flex:1}.erp-input-suffix span{font-weight:700;color:var(--color-text-maxcontrast)}.erp-offer-notes{margin-top:20px;padding-top:16px;border-top:1px solid var(--color-border)}.erp-offer-notes h3{margin:0 0 6px}.erp-offer-list-card{padding:0;overflow:hidden}.erp-offer-list-card .erp-section-head{padding:16px 18px 10px}.erp-offer-list-card .erp-section-head h2{margin:0}.erp-offer-list-card .erp-table{border:0;border-radius:0;box-shadow:none;margin:0}.erp-offer-detail-v2 .erp-record-head .erp-actions{flex-wrap:wrap;justify-content:flex-end}
+@media(max-width:1200px){.erp-offer-item{grid-template-columns:34px minmax(240px,1fr) 90px 90px 120px}.erp-offer-line-total{grid-column:5}.erp-offer-remove{grid-column:6;grid-row:1/3;align-self:center}.erp-offer-description{grid-column:2/6}.erp-offer-bottom{grid-template-columns:1fr}}
+@media(max-width:700px){.erp-offer-item{grid-template-columns:34px 1fr 1fr}.erp-offer-description{grid-column:2/4}.erp-offer-line-total{grid-column:2/3}.erp-offer-remove{grid-column:3;grid-row:auto;justify-self:end}.erp-offer-items-head{align-items:flex-start;flex-direction:column}.erp-offer-bottom{display:block}.erp-offer-totals{margin-top:12px}}
+
+/* Betrio 2.1 Rich-Text-Editor */
+.erp-rte{border:1px solid var(--color-border,#d8d8d8);border-radius:10px;background:var(--color-main-background,#fff);overflow:hidden}
+.erp-rte-toolbar{display:flex;align-items:center;gap:4px;flex-wrap:wrap;padding:7px;background:var(--color-background-dark,#f5f5f5);border-bottom:1px solid var(--color-border,#ddd)}
+.erp-rte-btn{min-width:34px!important;height:32px!important;padding:4px 8px!important;margin:0!important}
+.erp-rte-format{width:auto!important;min-width:135px;height:32px!important;margin:0 4px!important}
+.erp-rte-find{margin-left:auto!important;width:180px!important;height:32px!important}
+.erp-rte-editor{min-height:130px;padding:12px 14px;outline:none;line-height:1.55;overflow:auto}
+.erp-rte-editor:focus{box-shadow:inset 0 0 0 2px var(--color-primary-element,#00679e)}
+.erp-rte-editor h2{font-size:1.45em;margin:.6em 0 .3em}.erp-rte-editor h3{font-size:1.25em;margin:.5em 0 .25em}.erp-rte-editor h4{font-size:1.1em;margin:.45em 0 .2em}
+.erp-rte-editor ul,.erp-rte-editor ol{padding-left:25px}
+@media(max-width:700px){.erp-rte-find{width:100%!important;margin-left:0!important}.erp-rte-toolbar{gap:3px}}
+
+/* Betrio 2.1.2 Rich-Text UX */
+.erp-offer-description .erp-rte,
+.erp-offer-bottom .erp-rte,
+.erp-form-card .erp-rte{width:100%;max-width:none;box-sizing:border-box}
+.erp-rte-toolbar{display:flex!important;flex-direction:row!important;align-items:center!important;gap:5px!important;flex-wrap:wrap!important}
+.erp-rte-editor{
+ width:100%!important;
+ min-width:0!important;
+ min-height:150px!important;
+ height:180px;
+ max-height:650px;
+ resize:vertical!important;
+ overflow:auto!important;
+ box-sizing:border-box!important;
+ background:var(--color-main-background,#fff);
+}
+.erp-offer-description .erp-rte-editor{min-height:110px!important;height:120px}
+.erp-offer-bottom .erp-rte-editor{min-height:170px!important;height:190px}
+.erp-rte-find{margin-left:8px!important;min-width:170px!important;width:210px!important}
+.erp-rte-format{min-width:145px!important}
+.erp-rte-source{display:none!important}
+@media(max-width:900px){
+ .erp-rte-editor{height:170px}
+ .erp-rte-find{margin-left:0!important;flex:1 1 180px;width:auto!important}
+}
+
+.erp-rte-resize{height:11px;cursor:ns-resize;position:relative;background:var(--color-background-dark,#f5f5f5);border-top:1px solid var(--color-border,#ddd)}
+.erp-rte-resize:after{content:"";position:absolute;left:50%;top:4px;width:38px;height:2px;border-top:2px solid var(--color-border-maxcontrast,#777);border-bottom:2px solid var(--color-border-maxcontrast,#777)}
+
+/* Betrio 2.1.4 Alternativpositionen */
+.erp-alt-position{min-width:130px;display:flex;flex-direction:column;justify-content:flex-end}
+.erp-check{display:flex!important;align-items:center;gap:7px;white-space:nowrap;font-weight:600}
+.erp-check input{width:auto!important;margin:0!important}
+.erp-offer-item:has([data-alternative]:checked){background:var(--color-background-hover,#f7f7f7);border-style:dashed}
+.erp-offer-item:has([data-alternative]:checked) [data-line-total]::after{content:" · nicht in Summe";font-size:.82em;font-weight:400;opacity:.65}
+
+/* 2.3.9 document overview + compact numbering settings */
+.erp-document-filterbar{display:flex;align-items:center;gap:10px;margin:0 0 14px;padding:12px;border:1px solid var(--color-border,#ddd);border-radius:12px;background:var(--color-background-dark,#f7f8fa)}
+.erp-document-search{position:relative;flex:1;min-width:260px}.erp-document-search span{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:18px;color:var(--color-text-maxcontrast,#777);pointer-events:none}.erp-document-search input{width:100%;padding-left:36px!important;margin:0!important}.erp-document-filterbar select{min-width:140px;margin:0!important}.erp-document-filterbar .button{white-space:nowrap;margin:0!important}
+.erp-number-settings{padding:16px!important}.erp-number-settings-intro{margin:0 0 12px!important}.erp-number-grid{display:grid;grid-template-columns:minmax(125px,1.1fr) 88px 78px 100px 78px 120px minmax(145px,1fr);gap:10px;align-items:center;min-height:52px;padding:7px 10px;border-top:1px solid var(--color-border,#e3e6ea)}.erp-number-grid-head{min-height:auto;padding-top:4px;padding-bottom:8px;border-top:0;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.035em;color:var(--color-text-maxcontrast,#666)}.erp-number-grid input,.erp-number-grid select{width:100%!important;min-width:0!important;margin:0!important;box-sizing:border-box}.erp-number-label{font-size:15px}.erp-number-year{display:flex;align-items:center;gap:7px;margin:0!important;font-size:13px}.erp-number-year input{width:auto!important}.erp-number-preview{display:inline-block;width:max-content;max-width:100%;padding:5px 9px;border-radius:8px;background:var(--color-background-dark,#f4f5f6);font-size:12px;white-space:nowrap}.erp-number-settings-example{margin:10px 10px 0!important;font-size:12px}
+@media(max-width:1100px){.erp-number-grid{grid-template-columns:1fr 90px 80px 90px 75px 110px}.erp-number-grid-head span:last-child{display:none}.erp-number-preview{grid-column:2/-1}.erp-document-filterbar{flex-wrap:wrap}.erp-document-search{flex-basis:100%}}
+@media(max-width:720px){.erp-number-grid-head{display:none}.erp-number-grid{grid-template-columns:1fr 1fr;padding:12px 4px}.erp-number-label{grid-column:1/-1}.erp-number-preview{grid-column:1/-1}.erp-document-filterbar select{flex:1;min-width:120px}.erp-document-filterbar .button{width:100%}}
+
+/* 2.3.12 compact desktop permission editor; field names/API stay unchanged */
+.erp-permission-editor .erp-permission-user{padding:9px 12px}
+.erp-permission-user-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.erp-project-access{display:flex;align-items:center;gap:9px;margin:0!important;min-width:210px}.erp-project-access span{display:flex;align-items:baseline;gap:8px}.erp-project-access small{font-size:11px}
+.erp-permission-actions{display:flex;gap:5px}.erp-permission-actions .button{min-height:28px;padding:3px 9px;font-size:11px}
+.erp-folder-groups{display:grid;grid-template-columns:minmax(0,2fr) minmax(260px,1fr);gap:10px 18px;margin-top:8px;padding-top:8px;border-top:1px solid var(--color-border)}
+.erp-permission-group-title{display:block;margin-bottom:5px;color:var(--color-text-maxcontrast);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.erp-permission-editor .erp-folder-permissions{display:flex;flex-wrap:wrap;gap:5px 6px}.erp-permission-editor .erp-folder-permissions label{display:inline-flex;align-items:center;gap:4px;margin:0;padding:4px 7px;border:1px solid var(--color-border);border-radius:8px;background:var(--color-background-hover);font-size:11px;line-height:1.2}.erp-permission-editor .erp-folder-permissions input{margin:0}
+@media(max-width:1050px){.erp-folder-groups{grid-template-columns:1fr}.erp-project-access span{flex-direction:column;gap:0}}
+@media(max-width:700px){.erp-permission-user-head{align-items:flex-start;flex-direction:column}.erp-permission-actions{display:none}.erp-folder-groups{display:block}.erp-folder-groups>div+div{margin-top:9px}.erp-permission-editor .erp-folder-permissions label{padding:5px 7px}}
+
+
+/* Betrio 2.3.14 – kompakte kaufmaennische Erfassung */
+.erp-commercial-form-v3{max-width:1480px!important;padding-top:22px!important}
+.erp-commercial-form-v3>.erp-head{margin-bottom:12px}
+.erp-commercial-form-v3>.erp-head .erp-sub{margin-bottom:0}
+.erp-commercial-form-v3 .erp-form-card.erp-offer-create{padding:16px 18px 18px!important;margin-top:10px!important;overflow:visible!important}
+.erp-commercial-form-v3 .erp-form-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 12px;margin:0}
+.erp-commercial-form-v3 .erp-form-grid+.erp-form-grid{margin-top:2px}
+.erp-commercial-form-v3 .erp-span-2{grid-column:span 2}
+.erp-commercial-form-v3 label{font-size:12px!important;margin:7px 0 4px!important}
+.erp-commercial-form-v3 input,.erp-commercial-form-v3 select{min-height:34px!important;height:34px!important;margin:0!important}
+.erp-commercial-form-v3 .erp-input-suffix input{height:34px!important}
+.erp-commercial-form-v3 .erp-rte{margin-top:2px!important;border-radius:9px!important}
+.erp-commercial-form-v3 .erp-rte-toolbar{padding:5px 7px!important;min-height:34px!important}
+.erp-commercial-form-v3 .erp-rte-editor{min-height:78px!important;height:88px!important;padding:9px 11px!important}
+.erp-commercial-form-v3 .erp-offer-items-head{margin:16px 0 7px;padding-top:12px;border-top:1px solid var(--color-border)}
+.erp-commercial-form-v3 .erp-offer-items-head h2{font-size:18px!important}
+.erp-commercial-form-v3 .erp-offer-items{gap:6px}
+.erp-commercial-form-v3 .erp-offer-item{grid-template-columns:30px minmax(300px,1fr) 86px 86px 112px 112px 34px;gap:8px;padding:9px 10px;border-radius:9px}
+.erp-commercial-form-v3 .erp-offer-item textarea{min-height:54px!important;height:58px!important}
+.erp-commercial-form-v3 .erp-offer-item .erp-rte-editor{min-height:54px!important;height:58px!important}
+.erp-commercial-form-v3 .erp-offer-item input{height:32px!important;min-height:32px!important}
+.erp-commercial-form-v3 .erp-alt-position{align-self:center}
+.erp-commercial-form-v3 .erp-alt-position>label:first-child{display:none}
+.erp-commercial-form-v3 .erp-alt-position .erp-check{font-size:11px!important;white-space:nowrap;margin:0!important}
+.erp-commercial-form-v3 .erp-offer-bottom{grid-template-columns:minmax(0,1fr) 260px;gap:14px;margin-top:12px;align-items:stretch}
+.erp-commercial-form-v3 .erp-offer-bottom .erp-rte-editor{min-height:82px!important;height:92px!important}
+.erp-commercial-form-v3 .erp-offer-totals{padding:8px 13px;border-radius:9px}
+.erp-commercial-form-v3 .erp-offer-totals>div{padding:5px 0}
+.erp-commercial-form-v3 .erp-actions{margin-top:12px}
+.erp-commercial-form-v3 small.erp-muted{font-size:11px;margin-top:2px}
+@media(max-width:1150px){.erp-commercial-form-v3 .erp-form-grid{grid-template-columns:1fr 1fr}.erp-commercial-form-v3 .erp-offer-item{grid-template-columns:30px minmax(240px,1fr) 82px 82px 105px}.erp-commercial-form-v3 .erp-offer-description{grid-column:2/6}.erp-commercial-form-v3 .erp-offer-bottom{grid-template-columns:1fr 240px}}
+@media(max-width:760px){.erp-commercial-form-v3 .erp-form-grid{grid-template-columns:1fr}.erp-commercial-form-v3 .erp-span-2{grid-column:auto}.erp-commercial-form-v3 .erp-offer-bottom{grid-template-columns:1fr}.erp-commercial-form-v3 .erp-offer-item{grid-template-columns:30px 1fr 1fr}.erp-commercial-form-v3 .erp-offer-description{grid-column:2/4}}
+
+/* Betrio 2.3.16: commercial position editor */
+.erp-commercial-form-v3 .erp-offer-item{grid-template-columns:30px minmax(0,1fr)!important;align-items:start!important;position:relative}
+.erp-commercial-form-v3 .erp-offer-description{grid-column:2/-1!important;width:100%}
+.erp-commercial-form-v3 .erp-offer-description textarea,.erp-commercial-form-v3 .erp-offer-description .erp-rte-editor{min-height:105px!important;height:120px!important;resize:vertical!important;max-height:none!important;width:100%!important}
+.erp-commercial-form-v3 .erp-offer-description~div:not(.erp-offer-line-total):not(.erp-alt-position){grid-row:2}
+.erp-commercial-form-v3 .erp-offer-item>.erp-offer-description+div{grid-column:2;max-width:110px}
+.erp-commercial-form-v3 .erp-offer-item>.erp-offer-description+div+div{grid-column:3;max-width:110px}
+.erp-commercial-form-v3 .erp-offer-item{grid-template-columns:30px minmax(0,1fr) 110px 110px 150px 120px 110px 34px!important}
+.erp-commercial-form-v3 .erp-offer-description{grid-column:2/-1!important}
+.erp-commercial-form-v3 .erp-alt-position{grid-column:4;grid-row:2;align-self:end!important;padding-bottom:7px}
+.erp-commercial-form-v3 .erp-offer-line-total{grid-column:7;grid-row:2;align-self:end;padding-bottom:8px}
+.erp-commercial-form-v3 .erp-offer-remove{grid-column:8;grid-row:2;align-self:end;margin-bottom:3px}
+.erp-item-image{display:flex;align-items:center;gap:8px;margin-top:7px;min-height:32px}.erp-item-image label{margin:0!important}.erp-image-button{font-size:12px!important;padding:5px 10px!important}.erp-image-name,.erp-image-existing{font-size:11px;color:var(--color-text-maxcontrast)}
+@media(max-width:900px){.erp-commercial-form-v3 .erp-offer-item{grid-template-columns:30px 1fr 1fr!important}.erp-commercial-form-v3 .erp-offer-description{grid-column:2/4!important}.erp-commercial-form-v3 .erp-offer-description~div{grid-row:auto!important;grid-column:auto!important}.erp-commercial-form-v3 .erp-offer-remove{grid-column:3!important;grid-row:auto!important}}
+
+
+/* Betrio 2.3.17: position line layout fix */
+.erp-commercial-form-v3 .erp-offer-item{
+ grid-template-columns:30px 110px 110px 130px minmax(150px,1fr) 115px 34px!important;
+ column-gap:10px!important;
+ row-gap:8px!important;
+}
+.erp-commercial-form-v3 .erp-offer-description{grid-column:2/-1!important;grid-row:1!important}
+.erp-commercial-form-v3 .erp-item-qty{grid-column:2!important;grid-row:2!important;max-width:none!important}
+.erp-commercial-form-v3 .erp-item-unit{grid-column:3!important;grid-row:2!important;max-width:none!important}
+.erp-commercial-form-v3 .erp-item-price{grid-column:4!important;grid-row:2!important;max-width:none!important}
+.erp-commercial-form-v3 .erp-alt-position{grid-column:5!important;grid-row:2!important;align-self:end!important;padding:0 0 7px 4px!important}
+.erp-commercial-form-v3 .erp-offer-line-total{grid-column:6!important;grid-row:2!important;align-self:end!important;padding-bottom:8px!important;text-align:right}
+.erp-commercial-form-v3 .erp-offer-remove{grid-column:7!important;grid-row:2!important;align-self:end!important;margin-bottom:3px!important}
+.erp-commercial-form-v3 .erp-item-qty input,.erp-commercial-form-v3 .erp-item-unit input,.erp-commercial-form-v3 .erp-item-price input{width:100%!important;min-width:0!important}
+@media(max-width:900px){
+ .erp-commercial-form-v3 .erp-offer-item{grid-template-columns:30px repeat(2,minmax(0,1fr))!important}
+ .erp-commercial-form-v3 .erp-offer-description{grid-column:2/4!important}
+ .erp-commercial-form-v3 .erp-item-qty{grid-column:2!important;grid-row:2!important}
+ .erp-commercial-form-v3 .erp-item-unit{grid-column:3!important;grid-row:2!important}
+ .erp-commercial-form-v3 .erp-item-price{grid-column:2!important;grid-row:3!important}
+ .erp-commercial-form-v3 .erp-alt-position{grid-column:3!important;grid-row:3!important}
+ .erp-commercial-form-v3 .erp-offer-line-total{grid-column:2!important;grid-row:4!important;text-align:left}
+ .erp-commercial-form-v3 .erp-offer-remove{grid-column:3!important;grid-row:4!important;justify-self:end}
+}
+
+/* Betrio 2.4.1 kompakte kaufmännische Übersichten */
+.erp-document-list-card .erp-table table{font-size:13px}
+.erp-document-list-card .erp-table th{font-size:12px;padding:9px 10px}
+.erp-document-list-card .erp-table td{font-size:13px;padding:9px 10px}
+.erp-document-list-card .erp-table td strong{font-size:14px}
+.erp-document-list-card .erp-table td:nth-child(2) strong{font-size:15px}
+.erp-list-actions{white-space:nowrap;width:1%}
+.erp-list-actions form{display:inline-block;margin:0}
+.erp-list-actions .button{min-height:28px;padding:3px 9px;margin:0;font-size:11px}
+.erp-danger-button{color:var(--color-error,#d32f2f)!important}
+
+/* Betrio 2.4.2 Status und Aktionen in kaufmännischen Listen */
+.erp-inline-status-form{display:inline-block;margin:0}
+.erp-inline-status-form select{width:96px!important;min-width:96px!important;height:30px!important;min-height:30px!important;margin:0!important;padding:2px 26px 2px 9px!important;font-size:11px!important}
+.erp-action-cancel,.erp-action-delete{min-height:30px!important;padding:4px 10px!important;margin:0!important;font-size:11px!important;font-weight:600!important;opacity:1!important}
+.erp-action-cancel{background:var(--color-error,#c62828)!important;border-color:var(--color-error,#c62828)!important;color:#fff!important}
+.erp-action-delete{background:transparent!important;border:1px solid var(--color-error,#c62828)!important;color:var(--color-error,#c62828)!important}
+.erp-action-cancel:hover{filter:brightness(.92)}
+.erp-action-delete:hover{background:var(--color-error,#c62828)!important;color:#fff!important}
+.erp-status-cancelled{font-weight:600!important}

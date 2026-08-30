@@ -23,10 +23,18 @@ $groups = [
         'label' => 'Projekte', 'icon' => 'project', 'key' => 'projects',
         'items' => [
             ['Projektakten', 'reinhardterp.page.projects', 'projects', '/projects'],
-            ['Belege', 'reinhardterp.document.index', 'documents', '/documents'],
-            ['Aufträge', 'reinhardterp.business.orders', 'orders', '/orders'],
             ['Rapporte', 'reinhardterp.module.reports', 'reports', '/reports'],
             ['Abrechnung vorbereiten', 'reinhardterp.module.invoicePreparation', 'invoices', '/invoice-preparation'],
+        ],
+    ],
+    [
+        'label' => 'Verkauf', 'icon' => 'document', 'key' => 'sales',
+        'items' => [
+            ['Übersicht', 'reinhardterp.business.offers', 'offers', '/offers'],
+            ['Angebote', 'reinhardterp.business.offers', 'offers', '/offers'],
+            ['Aufträge', 'reinhardterp.business.orders', 'orders', '/orders'],
+            ['Rechnungen', 'reinhardterp.business.invoices', 'invoices', '/invoices'],
+            ['Gutschriften', 'reinhardterp.document.finance', 'documents', '/finance?type=credit_note'],
         ],
     ],
     [
@@ -46,16 +54,12 @@ $groups = [
         ],
     ],
     [
-        'label' => 'Belege', 'icon' => 'document', 'key' => 'documents',
+        'label' => 'Einkauf & Belege', 'icon' => 'document', 'key' => 'documents',
         'items' => [
-            ['Alle Belege', 'reinhardterp.document.index', 'documents', '/documents'],
-            ['Ausgangsrechnungen', 'reinhardterp.document.index', 'documents', '/documents?type=outgoing_invoice'],
+            ['Dokumenteneingang', 'reinhardterp.document.index', 'documents', '/documents'],
             ['Eingangsrechnungen', 'reinhardterp.document.index', 'documents', '/documents?type=incoming_invoice'],
             ['Lieferscheine', 'reinhardterp.document.index', 'documents', '/documents?type=delivery_note'],
-            ['Angebote', 'reinhardterp.document.index', 'documents', '/documents?type=offer'],
-            ['Auftragsbestätigungen', 'reinhardterp.document.index', 'documents', '/documents?type=order'],
-            ['Gutschriften', 'reinhardterp.document.index', 'documents', '/documents?type=credit_note'],
-            ['Kontoauszüge', 'reinhardterp.document.index', 'documents', '/documents?type=bank_statement'],
+            ['Sonstige Belege', 'reinhardterp.document.index', 'documents', '/documents?type=accounting_other'],
             ['Dokumentenarchiv', 'reinhardterp.document.index', 'documents', '/documents?processing=assigned'],
         ],
     ],
@@ -63,11 +67,8 @@ $groups = [
         'label' => 'Finanzen', 'icon' => 'statistics', 'key' => 'finance',
         'items' => [
             ['Übersicht', 'reinhardterp.document.finance', 'documents', '/finance'],
-            ['Eingangsrechnungen', 'reinhardterp.document.finance', 'documents', '/finance?type=incoming_invoice'],
-            ['Ausgangsrechnungen', 'reinhardterp.document.finance', 'documents', '/finance?type=outgoing_invoice'],
             ['Kontoauszüge', 'reinhardterp.document.finance', 'documents', '/finance?type=bank_statement'],
             ['Kasse', 'reinhardterp.document.finance', 'documents', '/finance?type=cash'],
-            ['Gutschriften', 'reinhardterp.document.finance', 'documents', '/finance?type=credit_note'],
             ['Steuern', 'reinhardterp.document.finance', 'documents', '/finance?type=tax'],
         ],
     ],
@@ -76,12 +77,6 @@ $groups = [
         'items' => [
             ['Zeitauswertung', 'reinhardterp.module.timeEvaluation', 'time_billing', '/time-evaluation'],
             ['Abrechnung', 'reinhardterp.module.invoicePreparation', 'invoices', '/invoice-preparation'],
-        ],
-    ],
-    [
-        'label' => 'Hilfe', 'icon' => 'document', 'key' => 'help',
-        'items' => [
-            ['Dokumentation', 'reinhardterp.business.documentation', 'mobile', '/documentation'],
         ],
     ],
     [
@@ -96,6 +91,12 @@ $groups = [
             ['Über Betrio & Release', 'reinhardterp.business.aboutRelease', 'settings', '/about-release'],
         ],
     ],
+    [
+        'label' => 'Hilfe', 'icon' => 'document', 'key' => 'help',
+        'items' => [
+            ['Dokumentation', 'reinhardterp.business.documentation', 'mobile', '/documentation'],
+        ],
+    ],
 ];
 
 $quickCreate = [
@@ -107,6 +108,8 @@ $quickCreate = [
     ['Zeit buchen', 'reinhardterp.module.workdays', 'time'],
     ['Neues Material', 'reinhardterp.module.materials', 'materials'],
 ];
+
+\OCP\Util::addScript('reinhardterp','richtext');
 ?>
 <nav id="app-navigation" class="erp-app-navigation" aria-label="Betrio Navigation">
     <div class="erp-nav-brand">
@@ -144,7 +147,7 @@ $quickCreate = [
                     ?>
                         <?php
                             $routeParams = [];
-                            if (in_array($group['key'], ['documents','finance'], true) && str_contains($match, '?')) {
+                            if (in_array($group['key'], ['documents','finance','sales'], true) && str_contains($match, '?')) {
                                 [, $queryString] = explode('?', $match, 2);
                                 parse_str($queryString, $routeParams);
                             }

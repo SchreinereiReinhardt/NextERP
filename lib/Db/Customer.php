@@ -19,6 +19,16 @@ final class Customer extends Entity {
     protected ?string $city = null;
     protected ?string $country = null;
     protected ?string $notes = null;
+    protected ?string $customerType = null;
+    protected ?string $invoiceEmail = null;
+    protected ?string $vatId = null;
+    protected ?string $taxNo = null;
+    protected ?string $leitwegId = null;
+    protected ?string $supplierNo = null;
+    protected ?string $buyerReference = null;
+    protected ?string $purchaseOrderReference = null;
+    protected ?string $costCenter = null;
+    protected ?string $invoiceFormat = null;
     protected ?string $ncAddressbookKey = null;
     protected ?string $ncContactId = null;
     protected ?string $ncContactUid = null;

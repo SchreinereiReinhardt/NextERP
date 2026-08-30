@@ -23,6 +23,15 @@
             toggle.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
             toggle.textContent = isHidden ? 'Schließen' : 'Bearbeiten';
         });
+
+        editor.querySelectorAll('[data-permission-user]').forEach(function (row) {
+            row.querySelectorAll('[data-action]').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const checked = button.dataset.action === 'all';
+                    row.querySelectorAll('.erp-folder-permissions input[type="checkbox"]').forEach(function (box) { box.checked = checked; });
+                });
+            });
+        });
     }
 
     if (document.readyState === 'loading') {

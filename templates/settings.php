@@ -41,8 +41,61 @@ require __DIR__ . '/_nav.php';
             </div>
             <?php if (!empty($_['logoDataUri'])): ?><img class="erp-settings-logo-preview" src="<?php p($_['logoDataUri']); ?>" alt="Firmenlogo"><?php endif; ?>
         </div>
-        <div class="erp-actions"><button class="button primary" type="submit">Firmendaten speichern</button></div>
-    </form>
+        <fieldset class="erp-card erp-document-settings erp-number-settings">
+ <legend><strong>Nummernkreise</strong></legend>
+ <p class="erp-muted erp-number-settings-intro">Bestehende Nummern bleiben unverändert. Hier legst du nur fest, wie neue Nummern weiterlaufen.</p>
+ <div class="erp-number-grid erp-number-grid-head"><span>Bereich</span><span>Präfix</span><span>Jahr</span><span>Trenner</span><span>Stellen</span><span>Nächste Nummer</span><span>Vorschau</span></div>
+ <?php foreach (($_['numberSettings'] ?? []) as $type => $num): ?>
+ <div class="erp-number-grid">
+  <strong class="erp-number-label"><?php p($num['label']); ?></strong>
+  <input name="number_<?php p($type); ?>_prefix" value="<?php p($num['prefix']); ?>" maxlength="12" aria-label="Präfix <?php p($num['label']); ?>">
+  <label class="erp-number-year"><input type="checkbox" name="number_<?php p($type); ?>_yearly" value="1" <?php if (!empty($num['yearly'])): ?>checked<?php endif; ?>><span>Jahr</span></label>
+  <select name="number_<?php p($type); ?>_separator" aria-label="Trenner <?php p($num['label']); ?>"><option value="" <?php if (($num['separator']??'')===''): ?>selected<?php endif; ?>>kein</option><option value="-" <?php if (($num['separator']??'')==='-'): ?>selected<?php endif; ?>>-</option><option value="/" <?php if (($num['separator']??'')==='/'): ?>selected<?php endif; ?>>/</option><option value="." <?php if (($num['separator']??'')==='.'): ?>selected<?php endif; ?>>.</option></select>
+  <input type="number" min="1" max="10" name="number_<?php p($type); ?>_width" value="<?php p($num['width']); ?>" aria-label="Stellen <?php p($num['label']); ?>">
+  <input type="number" min="1" name="number_<?php p($type); ?>_next" value="<?php p($num['next']); ?>" aria-label="Nächste Nummer <?php p($num['label']); ?>">
+  <code class="erp-number-preview"><?php p($num['preview']); ?></code>
+ </div>
+ <?php endforeach; ?>
+ <p class="erp-muted erp-number-settings-example">Beispiel: RE + Jahr + „-“ + 4 Stellen → <code>2026-RE0128</code></p>
+</fieldset>
+<div class="erp-actions"><button class="button primary" type="submit">Einstellungen speichern</button></div>
+    
+
+
+
+
+<fieldset class="erp-card erp-document-settings">
+ <legend><strong>Zahlungsbedingungen</strong></legend>
+ <p class="erp-muted">Fertige Vorlagen stehen sofort zur Verfügung. Zusätzlich kannst du drei eigene Zahlungsbedingungen hinterlegen.</p>
+ <?php $ps=$_['paymentSettings']??['default'=>'net14','custom'=>[]];?>
+ <div class="erp-form-grid"><div><label>Standard bei neuen Rechnungen</label><select name="payment_terms_default"><?php foreach(['due'=>'Sofort ohne Abzug','net10'=>'10 Tage netto','net14'=>'14 Tage netto','net30'=>'30 Tage netto','skonto2_10_30'=>'2 % Skonto / 10 Tage, 30 Tage netto','skonto3_10_30'=>'3 % Skonto / 10 Tage, 30 Tage netto','custom1'=>'Eigene Vorlage 1','custom2'=>'Eigene Vorlage 2','custom3'=>'Eigene Vorlage 3'] as $k=>$l):?><option value="<?php p($k);?>" <?php if(($ps['default']??'net14')===$k):?>selected<?php endif;?>><?php p($l);?></option><?php endforeach;?></select></div></div>
+ <?php for($pi=1;$pi<=3;$pi++):$pc=$ps['custom'][$pi]??[];?>
+ <div class="erp-form-grid"><div><label>Eigene Vorlage <?php p($pi);?> – Name</label><input name="payment_custom_<?php p($pi);?>_label" value="<?php p($pc['label']??'');?>" placeholder="z. B. Stammkunde 7 Tage"></div><div><label>Zahlungsziel in Tagen</label><input type="number" min="0" max="365" name="payment_custom_<?php p($pi);?>_days" value="<?php p($pc['days']??14);?>"></div><div style="grid-column:1/-1"><label>Text auf der Rechnung</label><input name="payment_custom_<?php p($pi);?>_text" value="<?php p($pc['text']??'');?>" placeholder="Zahlbar innerhalb von ..."></div></div>
+ <?php endfor;?>
+</fieldset>
+
+<fieldset class="erp-card erp-document-settings">
+ <legend><strong>Geschäftsdokumente / Bankverbindungen</strong></legend>
+ <p class="erp-muted">Diese Angaben werden automatisch in Angeboten, Rechnungen, Abschlags- und Schlussrechnungen, Gutschriften und Mahnungen verwendet.</p>
+ <h3>Bankverbindung 1</h3>
+ <div class="erp-form-grid">
+  <div><label>Bank / Kreditinstitut</label><input name="company_bank1_name" value="<?php p($_['company']['bank1_name']??'');?>"></div>
+  <div><label>IBAN</label><input name="company_bank1_iban" value="<?php p($_['company']['bank1_iban']??'');?>"></div>
+  <div><label>BIC</label><input name="company_bank1_bic" value="<?php p($_['company']['bank1_bic']??'');?>"></div>
+ </div>
+ <h3>Bankverbindung 2</h3>
+ <div class="erp-form-grid">
+  <div><label>Bank / Kreditinstitut</label><input name="company_bank2_name" value="<?php p($_['company']['bank2_name']??'');?>"></div>
+  <div><label>IBAN</label><input name="company_bank2_iban" value="<?php p($_['company']['bank2_iban']??'');?>"></div>
+  <div><label>BIC</label><input name="company_bank2_bic" value="<?php p($_['company']['bank2_bic']??'');?>"></div>
+ </div>
+ <h3>Standardtexte</h3>
+ <div><label>Einleitung Angebot</label><textarea name="company_default_offer_intro" rows="4"><?php p($_['company']['default_offer_intro']??'');?></textarea></div>
+ <div><label>Schlusstext Angebot</label><textarea name="company_default_offer_outro" rows="4"><?php p($_['company']['default_offer_outro']??'');?></textarea></div>
+ <div><label>Standardhinweis Rechnung / Zahlungsbedingungen</label><textarea name="company_default_invoice_note" rows="4"><?php p($_['company']['default_invoice_note']??'');?></textarea></div>
+</fieldset>
+<div class="erp-actions"><button class="button primary" type="submit">Einstellungen speichern</button></div>
+</form>
 </section>
 
 

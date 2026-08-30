@@ -48,6 +48,16 @@ final class CustomerController extends Controller {
         ?string $country = null,
         ?string $address = null,
         ?string $notes = null,
+        ?string $customerType = null,
+        ?string $invoiceEmail = null,
+        ?string $vatId = null,
+        ?string $taxNo = null,
+        ?string $leitwegId = null,
+        ?string $supplierNo = null,
+        ?string $buyerReference = null,
+        ?string $purchaseOrderReference = null,
+        ?string $costCenter = null,
+        ?string $invoiceFormat = null,
         ?string $saveToNextcloudContacts = null,
         ?string $addressBookKey = null,
     ): RedirectResponse {
@@ -73,6 +83,16 @@ final class CustomerController extends Controller {
         $customer->setCountry($this->nullable($country));
         $customer->setAddress($this->composeAddress($street, $postalCode, $city, $country, $address));
         $customer->setNotes($this->nullable($notes));
+        $customer->setCustomerType(in_array($customerType, ['private','business','public'], true) ? $customerType : 'business');
+        $customer->setInvoiceEmail($this->nullable($invoiceEmail));
+        $customer->setVatId($this->nullable($vatId));
+        $customer->setTaxNo($this->nullable($taxNo));
+        $customer->setLeitwegId($this->nullable($leitwegId));
+        $customer->setSupplierNo($this->nullable($supplierNo));
+        $customer->setBuyerReference($this->nullable($buyerReference));
+        $customer->setPurchaseOrderReference($this->nullable($purchaseOrderReference));
+        $customer->setCostCenter($this->nullable($costCenter));
+        $customer->setInvoiceFormat(in_array($invoiceFormat, ['pdf','xrechnung','zugferd'], true) ? $invoiceFormat : 'pdf');
         $customer->setUpdatedAt($now);
         $customer->setFolderPath($this->folders->ensureCustomerFolder($number, $name));
 

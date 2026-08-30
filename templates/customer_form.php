@@ -27,6 +27,22 @@ $isLinked = $customer && $customer->getNcContactId();
 <div><label>Land</label><input name="country" autocomplete="country-name" value="<?php p($customer?->getCountry() ?? 'Deutschland'); ?>" placeholder="Deutschland"></div>
 </div>
 </fieldset>
+<section class="erp-card" style="margin-top:18px">
+<h2>E-Rechnung & Abrechnung</h2>
+<p class="erp-muted">Optionale Rechnungsdaten des Kunden. Leitweg-ID und Käuferreferenzen werden später automatisch für XRechnungen verwendet.</p>
+<div class="erp-form-grid">
+<div><label>Kundentyp</label><select name="customerType"><?php $ct=$customer?->getCustomerType() ?: 'business'; ?><option value="private" <?= $ct==='private'?'selected':'' ?>>Privatkunde</option><option value="business" <?= $ct==='business'?'selected':'' ?>>Unternehmen</option><option value="public" <?= $ct==='public'?'selected':'' ?>>Öffentlicher Auftraggeber</option></select></div>
+<div><label>Bevorzugtes Rechnungsformat</label><select name="invoiceFormat"><?php $if=$customer?->getInvoiceFormat() ?: 'pdf'; ?><option value="pdf" <?= $if==='pdf'?'selected':'' ?>>PDF</option><option value="xrechnung" <?= $if==='xrechnung'?'selected':'' ?>>XRechnung</option><option value="zugferd" <?= $if==='zugferd'?'selected':'' ?>>ZUGFeRD</option></select></div>
+<div><label>Rechnungs-E-Mail</label><input type="email" name="invoiceEmail" value="<?php p($customer?->getInvoiceEmail() ?? ''); ?>" placeholder="rechnung@kunde.de"></div>
+<div><label>USt-IdNr.</label><input name="vatId" value="<?php p($customer?->getVatId() ?? ''); ?>" placeholder="DE123456789"></div>
+<div><label>Steuernummer</label><input name="taxNo" value="<?php p($customer?->getTaxNo() ?? ''); ?>"></div>
+<div><label>Leitweg-ID</label><input name="leitwegId" value="<?php p($customer?->getLeitwegId() ?? ''); ?>" placeholder="z. B. 991-...-...-.."></div>
+<div><label>Lieferantennummer beim Kunden</label><input name="supplierNo" value="<?php p($customer?->getSupplierNo() ?? ''); ?>"></div>
+<div><label>Käuferreferenz / Buyer Reference</label><input name="buyerReference" value="<?php p($customer?->getBuyerReference() ?? ''); ?>"></div>
+<div><label>Standard-Bestellreferenz</label><input name="purchaseOrderReference" value="<?php p($customer?->getPurchaseOrderReference() ?? ''); ?>"></div>
+<div><label>Kostenstelle</label><input name="costCenter" value="<?php p($customer?->getCostCenter() ?? ''); ?>"></div>
+</div>
+</section>
 <label>Notizen</label><textarea name="notes" rows="4"><?php p($customer?->getNotes() ?? ''); ?></textarea>
 
 <?php if (!empty($_['contactsEnabled'])): ?>

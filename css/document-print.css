@@ -1,0 +1,31 @@
+
+@page{size:A4;margin:16mm 15mm 18mm}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#fff;color:#111;font-family:Arial,Helvetica,sans-serif;font-size:10.5pt;line-height:1.35}
+.doc{width:100%;max-width:180mm;margin:0 auto}
+.doc-head{display:grid;grid-template-columns:1.2fr 1fr;gap:12mm;align-items:start;min-height:34mm}
+.doc-logo{max-width:70mm;max-height:24mm;object-fit:contain;object-position:left top}
+.doc-company{text-align:right;font-size:9.5pt;line-height:1.45}
+.doc-bank{margin-top:4mm}.doc-bank strong{display:block}
+.doc-recipient-wrap{display:grid;grid-template-columns:1.25fr .85fr;gap:16mm;margin-top:10mm;min-height:42mm}
+.doc-senderline{font-size:7.5pt;text-decoration:underline;margin-bottom:5mm}
+.doc-recipient{font-size:10.5pt;line-height:1.45}
+.doc-meta{font-size:9.5pt}.doc-meta-row{display:grid;grid-template-columns:1fr 1.25fr;gap:4mm;margin-bottom:2mm}.doc-meta-row span:first-child{font-weight:bold}
+.doc-title{font-size:20pt;font-weight:700;margin:6mm 0 3mm}
+.doc-intro{margin-bottom:6mm}
+.doc-table{width:100%;border-collapse:collapse;table-layout:fixed}
+.doc-table th{font-size:8.5pt;border-bottom:1.5px solid #222;padding:2mm 1.5mm;text-align:left}
+.doc-table td{vertical-align:top;padding:3mm 1.5mm;border-bottom:.3px solid #bbb}
+.doc-table .p{width:8mm}.doc-table .q{width:15mm;text-align:right}.doc-table .u{width:16mm}.doc-table .price{width:25mm;text-align:right}.doc-table .total{width:27mm;text-align:right}
+.doc-desc{overflow-wrap:anywhere}.doc-desc p:first-child{margin-top:0}.doc-desc p:last-child{margin-bottom:0}
+.doc-alt{font-weight:700;font-size:8.5pt;text-transform:uppercase;letter-spacing:.02em;margin-bottom:1mm}
+.doc-totals{width:76mm;margin:6mm 0 0 auto}.doc-total-row{display:flex;justify-content:space-between;padding:1.3mm 0}.doc-total-grand{font-weight:700;font-size:12pt;border-top:1.5px solid #222;margin-top:1mm;padding-top:2mm}
+.doc-notes{margin-top:10mm}.doc-outro{margin-top:12mm}
+.doc-footer{margin-top:12mm;padding-top:3mm;border-top:.4px solid #999;font-size:7.5pt;color:#333;display:grid;grid-template-columns:1fr 1fr 1fr;gap:5mm}
+.doc-page-note{font-size:8pt;text-align:right;margin-bottom:3mm}
+@media print{
+ .no-print{display:none!important}
+ thead{display:table-header-group}
+ tr{break-inside:avoid}
+ .doc-head,.doc-recipient-wrap,.doc-totals{break-inside:avoid}
+}

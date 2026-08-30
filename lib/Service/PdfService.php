@@ -121,4 +121,185 @@ final class PdfService {
  }
 
 
+
+ public function createCommercialDocument(string $type,array $doc,?array $customer,?array $project,array $items,?array $logo=null,array $company=[]):string{
+  require_once __DIR__.'/../tfpdf/tfpdf.php';
+  $pdf=new \tFPDF('P','mm','A4');$pdf->SetMargins(15,12,15);$pdf->SetAutoPageBreak(true,22);$pdf->AddPage();
+  $label=match($type){'offer'=>'Angebot','advance'=>'Abschlagsrechnung','final'=>'Schlussrechnung','credit'=>'Gutschrift',default=>'Rechnung'};
+  $number=$type==='offer'?(string)($doc['offer_no']??''):(string)(($doc['status']??'')==='draft'?'ENTWURF':($doc['invoice_no']??''));
+  $date=(string)($type==='offer'?($doc['offer_date']??date('Y-m-d')):($doc['invoice_date']??date('Y-m-d')));
+  $this->commercialHeader($pdf,$company,$logo);
+
+  $sender=trim(implode(' - ',array_filter([(string)($company['name']??''),(string)($company['street']??''),trim((string)($company['zip']??'').' '.(string)($company['city']??''))])));
+  $pdf->SetY(58);$pdf->SetTextColor(90,90,90);$pdf->SetFont('Helvetica','',6.8);$pdf->Cell(103,4,$this->text($sender),0,0);
+  $pdf->SetTextColor(30,30,30);$pdf->SetFont('Helvetica','B',8.5);$pdf->Cell(27,4,$this->text('Sachbearbeiter/-in:'),0,0);$pdf->SetFont('Helvetica','',8.5);$pdf->Cell(50,4,$this->text((string)($doc['clerk_name']??$company['owner']??'')),0,1);
+  $pdf->SetX(118);$pdf->SetFont('Helvetica','B',8.5);$pdf->Cell(27,4,$this->text('Datum:'),0,0);$pdf->SetFont('Helvetica','',8.5);$pdf->Cell(50,4,$this->text($this->deDate($date)),0,1);
+  $pdf->SetX(118);$pdf->SetFont('Helvetica','B',8.5);$pdf->Cell(27,4,$this->text($label.'-Nr.:'),0,0);$pdf->SetFont('Helvetica','',8.5);$pdf->Cell(50,4,$this->text($number),0,1);
+
+  $pdf->SetXY(15,67);$pdf->SetFont('Helvetica','',9.5);$pdf->SetTextColor(20,20,20);
+  $name=(string)($customer['name']??'');if($name!=='')$pdf->Cell(95,5,$this->text($name),0,1);
+  $address=$this->plain((string)($customer['address']??''));
+  if($address!==''){$pdf->SetX(15);$pdf->MultiCell(90,4.7,$this->text($address));}
+  else{
+   foreach([(string)($customer['street']??''),trim((string)($customer['zip']??'').' '.(string)($customer['city']??''))] as $row)if(trim($row)!==''){$pdf->SetX(15);$pdf->Cell(90,4.7,$this->text($row),0,1);}
+  }
+
+  $pdf->SetY(max(96,$pdf->GetY()+5));$pdf->SetFont('Helvetica','B',17);$pdf->Cell(0,9,$this->text($label),0,1);
+  $subject=trim((string)($doc['subject']??''));
+  if($subject!==''){$pdf->SetFont('Helvetica','B',10);$pdf->MultiCell(0,5,$this->text($this->plain($subject)));$pdf->Ln(1);}
+
+  if($type==='offer'){
+   $intro=trim((string)($doc['intro_text']??''));if($intro==='')$intro=trim((string)($company['default_offer_intro']??''));if($intro==='')$intro='Sehr geehrte Damen und Herren, wir freuen uns, Ihnen folgendes Angebot unterbreiten zu dürfen:';
+   $pdf->SetFont('Helvetica','',9);$pdf->MultiCell(0,5,$this->text($this->plain($intro)));$pdf->Ln(3);
+  }elseif(!empty($project)){
+   $projectText=trim((string)($project['project_no']??'').' '.(string)($project['title']??''));
+   if($projectText!==''){$pdf->SetFont('Helvetica','',8.5);$pdf->Cell(0,5,$this->text('Projekt: '.$projectText),0,1);$pdf->Ln(2);}
+  }
+
+  if($type!=='offer'){
+   $intro=trim((string)($doc['intro_text']??''));
+   if($intro!==''){$pdf->SetFont('Helvetica','',9);$pdf->MultiCell(0,5,$this->text($this->plain($intro)));$pdf->Ln(3);}
+  }
+  $this->commercialTableHeader($pdf);
+  $net=0.0;
+  foreach($items as $idx=>$item){
+   $alt=!empty($item['is_alternative']);$line=(float)($item['total_price']??0);if(!$alt)$net+=$line;
+   $desc=$this->plain((string)($item['description']??''));
+   if($alt)$desc="Alternativposition\n".$desc;
+   $lines=max(1,substr_count(wordwrap($desc,52,"\n",true),"\n")+1);$h=max(7,min(28,$lines*4.2));
+   if($pdf->GetY()+$h>270){$pdf->AddPage();$this->commercialHeader($pdf,$company,$logo,true);$pdf->SetY(48);$this->commercialTableHeader($pdf);}
+   $y=$pdf->GetY();$pdf->SetFont('Helvetica','',8);
+   $pdf->Cell(9,$h,$this->text((string)($idx+1)),0,0,'L');
+   $pdf->Cell(17,$h,$this->text(number_format((float)($item['quantity']??0),2,',','.')),0,0,'R');
+   $pdf->Cell(16,$h,$this->text((string)($item['unit']??'')),0,0,'L');
+   $pdf->SetXY(57,$y);$pdf->MultiCell(74,4.2,$this->text($desc),0,'L');
+   $pdf->SetXY(131,$y);$pdf->Cell(28,$h,$this->text(number_format((float)($item['unit_price']??0),2,',','.').' EUR'),0,0,'R');
+   $pdf->Cell(36,$h,$this->text(number_format($line,2,',','.').' EUR'),0,1,'R');
+   if($pdf->GetY()<$y+$h)$pdf->SetY($y+$h);
+   $pdf->SetDrawColor(225,225,225);$pdf->Line(15,$pdf->GetY(),195,$pdf->GetY());
+   $this->commercialItemImage($pdf,$item,$company,$logo);
+  }
+
+  $storedNet=(float)($doc['net_amount']??$net);$gross=(float)($doc['gross_amount']??$storedNet);$vat=(float)($doc['vat_rate']??19);$tax=$gross-$storedNet;
+  if($pdf->GetY()>235)$pdf->AddPage();
+  $pdf->Ln(4);$x=122;$w1=42;$w2=31;
+  $pdf->SetFont('Helvetica','',9);$pdf->SetX($x);$pdf->Cell($w1,5,$this->text('Summe'),0,0);$pdf->Cell($w2,5,$this->text(number_format($storedNet,2,',','.').' EUR'),0,1,'R');
+  $taxMode=(string)($doc['tax_mode']??'standard19');if($taxMode==='small_business'||$taxMode==='reverse_charge_13b'){$pdf->SetX($x);$pdf->Cell($w1,5,$this->text('Umsatzsteuer'),0,0);$pdf->Cell($w2,5,$this->text('0,00 EUR'),0,1,'R');}else{$pdf->SetX($x);$pdf->Cell($w1,5,$this->text('Mehrwertsteuer '.number_format($vat,0,',','.').'%'),0,0);$pdf->Cell($w2,5,$this->text(number_format($tax,2,',','.').' EUR'),0,1,'R');}
+  $pdf->SetFont('Helvetica','B',10.5);$pdf->SetX($x);$pdf->Cell($w1,7,$this->text('Gesamtbetrag'),0,0);$pdf->Cell($w2,7,$this->text(number_format($gross,2,',','.').' EUR'),0,1,'R');
+
+  if($type==='final'&&(float)($doc['advance_gross_amount']??0)>0){
+   $advance=(float)$doc['advance_gross_amount'];$remaining=$gross-$advance;$pdf->SetFont('Helvetica','',9);
+   $pdf->SetX($x);$pdf->Cell($w1,5,$this->text('abzgl. Abschlaege'),0,0);$pdf->Cell($w2,5,$this->text('- '.number_format($advance,2,',','.').' EUR'),0,1,'R');
+   $pdf->SetFont('Helvetica','B',10.5);$pdf->SetX($x);$pdf->Cell($w1,7,$this->text('Zahlbetrag'),0,0);$pdf->Cell($w2,7,$this->text(number_format($remaining,2,',','.').' EUR'),0,1,'R');
+  }
+
+  $taxNote=$this->plain((string)($doc['tax_note']??''));if($taxNote!==''){$pdf->Ln(6);$pdf->SetFont('Helvetica','B',8.7);$pdf->MultiCell(0,4.7,$this->text($taxNote));}$notes=$this->plain((string)($doc['notes']??''));if($notes!==''){$pdf->Ln(6);$pdf->SetFont('Helvetica','',8.7);$pdf->MultiCell(0,4.7,$this->text($notes));}
+  if($type==='offer'){
+   $outro=trim((string)($doc['outro_text']??''));if($outro==='')$outro=trim((string)($company['default_offer_outro']??''));if($outro==='')$outro='Wir hoffen, dass unser Angebot Ihnen zusagt und verbleiben mit freundlichen Gruessen';
+   $pdf->Ln(8);$pdf->SetFont('Helvetica','',9);$pdf->MultiCell(0,5,$this->text($this->plain($outro)));$pdf->Ln(4);$pdf->Cell(0,5,$this->text((string)($company['owner']??'')),0,1);
+  }
+  if($type!=='offer' && ($doc['invoice_type']??'')==='final' && !empty($doc['previous_installments'])){
+   $pdf->Ln(5);$pdf->SetFont('Helvetica','B',9);$pdf->Cell(0,5,$this->text('Bereits berechnete Abschlaege'),0,1);
+   $sumNet=0.0;$sumVat=0.0;$sumGross=0.0;
+   $pdf->SetFont('Helvetica','',8.5);
+   foreach($doc['previous_installments'] as $a){
+    $sumNet+=(float)($a['net_total']??0);$sumVat+=(float)($a['vat_total']??0);$sumGross+=(float)($a['gross_total']??0);
+    $name=(string)($a['invoice_no']??('Entwurf #'.($a['id']??'')));
+    $pdf->Cell(110,5,$this->text($name.' · '.($a['invoice_date']??'')),0,0);
+    $pdf->Cell(0,5,$this->text('- '.number_format((float)($a['gross_total']??0),2,',','.').' EUR'),0,1,'R');
+   }
+   $pdf->SetFont('Helvetica','B',9);
+   $pdf->Cell(110,6,$this->text('Summe Abschlaege'),0,0);
+   $pdf->Cell(0,6,$this->text('- '.number_format($sumGross,2,',','.').' EUR'),0,1,'R');
+   $remaining=(float)($doc['gross_total']??0)-$sumGross;
+   $pdf->Cell(110,7,$this->text('Verbleibender Rechnungsbetrag'),0,0);
+   $pdf->Cell(0,7,$this->text(number_format($remaining,2,',','.').' EUR'),0,1,'R');
+  }
+  if($type!=='offer'){
+   $outro=trim((string)($doc['outro_text']??''));
+   if($outro!==''){$pdf->Ln(7);$pdf->SetFont('Helvetica','',8.7);$pdf->MultiCell(0,4.7,$this->text($this->plain($outro)));}
+  }
+  $this->commercialFooter($pdf,$company);
+  return $pdf->Output('S');
+ }
+ private function commercialItemImage(\tFPDF $pdf,array $item,array $company,?array $logo):void{
+  $encoded=(string)($item['image_data']??'');$mime=strtolower((string)($item['image_mime']??''));if($encoded===''||!in_array($mime,['image/jpeg','image/png'],true))return;
+  $raw=base64_decode($encoded,true);if($raw===false)return;$info=@getimagesizefromstring($raw);if($info===false)return;
+  $type=$mime==='image/png'?'PNG':'JPG';$maxW=72.0;$maxH=45.0;$ratio=((int)$info[0]>0&&(int)$info[1]>0)?(int)$info[0]/(int)$info[1]:1.0;$w=$maxW;$h=$w/max(.01,$ratio);if($h>$maxH){$h=$maxH;$w=$h*$ratio;}
+  if($pdf->GetY()+$h+8>258){$pdf->AddPage();$this->commercialHeader($pdf,$company,$logo,true);$pdf->SetY(48);$this->commercialTableHeader($pdf);}
+  $tmp=tempnam(sys_get_temp_dir(),'erp-item-');if($tmp===false)return;
+  try{file_put_contents($tmp,$raw);$y=$pdf->GetY()+3;$pdf->Image($tmp,57,$y,$w,$h,$type);$pdf->SetY($y+$h+3);$pdf->SetFont('Helvetica','',6.8);$pdf->SetTextColor(105,105,105);$name=trim((string)($item['image_name']??''));if($name!==''){$pdf->SetX(57);$pdf->Cell(74,3.5,$this->text($name),0,1);} $pdf->SetTextColor(25,25,25);$pdf->SetDrawColor(225,225,225);$pdf->Line(15,$pdf->GetY(),195,$pdf->GetY());}catch(\Throwable){}finally{@unlink($tmp);}
+ }
+
+ private function commercialHeader(\tFPDF $pdf,array $company,?array $logo,bool $compact=false):void{
+  if($logo&&isset($logo['content'],$logo['extension'])){
+   $tmp=tempnam(sys_get_temp_dir(),'erp-commercial-logo-');if($tmp!==false){file_put_contents($tmp,$logo['content']);try{$type=strtoupper(($logo['extension']??'png')==='jpg'?'JPG':($logo['extension']??'PNG'));$pdf->Image($tmp,15,11,$compact?52:70,0,$type);}catch(\Throwable){}@unlink($tmp);}
+  }else{$pdf->SetXY(15,12);$pdf->SetFont('Helvetica','B',14);$pdf->Cell(80,7,$this->text((string)($company['name']??'Betrio')),0,1);}
+  $pdf->SetXY(118,11);$pdf->SetFont('Helvetica','B',8.5);$pdf->SetTextColor(35,35,35);$pdf->Cell(77,4,$this->text((string)($company['name']??'')),0,1,'L');
+  $pdf->SetX(118);$pdf->SetFont('Helvetica','',7.7);
+  foreach([(string)($company['street']??''),trim((string)($company['zip']??'').' '.(string)($company['city']??'')),((string)($company['phone']??''))!==''?'Telefon: '.(string)$company['phone']:'',((string)($company['mobile']??''))!==''?'Mobil: '.(string)$company['mobile']:'',((string)($company['email']??''))!==''?'Mail: '.(string)$company['email']:'',((string)($company['website']??''))!==''?'Web: '.(string)$company['website']:''] as $row)if(trim($row)!==''){$pdf->SetX(118);$pdf->Cell(77,3.8,$this->text($row),0,1);}
+ }
+ private function commercialTableHeader(\tFPDF $pdf):void{
+  $pdf->SetFillColor(245,245,245);$pdf->SetFont('Helvetica','B',7.6);$pdf->SetTextColor(25,25,25);
+  foreach([['Pos.',9,'L'],['Anzahl',17,'R'],['Einheit',16,'L'],['Bezeichnung',74,'L'],['Einzelpreis',28,'R'],['Gesamtpreis',36,'R']] as [$h,$w,$a])$pdf->Cell($w,6,$this->text($h),0,0,$a,true);
+  $pdf->Ln();$pdf->SetDrawColor(60,60,60);$pdf->Line(15,$pdf->GetY(),195,$pdf->GetY());
+ }
+ private function commercialFooter(\tFPDF $pdf,array $company):void{
+  $pdf->SetAutoPageBreak(false);
+  $y=264;
+  $pdf->SetY($y);
+  $pdf->SetDrawColor(160,160,160);
+  $pdf->Line(15,$y,195,$y);
+  $pdf->SetY($y+2);
+  $pdf->SetTextColor(80,80,80);
+
+  $x1=15;$x2=62;$x3=103;$x4=149;
+  $w1=45;$w2=39;$w3=44;$w4=46;
+
+  $pdf->SetFont('Helvetica','B',6.6);
+  $pdf->SetX($x1);$pdf->Cell($w1,3.5,$this->text((string)($company['name']??'')),0,0);
+  $pdf->SetX($x2);$pdf->Cell($w2,3.5,$this->text('Steuerdaten'),0,0);
+  $pdf->SetX($x3);$pdf->Cell($w3,3.5,$this->text('Bankverbindung 1'),0,0);
+  $pdf->SetX($x4);$pdf->Cell($w4,3.5,$this->text('Bankverbindung 2'),0,1);
+
+  $pdf->SetFont('Helvetica','',6.2);
+
+  $left=[
+   (string)($company['street']??''),
+   trim((string)($company['zip']??'').' '.(string)($company['city']??'')),
+   !empty($company['phone'])?'Tel. '.$company['phone']:'',
+   (string)($company['email']??''),
+   (string)($company['website']??'')
+  ];
+
+  $tax=[
+   !empty($company['taxNo'])?'St.-Nr. '.$company['taxNo']:'',
+   !empty($company['vatId'])?'USt-IdNr. '.$company['vatId']:'',
+   !empty($company['registerCourt'])?'Registergericht '.$company['registerCourt']:'',
+   !empty($company['registerNo'])?'Reg.-Nr. '.$company['registerNo']:''
+  ];
+
+  $bank1=[
+   (string)($company['bank1_name']??''),
+   !empty($company['bank1_iban'])?'IBAN '.$company['bank1_iban']:'',
+   !empty($company['bank1_bic'])?'BIC '.$company['bank1_bic']:''
+  ];
+
+  $bank2=[
+   (string)($company['bank2_name']??''),
+   !empty($company['bank2_iban'])?'IBAN '.$company['bank2_iban']:'',
+   !empty($company['bank2_bic'])?'BIC '.$company['bank2_bic']:''
+  ];
+
+  for($i=0;$i<5;$i++){
+   $pdf->SetX($x1);$pdf->Cell($w1,3.2,$this->text((string)($left[$i]??'')),0,0);
+   $pdf->SetX($x2);$pdf->Cell($w2,3.2,$this->text((string)($tax[$i]??'')),0,0);
+   $pdf->SetX($x3);$pdf->Cell($w3,3.2,$this->text((string)($bank1[$i]??'')),0,0);
+   $pdf->SetX($x4);$pdf->Cell($w4,3.2,$this->text((string)($bank2[$i]??'')),0,1);
+  }
+ }
+ private function plain(string $html):string{
+  $html=preg_replace('#<br\s*/?>#i',"\n",$html);$html=preg_replace('#</(p|li|h2|h3|h4)>#i',"\n",$html);$html=preg_replace('#<li[^>]*>#i','• ',$html);return trim(html_entity_decode(strip_tags($html),ENT_QUOTES|ENT_HTML5,'UTF-8'));
+ }
+ private function deDate(string $value):string{$ts=strtotime($value);return $ts?date('d.m.Y',$ts):$value;}
 }

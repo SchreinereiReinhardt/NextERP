@@ -1,3 +1,60 @@
+## 2.3.13 – Projekt-Tabs
+- Projekt-Tabs Angebote, Aufträge und Rechnungen reagieren wieder korrekt.
+- Jeder Tab zeigt gezielt den zugehörigen Projektbereich.
+- Keine Änderung an Mobile-API oder Projektfreigaben.
+
+## 2.3.5 – Direkter E-Mail-Versand
+
+- Angebote können direkt aus Betrio über die Nextcloud-Mailkonfiguration versendet werden.
+- Angebots-PDF wird automatisch angehängt.
+- Rechnungen können direkt aus Betrio versendet werden.
+- PDF ist standardmäßig als Anhang aktiviert.
+- XRechnung XML kann zusätzlich per Checkbox angehängt werden.
+- Empfänger, Betreff und Nachricht können vor dem Versand bearbeitet werden.
+- Der bisherige Windows-Mailprogramm-Button bleibt als Alternative erhalten.
+- Nach erfolgreichem Angebotsversand wird der Angebotsstatus auf „Versendet“ gesetzt.
+
+## 2.3.4 – PDF-Archiv & Mail
+
+- Finalisierte Rechnungen werden automatisch als PDF in Nextcloud Files gespeichert.
+- Ablage: ERP/30_Finanzen/Ausgangsrechnungen/JJJJ/MM.
+- Dateiname enthält Rechnungsnummer, Rechnungsart und Kundenname.
+- Angebot erhält ebenfalls einen Button zum Öffnen des Windows-Standard-Mailprogramms.
+- Rechnungs-Mailfunktion bleibt erhalten.
+
+## 2.3.3 – Abschlag nach Betrag oder Prozent
+
+- Keine feste 30-%-Vorgabe mehr.
+- Im Auftrag kann zwischen festem Netto-Betrag und Prozent vom Netto-Auftragswert gewählt werden.
+- Nur das zur Auswahl passende Eingabefeld wird angezeigt.
+- Der Rechnungsentwurf wird entsprechend automatisch vorbelegt.
+
+## 2.3.2 – Windows-Mail-Button
+
+- Finalisierte Rechnungen können direkt im Windows-Standard-Mailprogramm vorbereitet werden.
+- Rechnungs-E-Mail des Kunden wird automatisch als Empfänger übernommen.
+- Betreff enthält Rechnungsart und Rechnungsnummer.
+- Nachrichtentext wird automatisch vorbereitet.
+- PDF- und XRechnung-Download bleiben direkt neben dem Mail-Button verfügbar.
+- Hinweis, wenn beim Kunden keine Rechnungs-E-Mail-Adresse hinterlegt ist.
+
+## 2.3.1 – Abschlagsrechnungen & E-Rechnungs-Hinweise
+
+- Abschlagsrechnung direkt aus Auftrag, Prozentsatz frei wählbar.
+- 30-%-Schnellaktion und automatische Vorbelegung aus Netto-Auftragswert.
+- Schlussrechnung direkt aus Auftrag erreichbar; vorhandene Abschläge werden berücksichtigt.
+- Auftragsdetail zeigt zugehörige Rechnungen.
+- Fehlende XRechnungsdaten werden direkt in Betrio angezeigt; Entwicklungs-XML bleibt exportierbar.
+- Doppelte Rechnungsarten im Formular bereinigt.
+
+## 2.3.0 – XRechnung Basis
+
+- XRechnung-XML-Export für finalisierte Rechnungen (UBL 2.1 / XRechnung 3.0).
+- E-Rechnungs-Kundendaten und finalisierte Kunden-/Firmensnapshots werden verwendet.
+- Vor Export werden zentrale Pflichtangaben geprüft; öffentliche Auftraggeber benötigen eine Leitweg-ID.
+- PDF-Ausgabe bleibt unverändert parallel verfügbar.
+- Repariert: Bereinigung des Angebots-Speicherblocks und vollständige Speicherung der Rechnungs-Text-/Sachbearbeiterfelder.
+
 ## 1.9.52
 - Kundenakte: Projekttitel in der Übersicht kompakter und einheitlicher gestaltet.
 - Kontaktbereich verdichtet und sauber ausgerichtet.

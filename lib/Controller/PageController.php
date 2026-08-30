@@ -99,6 +99,8 @@ final class PageController extends Controller {
   return new TemplateResponse($this->appName,'dashboard',[
    'displayName'=>$this->users->getUser()?->getDisplayName()??'Benutzer','role'=>$this->permissions->role(),'can'=>$can,
    'customerCount'=>$can['customers']?$this->count('re_erp_customers'):0,'projectCount'=>count($projects),
+   'offerStats'=>$can['offers']?$this->dashboardOfferStats():['count'=>0,'gross'=>0.0],
+   'invoiceStats'=>$can['invoices']?$this->dashboardInvoiceStats():['count'=>0,'gross'=>0.0],
    'openReportCount'=>$this->dashboardOpenReports($projects),'todayHours'=>$this->todayHours(),
    'upcomingEvents'=>$can['calendar']?$this->upcomingEvents():[],'activities'=>$this->activities->recent(10),
    'attention'=>$this->dashboardAttention($projects,$can),'recentProjects'=>$this->dashboardRecentProjects($projects),
@@ -124,6 +126,7 @@ final class PageController extends Controller {
   $documents=$this->filterDocumentsByFolders($this->documentsForUser($owner,(string)($p['folder_path']??''),60,4),$p['folder_path']??'', $allowedFolders);
   $offers=$this->queryOffersByProject($id);
   $orders=$this->queryOrdersByProject($id);
+  $invoices=$this->queryInvoicesByProject($id);
   $events=$this->queryProjectEvents($id);
   $documentRecords=$this->filterDocumentRecordsByFolders($this->queryProjectDocuments($id),$p['folder_path']??'', $allowedFolders);
   return new TemplateResponse($this->appName,'project_detail',[
@@ -134,6 +137,8 @@ final class PageController extends Controller {
    'documentRecords'=>$documentRecords,
    'offers'=>$offers,
    'orders'=>$orders,
+   'invoices'=>$invoices,
+   'projectPayments'=>$this->queryProjectPayments($id),
    'projectEvents'=>$events,
    'projectCosts'=>$this->projectCosts($id,$p,$times),
    'activities'=>$this->activities->forProject($id,80),
@@ -313,6 +318,20 @@ final class PageController extends Controller {
   return $qb->executeQuery()->fetchAllAssociative();
  }
  private function count(string $table):int{$qb=$this->db->getQueryBuilder();$qb->select($qb->func()->count('*','c'))->from($table);return (int)$qb->executeQuery()->fetchOne();}
+ private function dashboardOfferStats():array{
+  $qb=$this->db->getQueryBuilder();
+  $qb->select($qb->func()->count('*','c'))->addSelect($qb->func()->sum('gross_amount','gross'))->from('re_erp_offers')
+   ->where($qb->expr()->in('status',[$qb->createNamedParameter('draft'),$qb->createNamedParameter('sent')]));
+  $row=$qb->executeQuery()->fetchAssociative()?:[];
+  return ['count'=>(int)($row['c']??0),'gross'=>(float)($row['gross']??0)];
+ }
+ private function dashboardInvoiceStats():array{
+  $qb=$this->db->getQueryBuilder();
+  $qb->select($qb->func()->count('*','c'))->addSelect($qb->func()->sum('gross_amount','gross'))->from('re_erp_invoices')
+   ->where($qb->expr()->eq('status',$qb->createNamedParameter('open')));
+  $row=$qb->executeQuery()->fetchAssociative()?:[];
+  return ['count'=>(int)($row['c']??0),'gross'=>(float)($row['gross']??0)];
+ }
  private function queryProjects(int $customerId):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_projects')->where($qb->expr()->eq('customer_id',$qb->createNamedParameter($customerId)))->orderBy('created_at','DESC');return $qb->executeQuery()->fetchAllAssociative();}
  private function queryProject(int $id):array{$qb=$this->db->getQueryBuilder();$qb->select('p.*','c.name AS customer_name','c.customer_no')->from('re_erp_projects','p')->leftJoin('p','re_erp_customers','c',$qb->expr()->eq('c.id','p.customer_id'))->where($qb->expr()->eq('p.id',$qb->createNamedParameter($id)));$r=$qb->executeQuery()->fetchAssociative();if(!$r)throw new \OCP\AppFramework\Http\NotFoundResponse();return $r;}
  private function queryReportsByCustomer(int $id):array{$qb=$this->db->getQueryBuilder();$qb->select('r.*','p.project_no','p.title AS project_title')->from('re_erp_reports','r')->leftJoin('r','re_erp_projects','p',$qb->expr()->eq('p.id','r.project_id'))->where($qb->expr()->eq('p.customer_id',$qb->createNamedParameter($id)))->andWhere($qb->expr()->eq('r.archived',$qb->createNamedParameter(0)))->orderBy('r.report_date','DESC');return $qb->executeQuery()->fetchAllAssociative();}
@@ -335,6 +354,8 @@ final class PageController extends Controller {
 
  private function queryOffersByProject(int $projectId):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_offers')->where($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))->orderBy('offer_date','DESC')->setMaxResults(20);return $qb->executeQuery()->fetchAllAssociative();}
  private function queryOrdersByProject(int $projectId):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_orders')->where($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))->orderBy('order_date','DESC')->setMaxResults(20);return $qb->executeQuery()->fetchAllAssociative();}
+ private function queryInvoicesByProject(int $projectId):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_invoices')->where($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))->orderBy('invoice_date','DESC')->addOrderBy('id','DESC')->setMaxResults(30);return $qb->executeQuery()->fetchAllAssociative();}
+ private function queryProjectPayments(int $projectId):array{$qb=$this->db->getQueryBuilder();$qb->select('p.*','i.invoice_no','i.invoice_type')->from('re_erp_invoice_payments','p')->innerJoin('p','re_erp_invoices','i',$qb->expr()->eq('i.id','p.invoice_id'))->where($qb->expr()->eq('i.project_id',$qb->createNamedParameter($projectId)))->orderBy('p.payment_date','DESC')->setMaxResults(50);return $qb->executeQuery()->fetchAllAssociative();}
  private function queryProjectEvents(int $projectId):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_team_events')->where($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))->andWhere($qb->expr()->eq('is_deleted',$qb->createNamedParameter(0)))->orderBy('start_at','ASC')->setMaxResults(20);return $qb->executeQuery()->fetchAllAssociative();}
  private function queryProjectDocuments(int $projectId):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_project_documents')->where($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))->orderBy('created_at','DESC')->setMaxResults(50);return $qb->executeQuery()->fetchAllAssociative();}
  private function projectCosts(int $projectId,array $project,array $times):array{
