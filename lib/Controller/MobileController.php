@@ -12,6 +12,7 @@ use OCP\IRequest;
 
 final class MobileController extends Controller {
  public function __construct(string $appName,IRequest $request,private MobileService $mobile){parent::__construct($appName,$request);}
+ #[PublicPage,NoCSRFRequired] public function status():JSONResponse{return $this->run(fn()=> $this->mobile->status());}
  #[PublicPage,NoCSRFRequired] public function login(string $username='',string $password='',string $deviceName=''):JSONResponse{return $this->run(function()use($username,$password,$deviceName){$body=$this->jsonBody();return $this->mobile->login((string)($body['username']??$username),(string)($body['password']??$password),(string)($body['deviceName']??$deviceName)?:null);});}
  #[PublicPage,NoCSRFRequired] public function refresh(string $refreshToken=''):JSONResponse{return $this->run(function()use($refreshToken){$body=$this->jsonBody();return $this->mobile->refresh((string)($body['refreshToken']??$refreshToken));});}
  #[PublicPage,NoCSRFRequired] public function logout():JSONResponse{return $this->authRun(function(array $auth){$this->mobile->logout((int)$auth['tokenId']);return ['loggedOut'=>true];});}
@@ -83,5 +84,5 @@ final class MobileController extends Controller {
   $params = $this->request->getParams();
   return is_array($params) ? $params : [];
  }
- private function run(callable $fn):JSONResponse{try{return new JSONResponse(['success'=>true,'data'=>$fn(),'errors'=>[],'message'=>'']);}catch(\InvalidArgumentException $e){return new JSONResponse(['success'=>false,'data'=>null,'errors'=>[$e->getMessage()],'message'=>$e->getMessage(),'code'=>'VALIDATION_ERROR'],400);}catch(\Throwable $e){$message=$e->getMessage()!==''?$e->getMessage():'Unbekannter Fehler.';$status=str_contains(strtolower($message),'token')||str_contains(strtolower($message),'anmeldung')?401:500;return new JSONResponse(['success'=>false,'data'=>null,'errors'=>[$message],'message'=>$message,'code'=>$status===401?'AUTHENTICATION_FAILED':'MOBILE_API_ERROR'],$status);}}
+ private function run(callable $fn):JSONResponse{try{return new JSONResponse(['success'=>true,'data'=>$fn(),'errors'=>[],'message'=>'']);}catch(\InvalidArgumentException $e){return new JSONResponse(['success'=>false,'data'=>null,'errors'=>[$e->getMessage()],'message'=>$e->getMessage(),'code'=>'VALIDATION_ERROR'],400);}catch(\Throwable $e){$message=$e->getMessage()!==''?$e->getMessage():'Unbekannter Fehler.';$lower=strtolower($message);$status=str_contains($lower,'token')||str_contains($lower,'anmeldung')?401:(str_contains($lower,'freigeschaltet')||str_contains($lower,'gesperrt')||str_contains($lower,'berechtigung')?403:500);$code=$status===401?'AUTHENTICATION_FAILED':($status===403?'ACCESS_DENIED':'MOBILE_API_ERROR');return new JSONResponse(['success'=>false,'data'=>null,'errors'=>[$message],'message'=>$message,'code'=>$code],$status);}}
 }

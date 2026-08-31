@@ -25,12 +25,14 @@ final class MobileService {
   private PdfService $pdf,
   private PermissionService $permissions,
  ){}
+ public function status():array{return ['app'=>'betrio','appId'=>'reinhardterp','apiVersion'=>1,'serverVersion'=>$this->version(),'loginAvailable'=>true];}
  public function login(string $username,string $password,?string $deviceName=null):array{
   $username=trim($username);
   if($username===''||$password==='')throw new \InvalidArgumentException('Benutzername und Passwort sind erforderlich.');
   $user=$this->users->checkPassword($username,$password);
   if(!$user instanceof IUser)throw new \RuntimeException('Anmeldung fehlgeschlagen.');
   if(!$user->isEnabled())throw new \RuntimeException('Benutzer ist deaktiviert.');
+  if(!$this->permissions->isEnabled($user->getUID()))throw new \RuntimeException('Benutzer ist in Betrio nicht freigeschaltet.');
   return $this->issueTokens($user,$deviceName);
  }
  public function refresh(string $refreshToken):array{

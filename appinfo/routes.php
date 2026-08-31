@@ -164,6 +164,7 @@ return ['routes'=>[
  ['name'=>'document#createRule','url'=>'/api/document-rules','verb'=>'POST'],
  ['name'=>'document#deleteRule','url'=>'/api/document-rules/{id}/delete','verb'=>'POST'],
 
+ ['name'=>'mobile#status','url'=>'/api/mobile/v1/status','verb'=>'GET'],
  ['name'=>'mobile#login','url'=>'/api/mobile/v1/login','verb'=>'POST'],
  ['name'=>'mobile#refresh','url'=>'/api/mobile/v1/refresh','verb'=>'POST'],
  ['name'=>'mobile#logout','url'=>'/api/mobile/v1/logout','verb'=>'POST'],
