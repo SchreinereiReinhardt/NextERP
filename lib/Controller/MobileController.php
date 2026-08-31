@@ -4,16 +4,19 @@ namespace OCA\ReinhardtERP\Controller;
 
 use OCA\ReinhardtERP\Service\MobileService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\DataDisplayResponse;
 use OCP\IRequest;
+use OCP\IUserSession;
 
 final class MobileController extends Controller {
- public function __construct(string $appName,IRequest $request,private MobileService $mobile){parent::__construct($appName,$request);}
+ public function __construct(string $appName,IRequest $request,private MobileService $mobile,private IUserSession $userSession){parent::__construct($appName,$request);}
  #[PublicPage,NoCSRFRequired] public function status():JSONResponse{return $this->run(fn()=> $this->mobile->status());}
  #[PublicPage,NoCSRFRequired] public function login(string $username='',string $password='',string $deviceName=''):JSONResponse{return $this->run(function()use($username,$password,$deviceName){$body=$this->jsonBody();return $this->mobile->login((string)($body['username']??$username),(string)($body['password']??$password),(string)($body['deviceName']??$deviceName)?:null);});}
+ #[NoAdminRequired,NoCSRFRequired] public function sessionLogin(string $deviceName=''):JSONResponse{return $this->run(function()use($deviceName){$body=$this->jsonBody();$user=$this->userSession->getUser();if($user===null)throw new \RuntimeException('Nextcloud-Anmeldung fehlgeschlagen.');return $this->mobile->loginUser($user,(string)($body['deviceName']??$deviceName)?:null);});}
  #[PublicPage,NoCSRFRequired] public function refresh(string $refreshToken=''):JSONResponse{return $this->run(function()use($refreshToken){$body=$this->jsonBody();return $this->mobile->refresh((string)($body['refreshToken']??$refreshToken));});}
  #[PublicPage,NoCSRFRequired] public function logout():JSONResponse{return $this->authRun(function(array $auth){$this->mobile->logout((int)$auth['tokenId']);return ['loggedOut'=>true];});}
  #[PublicPage,NoCSRFRequired] public function bootstrap():JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->bootstrap((string)$a['uid']));}

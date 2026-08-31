@@ -31,6 +31,9 @@ final class MobileService {
   if($username===''||$password==='')throw new \InvalidArgumentException('Benutzername und Passwort sind erforderlich.');
   $user=$this->users->checkPassword($username,$password);
   if(!$user instanceof IUser)throw new \RuntimeException('Anmeldung fehlgeschlagen.');
+  return $this->loginUser($user,$deviceName);
+ }
+ public function loginUser(IUser $user,?string $deviceName=null):array{
   if(!$user->isEnabled())throw new \RuntimeException('Benutzer ist deaktiviert.');
   if(!$this->permissions->isEnabled($user->getUID()))throw new \RuntimeException('Benutzer ist in Betrio nicht freigeschaltet.');
   return $this->issueTokens($user,$deviceName);

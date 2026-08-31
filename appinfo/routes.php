@@ -166,6 +166,7 @@ return ['routes'=>[
 
  ['name'=>'mobile#status','url'=>'/api/mobile/v1/status','verb'=>'GET'],
  ['name'=>'mobile#login','url'=>'/api/mobile/v1/login','verb'=>'POST'],
+ ['name'=>'mobile#sessionLogin','url'=>'/api/mobile/v1/session-login','verb'=>'POST'],
  ['name'=>'mobile#refresh','url'=>'/api/mobile/v1/refresh','verb'=>'POST'],
  ['name'=>'mobile#logout','url'=>'/api/mobile/v1/logout','verb'=>'POST'],
  ['name'=>'mobile#bootstrap','url'=>'/api/mobile/v1/bootstrap','verb'=>'GET'],
@@ -196,4 +197,6 @@ return ['routes'=>[
  ['name'=>'mobile#upload','url'=>'/api/mobile/v1/upload','verb'=>'POST'],
  ['name'=>'mobile#scan','url'=>'/api/mobile/v1/scan','verb'=>'POST'],
  ['name'=>'mobile#sync','url'=>'/api/mobile/v1/sync','verb'=>'POST'],
+], 'ocs'=>[
+ ['name'=>'mobileOcs#sessionLogin','url'=>'/api/mobile/v1/session-login','verb'=>'POST'],
 ]];
