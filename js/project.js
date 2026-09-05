@@ -42,31 +42,34 @@ document.addEventListener('DOMContentLoaded', () => {
 })
 
 
-// Betrio 2.3.13: Projektakte – funktionierende Bereichsnavigation.
+// Betrio 2.4.9: Projektakte – eindeutige Reiter ohne durchlaufende Karten.
 document.addEventListener('DOMContentLoaded', () => {
     const nav = document.querySelector('.erp-project-center-nav')
     const center = document.querySelector('.erp-project-center')
     if (!nav || !center) return
 
-    const sectionIds = [
+    const tabIds = [
         'offers', 'orders', 'invoices', 'appointments', 'reports', 'time',
         'material', 'notes', 'photos', 'documents', 'permissions', 'costs', 'timeline'
     ]
-    const sections = sectionIds
-        .map(id => document.getElementById(id))
-        .filter(Boolean)
+    const overviewOnlyIds = ['billing', 'payments']
 
     const overviewOnly = [
         center.querySelector('.erp-project-center-metrics'),
         center.querySelector('.erp-permissions-compact'),
         center.querySelector('.erp-workflow-card'),
+        ...overviewOnlyIds.map(id => document.getElementById(id))
     ].filter(Boolean)
+
+    const tabSections = tabIds
+        .map(id => document.getElementById(id))
+        .filter(Boolean)
 
     const grids = Array.from(center.querySelectorAll('.erp-project-center-grid'))
 
     const normalizeTab = hash => {
         const id = (hash || '#overview').replace('#', '')
-        return sectionIds.includes(id) ? id : 'overview'
+        return tabIds.includes(id) ? id : 'overview'
     }
 
     const refreshGrids = () => {
@@ -79,14 +82,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const showTab = tab => {
         const isOverview = tab === 'overview'
 
+        // Globale Projektkarten gehören ausschließlich auf die Übersicht.
         overviewOnly.forEach(el => { el.hidden = !isOverview })
-        sections.forEach(el => { el.hidden = !isOverview })
 
-        if (!isOverview) {
-            // Freigaben werden auf der Übersicht bereits kompakt dargestellt.
-            // Bei direkter Auswahl zeigen wir nur den gewählten Bereich.
-            sections.forEach(el => { el.hidden = el.id !== tab })
-        }
+        // Fachbereiche: Übersicht zeigt alle; ein Reiter zeigt nur seinen Bereich.
+        tabSections.forEach(el => {
+            el.hidden = !isOverview && el.id !== tab
+        })
 
         refreshGrids()
 

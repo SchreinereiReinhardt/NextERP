@@ -86,11 +86,19 @@ final class ModuleController extends Controller {
  #[NoAdminRequired] public function resumeTimer(int $id,?string $returnTo=null):RedirectResponse{$this->permissions->assert('time');$timer=$this->one('re_erp_time_timers',$id);if(!$timer||$timer['status']!=='paused'||empty($timer['paused_at']))throw new \InvalidArgumentException('Der Timer ist nicht pausiert.');$extra=max(0,time()-strtotime((string)$timer['paused_at']));$this->update('re_erp_time_timers',$id,['status'=>'running','paused_at'=>null,'pause_seconds'=>(int)$timer['pause_seconds']+$extra]);return $this->go($returnTo==='mobile'?'reinhardterp.business.mobile':'reinhardterp.module.workdays');}
  #[NoAdminRequired] public function stopTimer(int $id,?string $notes=null,?string $returnTo=null):RedirectResponse{$this->permissions->assert('time');$timer=$this->one('re_erp_time_timers',$id);if(!$timer||!in_array($timer['status'],['running','paused'],true))throw new \InvalidArgumentException('Timer nicht gefunden oder bereits beendet.');$now=time();$pause=(int)$timer['pause_seconds'];if($timer['status']==='paused'&&!empty($timer['paused_at']))$pause+=max(0,$now-strtotime((string)$timer['paused_at']));$start=strtotime((string)$timer['started_at']);$seconds=max(60,$now-$start-$pause);$hours=round($seconds/3600,2);$project=$this->one('re_erp_projects',(int)$timer['project_id']);if(!$project)throw new \InvalidArgumentException('Projekt nicht gefunden.');$workDate=date('Y-m-d',$start);$workdayId=$this->insert('re_erp_workdays',['user_id'=>$timer['user_id'],'work_date'=>$workDate,'start_time'=>date('H:i',$start),'end_time'=>date('H:i',$now),'break_minutes'=>(int)round($pause/60),'notes'=>$notes,'entered_by'=>$timer['created_by'],'updated_by'=>$this->uid(),'created_at'=>date('Y-m-d H:i:s'),'updated_at'=>date('Y-m-d H:i:s')]);$entryId=$this->insert('re_erp_workday_entries',['workday_id'=>$workdayId,'customer_id'=>$project['customer_id']??null,'project_id'=>$timer['project_id'],'activity'=>$timer['activity'],'hours'=>$hours,'imported_to_report_id'=>null,'created_at'=>date('Y-m-d H:i:s')]);$qb=$this->db->getQueryBuilder();$qb->update('re_erp_workday_materials')->set('workday_entry_id',$qb->createNamedParameter($entryId))->set('timer_id',$qb->createNamedParameter(null))->where($qb->expr()->eq('timer_id',$qb->createNamedParameter($id)))->executeStatement();$this->update('re_erp_time_timers',$id,['status'=>'stopped','paused_at'=>null]);return $this->go($returnTo==='mobile'?'reinhardterp.business.mobile':'reinhardterp.module.workdays');}
  #[NoAdminRequired,NoCSRFRequired]
- public function teamEvents():TemplateResponse {
+ public function teamEvents(?int $customerId=null,?int $projectId=null,?string $userId=null):TemplateResponse {
   $this->permissions->assert('calendar');
   $syncStats=null;$syncError='';
   if($this->integration->selectedCalendarKey()!==''){
    try{$syncStats=$this->integration->syncCalendarEvents();}catch(\Throwable $e){$syncError=$e->getMessage();}
+  }
+  $projects=$this->accessibleProjects();
+  $selectedProjectId=$projectId&&$projectId>0?$projectId:null;
+  $selectedCustomerId=$customerId&&$customerId>0?$customerId:null;
+  if($selectedProjectId!==null){
+   $project=null;foreach($projects as $candidate){if((int)$candidate['id']===$selectedProjectId){$project=$candidate;break;}}
+   if($project!==null)$selectedCustomerId=(int)($project['customer_id']??0)?:$selectedCustomerId;
+   else $selectedProjectId=null;
   }
   return $this->page('team_events','Teamkalender',$this->teamEventRows(),[
    'selectedCalendarName'=>$this->integration->selectedCalendarName(),
@@ -98,29 +106,46 @@ final class ModuleController extends Controller {
    'lastCalendarSync'=>$this->integration->lastCalendarSync(),
    'lastCalendarError'=>$syncError!==''?$syncError:$this->integration->lastCalendarError(),
    'syncStats'=>$syncStats,
+   'customers'=>$this->rows('re_erp_customers','name'),
+   'projects'=>$projects,
+   'users'=>$this->activeErpUsers(),
+   'selectedCustomerId'=>$selectedCustomerId,
+   'selectedProjectId'=>$selectedProjectId,
+   'selectedUserId'=>trim((string)$userId),
    'error'=>(string)$this->request->getParam('error',''),
    'success'=>(string)$this->request->getParam('success',''),
   ]);
  }
  #[NoAdminRequired]
- public function saveTeamEvent(string $title,string $startAt,?string $endAt=null,?string $location=null,?string $description=null):RedirectResponse {
+ public function saveTeamEvent(string $title,string $startAt,?string $endAt=null,?string $location=null,?string $description=null,?int $customerId=null,?int $projectId=null,?string $assignedUserId=null,array $assignedUserIds=[]):RedirectResponse {
   $this->permissions->assert('calendar');
   try{
    $title=trim($title);if($title==='')throw new \InvalidArgumentException('Bitte einen Termintitel eintragen.');
    $start=new \DateTimeImmutable($startAt);
    $end=$endAt!==null&&trim($endAt)!==''?new \DateTimeImmutable($endAt):$start->modify('+1 hour');
    if($end<=$start)throw new \InvalidArgumentException('Die Endzeit muss nach der Startzeit liegen.');
-   $calendar=$this->integration->createCalendarEvent($title,$start->format('Y-m-d H:i:s'),$end->format('Y-m-d H:i:s'),$location,$description);
-   $this->insert('re_erp_team_events',[
+   $projectId=$projectId&&$projectId>0?$projectId:null;$customerId=$customerId&&$customerId>0?$customerId:null;
+   if($projectId!==null){$this->permissions->assertProjectAccess($projectId);$project=$this->one('re_erp_projects',$projectId);if(!$project)throw new \InvalidArgumentException('Projekt nicht gefunden.');$customerId=(int)($project['customer_id']??0)?:$customerId;}
+   if($customerId!==null&&!$this->one('re_erp_customers',$customerId))throw new \InvalidArgumentException('Kunde nicht gefunden.');
+   $assignedUserIds=array_values(array_unique(array_filter(array_map(fn($uid)=>trim((string)$uid),$assignedUserIds),fn($uid)=>$uid!=='')));
+   $legacyUser=trim((string)$assignedUserId);if($legacyUser!==''&&!in_array($legacyUser,$assignedUserIds,true))$assignedUserIds[]=$legacyUser;
+   foreach($assignedUserIds as $uid){if(!$this->permissions->isEnabled($uid))throw new \InvalidArgumentException('Mindestens ein gewählter Mitarbeiter ist für Betrio nicht aktiv.');}
+   $assignedUserId=$assignedUserIds[0]??null;
+   $calendarDescription=trim((string)$description);
+   $calendar=$this->integration->createCalendarEvent($title,$start->format('Y-m-d H:i:s'),$end->format('Y-m-d H:i:s'),$location,$calendarDescription!==''?$calendarDescription:null);
+   $eventId=$this->insert('re_erp_team_events',[
     'title'=>$title,'start_at'=>$start->format('Y-m-d H:i:s'),'end_at'=>$end->format('Y-m-d H:i:s'),
-    'location'=>$location,'description'=>$description,'calendar_uri'=>$calendar['calendarKey']??null,
-    'calendar_object_uri'=>$calendar['objectUri']??null,'calendar_uid'=>null,'sync_source'=>'erp','sync_hash'=>null,
+    'location'=>$location,'description'=>$description,'customer_id'=>$customerId,'project_id'=>$projectId,'assigned_user_id'=>$assignedUserId,
+    'calendar_uri'=>$calendar['calendarKey']??null,'calendar_object_uri'=>$calendar['objectUri']??null,'calendar_uid'=>null,'sync_source'=>'erp','sync_hash'=>null,
     'is_deleted'=>0,'last_synced_at'=>$calendar!==null?date('Y-m-d H:i:s'):null,'updated_at'=>date('Y-m-d H:i:s'),
     'created_by'=>$this->uid(),'created_at'=>date('Y-m-d H:i:s')
    ]);
-   return new RedirectResponse($this->url->linkToRoute('reinhardterp.module.teamEvents').'?success='.rawurlencode('Termin wurde gespeichert.'));
+   foreach($assignedUserIds as $uid)$this->insert('re_erp_team_event_users',['event_id'=>$eventId,'user_id'=>$uid]);
+   $params=['success'=>'Termin wurde gespeichert.'];if($customerId)$params['customerId']=$customerId;if($projectId)$params['projectId']=$projectId;if($assignedUserId)$params['userId']=$assignedUserId;
+   return $this->go('reinhardterp.module.teamEvents',$params);
   }catch(\Throwable $e){
-   return new RedirectResponse($this->url->linkToRoute('reinhardterp.module.teamEvents').'?error='.rawurlencode($e->getMessage()));
+   $params=['error'=>$e->getMessage()];if($customerId)$params['customerId']=$customerId;if($projectId)$params['projectId']=$projectId;if(!empty($assignedUserId))$params['userId']=$assignedUserId;
+   return $this->go('reinhardterp.module.teamEvents',$params);
   }
  }
  #[NoAdminRequired,NoCSRFRequired] public function users():TemplateResponse{$this->permissions->assert('users_view');return new TemplateResponse($this->appName,'users',['users'=>$this->usersArray(),'roles'=>$this->permissions->roles(),'hourlyRates'=>$this->hourlyRates()]);}
@@ -246,7 +271,7 @@ final class ModuleController extends Controller {
   unset($row);return $rows;
  }
  private function page(string $template,string $title,array $rows,array $extra=[]):TemplateResponse{return new TemplateResponse($this->appName,$template,array_merge(['title'=>$title,'rows'=>$rows],$extra));}
- private function teamEventRows():array{$selected=$this->integration->selectedCalendarKey();$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_team_events')->where($qb->expr()->eq('is_deleted',$qb->createNamedParameter(0)));if($selected!==''){$qb->andWhere($qb->expr()->eq('calendar_uri',$qb->createNamedParameter($selected)));}$qb->andWhere($qb->expr()->gte('start_at',$qb->createNamedParameter(date('Y-m-d 00:00:00'))));$qb->orderBy('start_at','ASC')->setMaxResults(500);return $qb->executeQuery()->fetchAllAssociative();}
+ private function teamEventRows():array{$selected=$this->integration->selectedCalendarKey();$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_team_events')->where($qb->expr()->eq('is_deleted',$qb->createNamedParameter(0)));if($selected!==''){$qb->andWhere($qb->expr()->eq('calendar_uri',$qb->createNamedParameter($selected)));}$qb->andWhere($qb->expr()->gte('start_at',$qb->createNamedParameter(date('Y-m-d 00:00:00'))));$qb->orderBy('start_at','ASC')->setMaxResults(500);$rows=$qb->executeQuery()->fetchAllAssociative();foreach($rows as &$row){$uq=$this->db->getQueryBuilder();$uq->select('user_id')->from('re_erp_team_event_users')->where($uq->expr()->eq('event_id',$uq->createNamedParameter((int)$row['id'])))->orderBy('id','ASC');$ids=array_map('strval',$uq->executeQuery()->fetchFirstColumn());if($ids===[]&&!empty($row['assigned_user_id']))$ids=[(string)$row['assigned_user_id']];$row['assigned_user_ids']=$ids;}unset($row);return $rows;}
  private function accessibleProjects():array{return array_values(array_filter($this->rows('re_erp_projects','project_no'),fn(array $p):bool=>$this->permissions->canAccessProject((int)$p['id'])));}
  private function rows(string $table,string $order):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from($table)->orderBy($order,'DESC')->setMaxResults(250);return $qb->executeQuery()->fetchAllAssociative();}
  private function where(string $table,string $column,int $value,string $order):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from($table)->where($qb->expr()->eq($column,$qb->createNamedParameter($value)))->orderBy($order,'ASC');return $qb->executeQuery()->fetchAllAssociative();}

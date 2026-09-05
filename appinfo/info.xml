@@ -10,49 +10,93 @@
   <description lang="de"><![CDATA[
 Betrio ist eine ERP- und Projektmanagement-Lösung speziell für Handwerksunternehmen direkt in Nextcloud.
 
-Die App verbindet kaufmännische und operative Abläufe mit der bestehenden Nextcloud-Umgebung – vom Kunden und Projekt über Angebote, Aufträge, Rapporte und Zeiterfassung bis hin zu Dokumenten, Material und mobilen Baustellenprozessen.
+Die App verbindet kaufmännische und operative Abläufe mit der bestehenden Nextcloud-Umgebung – vom Kunden und Projekt über Angebote, Aufträge, Rechnungen, Rapporte und Zeiterfassung bis hin zu Dokumenten, Material, Terminen und mobilen Baustellenprozessen.
 
 Funktionen:
 
-- Kundenverwaltung
+- Kundenverwaltung und CRM
 - Projektverwaltung und digitale Projektakten
-- Angebote und Aufträge
+- Angebote
+- Aufträge
+- Rechnungen
+- Abschlagsrechnungen
+- Schlussrechnungen
+- Gutschriften
+- Zahlungsstatus
+- offene Rechnungen
+- Zahlungen
+- PDF-Rechnungen
+- XRechnung
+- Verknüpfung Angebot → Auftrag → Rechnung
 - Rapporte mit Unterschrift und PDF
 - Zeiterfassung
-- Material- und Lagerverwaltung
-- Dokumente, Fotos und Projektdateien
-- Termine und Projekt-Timeline
-- Kosten und Projektübersichten
-- Mobile, für Smartphones optimierte Oberfläche
-- Kamera- und Barcode-Funktionen für den Baustelleneinsatz
-- Integration in Nextcloud Files und bestehende Nextcloud-Strukturen
+- Zeitauswertung
+- Materialverwaltung
+- Lagerverwaltung
+- Dokumente
+- Fotos
+- Projektdateien
+- Termine
+- Projekt-Timeline
+- Kosten- und Projektübersichten
+- mobile Smartphone-Oberfläche
+- Kamera- und Barcode-Funktionen
+- Integration in Nextcloud Files
 
-Betrio wurde aus der täglichen Praxis eines Handwerksbetriebs entwickelt und richtet sich besonders an Handwerksunternehmen, die ihre betrieblichen Abläufe direkt in Nextcloud organisieren möchten.
+Zusätzlich steht mit „Betrio Mobile“ eine separate Android-App im Google Play Store zur Verfügung.
+
+Die Rechnungsfunktion ist bereits nutzbar und wird kontinuierlich weiter ausgebaut. Insbesondere werden die kaufmännischen Abläufe und Verknüpfungen zwischen Angeboten, Aufträgen, Abschlags- und Schlussrechnungen, Zahlungen, Gutschriften, Rapporten, Zeiten und Material weiter vertieft.
+
+XRechnung ist bereits integriert und befindet sich weiterhin in Entwicklung und Validierung.
+
+Weitere Funktionen für Buchhaltung und Datenaustausch, darunter DATEV, sind geplant.
   ]]></description>
 
   <description lang="en"><![CDATA[
 Betrio is an ERP and project management solution specifically designed for trades and craft businesses and integrated directly into Nextcloud.
 
-It combines commercial and operational workflows with the existing Nextcloud environment – from customers and projects to quotations, orders, work reports, time tracking, documents, materials and mobile on-site processes.
+The app combines commercial and operational workflows within the existing Nextcloud environment – from customers and projects to quotations, orders, invoices, work reports, time tracking, documents, materials, appointments and mobile on-site processes.
 
 Features:
 
-- Customer management
+- Customer management and CRM
 - Project management and digital project files
-- Quotations and orders
-- Work reports with signature and PDF export
+- Quotations
+- Orders
+- Invoices
+- Progress invoices
+- Final invoices
+- Credit notes
+- Payment status
+- Outstanding invoices
+- Payments
+- PDF invoices
+- XRechnung
+- Quotation → order → invoice workflow
+- Work reports with signature and PDF
 - Time tracking
-- Material and inventory management
-- Documents, photos and project files
-- Appointments and project timeline
+- Time evaluation
+- Material management
+- Inventory management
+- Documents
+- Photos
+- Project files
+- Appointments
+- Project timeline
 - Cost and project overviews
-- Mobile-optimized interface
-- Camera and barcode functions for on-site work
-- Integration with Nextcloud Files and existing Nextcloud structures
+- Mobile smartphone interface
+- Camera and barcode functions
+- Integration with Nextcloud Files
 
-Betrio was developed from the daily practice of a craft business and is especially aimed at trades and craft companies that want to manage their operational workflows directly in Nextcloud.
+A separate Android app, “Betrio Mobile”, is also available in the Google Play Store.
+
+The invoicing functionality is already usable and is being continuously expanded. In particular, the commercial workflows and connections between quotations, orders, progress and final invoices, payments, credit notes, work reports, time entries and materials are being further developed.
+
+XRechnung is already integrated and continues to be under development and validation.
+
+Further accounting and data exchange functions, including DATEV, are planned.
   ]]></description>
-<version>2.4.6</version>
+<version>2.4.10</version>
   <licence>AGPL-3.0-or-later</licence>
 
   <author homepage="https://www.schreinerei-reinhardt.de">André Reinhardt</author>
@@ -64,12 +108,6 @@ Betrio was developed from the daily practice of a craft business and is especial
   <website>https://www.schreinerei-reinhardt.de</website>
   <bugs>https://github.com/SchreinereiReinhardt/NextERP/issues</bugs>
   <repository>https://github.com/SchreinereiReinhardt/NextERP</repository>
-  <screenshot small-thumbnail="https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/screenshots/Betrio-small.png">https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/screenshots/Betrio.png</screenshot>
-  <screenshot small-thumbnail="https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/store/screenshots/01-betrio-dashboard.png">https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/store/screenshots/01-betrio-dashboard.png</screenshot>
-  <screenshot small-thumbnail="https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/store/screenshots/02-betrio-projekte.png">https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/store/screenshots/02-betrio-projekte.png</screenshot>
-  <screenshot small-thumbnail="https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/store/screenshots/03-betrio-projektdetails.png">https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/store/screenshots/03-betrio-projektdetails.png</screenshot>
-  <screenshot small-thumbnail="https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/store/screenshots/04-betrio-rapporte.png">https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/store/screenshots/04-betrio-rapporte.png</screenshot>
-  <screenshot small-thumbnail="https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/store/screenshots/05-betrio-mobil.png">https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/store/screenshots/05-betrio-mobil.png</screenshot>
 
 
 
@@ -89,4 +127,10 @@ Betrio was developed from the daily practice of a craft business and is especial
     </navigation>
   </navigations>
 
+  <screenshot small-thumbnail="https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/img/betrio01_small.png">https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/img/betrio01.png</screenshot>
+  <screenshot>https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/img/01-betrio-dashboard.png</screenshot>
+  <screenshot>https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/img/02-betrio-projekte.png</screenshot>
+  <screenshot>https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/img/03-betrio-projektdetails.png</screenshot>
+  <screenshot>https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/img/04-betrio-rapporte.png</screenshot>
+  <screenshot>https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/img/05-betrio-mobil.png</screenshot>
 </info>
