@@ -6,7 +6,7 @@ $fileUrl=static function(string $path)use($filesBase):string{$path=trim($path,'/
 $formatSize=static function(int $b):string{if($b<1024)return $b.' B';if($b<1048576)return number_format($b/1024,1,',','.').' KB';return number_format($b/1048576,1,',','.').' MB';};
 $totalHours=array_sum(array_map(static fn($x)=>(float)$x['hours'],$times)); $statuses=['Anfrage','Angebot','Auftrag','Fertigung','Montage','Abnahme','Abrechnung','Abgeschlossen'];
 $currentStatus=(string)($project['status']??'Anfrage');$idx=array_search(strtolower($currentStatus),array_map('strtolower',$statuses),true);$progress=$idx===false?0:(int)round(($idx/(count($statuses)-1))*100);
-$cockpit=$cockpit??[];$projectCosts=$projectCosts??[];$offers=$offers??[];$orders=$orders??[];$invoices=$invoices??[];$projectEvents=$projectEvents??[];$documentRecords=$documentRecords??[];$projectNotes=$projectNotes??[];
+$cockpit=$cockpit??[];$projectCosts=$projectCosts??[];$offers=$offers??[];$orders=$orders??[];$invoices=$invoices??[];$projectEvents=$projectEvents??[];$documentRecords=$documentRecords??[];$projectNotes=$projectNotes??[];$projectChecklist=$projectChecklist??[];
 $money=static fn($v):string=>number_format((float)$v,2,',','.').' €';
 $memberMap=[];foreach(($projectMembers??[]) as $m)$memberMap[(string)$m['user_id']]=$m;
 $openProjectFile=static fn(string $path):string=>$url->linkToRoute('reinhardterp.page.projectFile',['id'=>$project['id'],'path'=>$path]);
@@ -14,7 +14,7 @@ $folderLabels=['00_Eingang'=>'Eingang','01_Aufmass'=>'Aufmaß','02_Planung'=>'Pl
 ?>
 <div id="app-content"><div id="app-content-wrapper"><?php print_unescaped($this->inc('_nav')); ?><main class="erp-main erp-project-center">
 <header class="erp-project-hero"><div class="erp-project-identity"><span class="erp-record-kicker">Digitale Projektakte · <?=p($project['project_no'])?></span><h1><?=p($project['title'])?></h1><p><a href="<?=p($url->linkToRoute('reinhardterp.page.customerDetail',['id'=>$project['customer_id']]))?>"><?=p($project['customer_no'].' '.$project['customer_name'])?></a> · <strong><?=p($currentStatus)?></strong></p><div class="erp-project-progress"><i style="width:<?=p($progress)?>%"></i></div></div><div class="erp-project-hero-actions"><?php if($projectPath!==''):?><a class="button primary" href="<?=p($url->linkToRoute('reinhardterp.page.projectExplorer',['id'=>$project['id']]))?>"><span class="erp-ui-icon erp-icon-folder"></span>Projektordner</a><?php endif;?><a class="button" href="<?=p($url->linkToRoute('reinhardterp.module.reports',['projectId'=>$project['id']]))?>">+ Rapport</a><a class="button" href="<?=p($url->linkToRoute('reinhardterp.module.workdays'))?>">+ Zeit</a><?php if(!empty($isProjectSupervisor)):?><details class="erp-project-more"><summary class="button">Mehr</summary><div class="erp-project-more-menu"><a href="<?=p($url->linkToRoute('reinhardterp.page.projectForm',['id'=>$project['id']]))?>">Projekt bearbeiten</a><?php if($projectPath!==''):?><a target="_blank" rel="noopener" href="<?=p($folderUrl($projectPath))?>">In Nextcloud öffnen</a><?php endif;?></div></details><?php endif;?></div></header>
-<nav class="erp-project-center-nav" aria-label="Projektcenter"><a href="#overview">Übersicht</a><a href="#appointments">Termine</a><?php if(!empty($isProjectSupervisor)):?><a href="#offers">Angebote</a><a href="#orders">Aufträge</a><a href="#invoices">Rechnungen</a><?php endif;?><a href="#reports">Rapporte</a><a href="#time">Zeiten</a><a href="#material">Material</a><a href="#notes">Notizen</a><a href="#documents">Dokumente</a><details class="erp-project-nav-more"><summary>Mehr</summary><div><a href="#photos">Fotos</a><a href="#permissions">Freigaben</a><?php if(!empty($isProjectSupervisor)):?><a href="#costs">Kosten</a><?php endif;?><a href="#timeline">Timeline</a></div></details></nav>
+<nav class="erp-project-center-nav" aria-label="Projektcenter"><a href="#overview">Übersicht</a><a href="#appointments">Termine</a><?php if(!empty($isProjectSupervisor)):?><a href="#offers">Angebote</a><a href="#orders">Aufträge</a><a href="#invoices">Rechnungen</a><?php endif;?><a href="#reports">Rapporte</a><a href="#time">Zeiten</a><a href="#material">Material</a><a href="#notes">Notizen</a><a href="#checklist">Checkliste</a><a href="#documents">Dokumente</a><details class="erp-project-nav-more"><summary>Mehr</summary><div><a href="#photos">Fotos</a><a href="#permissions">Freigaben</a><?php if(!empty($isProjectSupervisor)):?><a href="#costs">Kosten</a><?php endif;?><a href="#timeline">Timeline</a></div></details></nav>
 <section id="overview" class="erp-project-center-metrics"><article><span>Fortschritt</span><strong><?=p($progress)?> %</strong><small><?=p($currentStatus)?></small></article><article><span>Arbeitszeit</span><strong><?=p(number_format($totalHours,2,',','.'))?> h</strong><small><?=count($times)?> Buchungen</small></article><article><span>Rapporte</span><strong><?=count($reports)?></strong><small><?=count(array_filter($reports,static fn($r)=>empty($r['locked'])))?> offen</small></article><article><span>Projektwert</span><strong><?=p($money($projectCosts['projectValue']??0))?></strong><small><?=($projectCosts['orderValue']??0)>0?'Aufträge':'Angebote'?></small></article><article><span>Dokumente</span><strong><?=count($documents)?></strong><small><?=count($documentRecords)?> klassifiziert</small></article></section>
 <section class="erp-card erp-permissions-compact" id="permissions"><div class="erp-permission-summary"><div><h2>Mitarbeiter & Freigaben</h2><?php if(!empty($canManageAssignments)):?><?php $assignedSummaries=[];foreach(($assignmentUsers??[]) as $u){$uid=(string)$u['uid'];if(isset($memberMap[$uid])){$folders=$memberMap[$uid]['folders']??[];$assignedSummaries[]=(string)$u['displayName'].' · '.count($folders).' Ordner';}}?><p class="erp-muted"><?php p(!empty($assignedSummaries)?implode(' · ',$assignedSummaries):'Noch keinem Monteur zugewiesen.'); ?></p><?php else:?><p class="erp-muted">Deine Projektfreigaben</p><?php endif;?></div><?php if(!empty($canManageAssignments)):?><button type="button" class="button erp-permission-toggle" aria-expanded="false" aria-controls="erp-permission-editor">Bearbeiten</button><?php endif;?></div>
 <?php if(!empty($canManageAssignments)):?>
@@ -88,6 +88,36 @@ $folderLabels=['00_Eingang'=>'Eingang','01_Aufmass'=>'Aufmaß','02_Planung'=>'Pl
      <button class="button" type="submit">Löschen</button>
     </form>
    </article>
+   <?php endforeach;?>
+  </div>
+ <?php endif;?>
+</section>
+<section class="erp-card erp-checklist-card" id="checklist">
+ <div class="erp-section-head">
+  <div><h2>Checkliste</h2><p class="erp-muted">Gemeinsame Projektcheckliste für Betrio und Betrio Mobile.</p></div>
+  <?php if($projectChecklist):?><span class="erp-checklist-progress"><?=count(array_filter($projectChecklist,static fn($x)=>(int)($x['done']??0)===1))?> / <?=count($projectChecklist)?> erledigt</span><?php endif;?>
+ </div>
+ <form method="post" action="<?=p($url->linkToRoute('reinhardterp.page.saveProjectChecklistItem',['id'=>$project['id']]))?>" class="erp-checklist-add">
+  <input type="hidden" name="requesttoken" value="<?=p(\OCP\Util::callRegister())?>">
+  <input type="text" name="text" maxlength="1000" required placeholder="Neuen Checklistenpunkt hinzufügen">
+  <button class="button primary" type="submit">Hinzufügen</button>
+ </form>
+ <?php if(empty($projectChecklist)):?>
+  <p class="erp-muted erp-checklist-empty">Noch keine Checklistenpunkte vorhanden.</p>
+ <?php else:?>
+  <div class="erp-checklist-list">
+   <?php foreach($projectChecklist as $item):$done=(int)($item['done']??0)===1;?>
+    <div class="erp-checklist-item<?=$done?' is-done':''?>">
+     <form method="post" action="<?=p($url->linkToRoute('reinhardterp.page.toggleProjectChecklistItem',['id'=>$project['id'],'itemId'=>(int)$item['id']]))?>">
+      <input type="hidden" name="requesttoken" value="<?=p(\OCP\Util::callRegister())?>">
+      <button type="submit" class="erp-checklist-toggle" title="<?=$done?'Wieder öffnen':'Erledigen'?>" aria-label="<?=$done?'Wieder öffnen':'Erledigen'?>"><?=$done?'✓':''?></button>
+     </form>
+     <div class="erp-checklist-text"><span><?=p((string)$item['text'])?></span><?php if(!empty($item['created_by'])):?><small><?=p((string)$item['created_by'])?></small><?php endif;?></div>
+     <form method="post" action="<?=p($url->linkToRoute('reinhardterp.page.deleteProjectChecklistItem',['id'=>$project['id'],'itemId'=>(int)$item['id']]))?>" onsubmit="return confirm('Diesen Checklistenpunkt wirklich löschen?');">
+      <input type="hidden" name="requesttoken" value="<?=p(\OCP\Util::callRegister())?>">
+      <button class="erp-checklist-delete" type="submit" title="Löschen" aria-label="Löschen">×</button>
+     </form>
+    </div>
    <?php endforeach;?>
   </div>
  <?php endif;?>

@@ -696,6 +696,48 @@ final class BusinessController extends Controller {
   return $q->executeQuery()->fetchAllAssociative();
  }
 
+ private function communications():array{
+  $q=$this->db->getQueryBuilder();
+  $q->select('c.*','cu.name AS customer_name','p.project_no','p.title AS project_title')
+    ->from('re_erp_communications','c')
+    ->leftJoin('c','re_erp_customers','cu',$q->expr()->eq('cu.id','c.customer_id'))
+    ->leftJoin('c','re_erp_projects','p',$q->expr()->eq('p.id','c.project_id'))
+    ->orderBy('c.contact_at','DESC')
+    ->addOrderBy('c.id','DESC')
+    ->setMaxResults(100);
+  return $q->executeQuery()->fetchAllAssociative();
+ }
+
+ private function dueFollowUps():array{
+  $q=$this->db->getQueryBuilder();
+  $q->select('c.*','cu.name AS customer_name','p.project_no','p.title AS project_title')
+    ->from('re_erp_communications','c')
+    ->leftJoin('c','re_erp_customers','cu',$q->expr()->eq('cu.id','c.customer_id'))
+    ->leftJoin('c','re_erp_projects','p',$q->expr()->eq('p.id','c.project_id'))
+    ->where($q->expr()->isNotNull('c.follow_up_at'))
+    ->andWhere($q->expr()->lte('c.follow_up_at',$q->createNamedParameter(date('Y-m-d H:i:s'))))
+    ->orderBy('c.follow_up_at','ASC')
+    ->addOrderBy('c.id','ASC');
+  return $q->executeQuery()->fetchAllAssociative();
+ }
+
+ private function dt(?string $value):?string{
+  $value=trim((string)$value);
+  if($value==='')return null;
+  $ts=strtotime($value);
+  if($ts===false)throw new \InvalidArgumentException('Ungültiges Datum oder ungültige Uhrzeit.');
+  return date('Y-m-d H:i:s',$ts);
+ }
+
+ private function oneBy(string $table,string $column,mixed $value):?array{
+  $q=$this->db->getQueryBuilder();
+  $q->select('*')->from($table)
+    ->where($q->expr()->eq($column,$q->createNamedParameter($value)))
+    ->setMaxResults(1);
+  $row=$q->executeQuery()->fetchAssociative();
+  return $row?:null;
+ }
+
  private function one(string $table,int $id):?array{
   $q=$this->db->getQueryBuilder();
   $q->select('*')->from($table)

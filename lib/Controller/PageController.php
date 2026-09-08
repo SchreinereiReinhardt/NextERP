@@ -150,6 +150,7 @@ final class PageController extends Controller {
    'isProjectSupervisor'=>$this->permissions->isProjectSupervisor(),
    'projectMaterials'=>$this->projectMaterials($id),
    'projectNotes'=>$this->queryProjectNotes($id),
+   'projectChecklist'=>$this->queryProjectChecklist($id),
   ]);
  }
 
@@ -163,6 +164,51 @@ final class PageController extends Controller {
   Util::addHeader('meta',['name'=>'apple-mobile-web-app-capable','content'=>'yes']);
   Util::addHeader('meta',['name'=>'apple-mobile-web-app-title','content'=>'Betrio']);
   Util::addHeader('link',['rel'=>'apple-touch-icon','href'=>$icon]);
+ }
+ #[NoAdminRequired] public function saveProjectChecklistItem(int $id,?string $text=null):RedirectResponse{
+  $this->permissions->assertProjectAccess($id);
+  $text=trim((string)$text);
+  if($text==='')throw new \InvalidArgumentException('Bitte einen Checklistenpunkt eingeben.');
+  if(mb_strlen($text)>1000)$text=mb_substr($text,0,1000);
+  $now=date('Y-m-d H:i:s');
+  $qb=$this->db->getQueryBuilder();
+  $qb->insert('re_erp_checklist')->values([
+   'project_id'=>$qb->createNamedParameter($id),
+   'text'=>$qb->createNamedParameter($text),
+   'done'=>$qb->createNamedParameter(0),
+   'client_id'=>$qb->createNamedParameter(null),
+   'created_by'=>$qb->createNamedParameter($this->users->getUser()?->getUID()??''),
+   'created_at'=>$qb->createNamedParameter($now),
+   'updated_at'=>$qb->createNamedParameter($now),
+  ])->executeStatement();
+  return new RedirectResponse($this->url->linkToRoute('reinhardterp.page.projectDetail',['id'=>$id]).'#checklist');
+ }
+ #[NoAdminRequired] public function toggleProjectChecklistItem(int $id,int $itemId):RedirectResponse{
+  $this->permissions->assertProjectAccess($id);
+  $qb=$this->db->getQueryBuilder();
+  $qb->select('done')->from('re_erp_checklist')
+   ->where($qb->expr()->eq('id',$qb->createNamedParameter($itemId)))
+   ->andWhere($qb->expr()->eq('project_id',$qb->createNamedParameter($id)));
+  $current=$qb->executeQuery()->fetchOne();
+  if($current===false)throw new \InvalidArgumentException('Checklistenpunkt nicht gefunden.');
+  $done=((int)$current)===1?0:1;
+  $u=$this->db->getQueryBuilder();
+  $u->update('re_erp_checklist')
+   ->set('done',$u->createNamedParameter($done))
+   ->set('updated_at',$u->createNamedParameter(date('Y-m-d H:i:s')))
+   ->where($u->expr()->eq('id',$u->createNamedParameter($itemId)))
+   ->andWhere($u->expr()->eq('project_id',$u->createNamedParameter($id)))
+   ->executeStatement();
+  return new RedirectResponse($this->url->linkToRoute('reinhardterp.page.projectDetail',['id'=>$id]).'#checklist');
+ }
+ #[NoAdminRequired] public function deleteProjectChecklistItem(int $id,int $itemId):RedirectResponse{
+  $this->permissions->assertProjectAccess($id);
+  $qb=$this->db->getQueryBuilder();
+  $qb->delete('re_erp_checklist')
+   ->where($qb->expr()->eq('id',$qb->createNamedParameter($itemId)))
+   ->andWhere($qb->expr()->eq('project_id',$qb->createNamedParameter($id)))
+   ->executeStatement();
+  return new RedirectResponse($this->url->linkToRoute('reinhardterp.page.projectDetail',['id'=>$id]).'#checklist');
  }
  #[NoAdminRequired] public function saveProjectNote(int $id,?int $noteId=null,?string $noteType=null,?string $title=null,?string $content=null):RedirectResponse{
   $this->permissions->assertProjectAccess($id);
@@ -333,7 +379,7 @@ final class PageController extends Controller {
   return ['count'=>(int)($row['c']??0),'gross'=>(float)($row['gross']??0)];
  }
  private function queryProjects(int $customerId):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_projects')->where($qb->expr()->eq('customer_id',$qb->createNamedParameter($customerId)))->orderBy('created_at','DESC');return $qb->executeQuery()->fetchAllAssociative();}
- private function queryProject(int $id):array{$qb=$this->db->getQueryBuilder();$qb->select('p.*','c.name AS customer_name','c.customer_no')->from('re_erp_projects','p')->leftJoin('p','re_erp_customers','c',$qb->expr()->eq('c.id','p.customer_id'))->where($qb->expr()->eq('p.id',$qb->createNamedParameter($id)));$r=$qb->executeQuery()->fetchAssociative();if(!$r)throw new \OCP\AppFramework\Http\NotFoundResponse();return $r;}
+ private function queryProject(int $id):array{$qb=$this->db->getQueryBuilder();$qb->select('p.*','c.name AS customer_name','c.customer_no')->from('re_erp_projects','p')->leftJoin('p','re_erp_customers','c',$qb->expr()->eq('c.id','p.customer_id'))->where($qb->expr()->eq('p.id',$qb->createNamedParameter($id)));$r=$qb->executeQuery()->fetchAssociative();if(!$r)throw new \OCP\AppFramework\Http\ForbiddenException('Projekt nicht gefunden.');return $r;}
  private function queryReportsByCustomer(int $id):array{$qb=$this->db->getQueryBuilder();$qb->select('r.*','p.project_no','p.title AS project_title')->from('re_erp_reports','r')->leftJoin('r','re_erp_projects','p',$qb->expr()->eq('p.id','r.project_id'))->where($qb->expr()->eq('p.customer_id',$qb->createNamedParameter($id)))->andWhere($qb->expr()->eq('r.archived',$qb->createNamedParameter(0)))->orderBy('r.report_date','DESC');return $qb->executeQuery()->fetchAllAssociative();}
  private function queryProjectNotes(int $projectId):array{
   $qb=$this->db->getQueryBuilder();
@@ -375,6 +421,13 @@ final class PageController extends Controller {
   $qb=$this->db->getQueryBuilder();
   $qb->select('pu.user_id','pu.role','pu.folder_permissions')->from('re_erp_project_users','pu')->where($qb->expr()->eq('pu.project_id',$qb->createNamedParameter($projectId)))->orderBy('pu.role','ASC')->addOrderBy('pu.user_id','ASC');
   $rows=$qb->executeQuery()->fetchAllAssociative();foreach($rows as &$row){$u=$this->userManager->get((string)$row['user_id']);$row['display_name']=$u?->getDisplayName()??(string)$row['user_id'];$decoded=json_decode((string)($row['folder_permissions']??''),true);$row['folders']=is_array($decoded)?$decoded:PermissionService::EMPLOYEE_DEFAULT_FOLDERS;}unset($row);return $rows;
+ }
+ private function queryProjectChecklist(int $projectId):array{
+  $qb=$this->db->getQueryBuilder();
+  $qb->select('*')->from('re_erp_checklist')
+   ->where($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))
+   ->orderBy('done','ASC')->addOrderBy('id','ASC');
+  return $qb->executeQuery()->fetchAllAssociative();
  }
  private function projectMaterials(int $projectId):array{
   $qb=$this->db->getQueryBuilder();

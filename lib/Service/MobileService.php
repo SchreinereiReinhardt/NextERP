@@ -199,6 +199,29 @@ final class MobileService {
   $this->assertProjectAccess($uid,$id);$qb=$this->db->getQueryBuilder();$qb->select('p.*','c.name AS customer_name','c.contact_name','c.phone','c.mobile','c.email','c.street','c.postal_code','c.city','c.country')->from('re_erp_projects','p')->leftJoin('p','re_erp_customers','c',$qb->expr()->eq('c.id','p.customer_id'))->where($qb->expr()->eq('p.id',$qb->createNamedParameter($id)));$p=$qb->executeQuery()->fetchAssociative();if(!$p)throw new \RuntimeException('Projekt nicht gefunden.');
   $out=$this->projectSummary($p);$out['description']=$p['description']??null;$out['documents']=$this->projectDocuments($uid,$id);$out['photos']=$this->projectPhotos($uid,$id);$out['material']=$this->projectMaterial($id);$out['appointments']=$this->projectEvents($id);$out['reports']=$this->projectReports($id);return $out;
  }
+ public function projectChecklist(string $uid,int $projectId):array{
+  $this->assertProjectAccess($uid,$projectId);
+  $qb=$this->db->getQueryBuilder();
+  $qb->select('*')->from('re_erp_checklist')->where($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))
+   ->orderBy('done','ASC')->addOrderBy('id','ASC');
+  return array_map(static fn(array $r):array=>['id'=>(int)$r['id'],'projectId'=>(int)$r['project_id'],'text'=>(string)$r['text'],'done'=>(bool)$r['done'],'clientId'=>(string)($r['client_id']??''),'createdBy'=>(string)$r['created_by'],'createdAt'=>(string)$r['created_at'],'updatedAt'=>(string)$r['updated_at']],$qb->executeQuery()->fetchAllAssociative());
+ }
+ public function createChecklistItem(string $uid,int $projectId,array $data):array{
+  $this->assertProjectAccess($uid,$projectId);$text=trim((string)($data['text']??''));if($text==='')throw new \InvalidArgumentException('Bitte einen Checklistenpunkt eingeben.');
+  $clientId=trim((string)($data['clientId']??''));
+  if($clientId!==''){$q=$this->db->getQueryBuilder();$q->select('*')->from('re_erp_checklist')->where($q->expr()->eq('project_id',$q->createNamedParameter($projectId)))->andWhere($q->expr()->eq('client_id',$q->createNamedParameter($clientId)));$old=$q->executeQuery()->fetchAssociative();if($old)return ['id'=>(int)$old['id'],'projectId'=>$projectId,'text'=>(string)$old['text'],'done'=>(bool)$old['done'],'clientId'=>(string)$old['client_id']];}
+  $now=date('Y-m-d H:i:s');$q=$this->db->getQueryBuilder();$q->insert('re_erp_checklist')->values(['project_id'=>$q->createNamedParameter($projectId),'text'=>$q->createNamedParameter($text),'done'=>$q->createNamedParameter(!empty($data['done'])?1:0),'client_id'=>$q->createNamedParameter($clientId!==''?$clientId:null),'created_by'=>$q->createNamedParameter($uid),'created_at'=>$q->createNamedParameter($now),'updated_at'=>$q->createNamedParameter($now)])->executeStatement();
+  return ['id'=>(int)$this->db->lastInsertId('re_erp_checklist'),'projectId'=>$projectId,'text'=>$text,'done'=>!empty($data['done']),'clientId'=>$clientId,'createdBy'=>$uid,'createdAt'=>$now,'updatedAt'=>$now];
+ }
+ public function updateChecklistItem(string $uid,int $projectId,int $itemId,array $data):array{
+  $this->assertProjectAccess($uid,$projectId);$q=$this->db->getQueryBuilder();$q->select('*')->from('re_erp_checklist')->where($q->expr()->eq('id',$q->createNamedParameter($itemId)))->andWhere($q->expr()->eq('project_id',$q->createNamedParameter($projectId)));$row=$q->executeQuery()->fetchAssociative();if(!$row)throw new \RuntimeException('Checklistenpunkt nicht gefunden.');
+  $text=array_key_exists('text',$data)?trim((string)$data['text']):(string)$row['text'];if($text==='')throw new \InvalidArgumentException('Checklistenpunkt darf nicht leer sein.');$done=array_key_exists('done',$data)?!empty($data['done']):(bool)$row['done'];$now=date('Y-m-d H:i:s');
+  $u=$this->db->getQueryBuilder();$u->update('re_erp_checklist')->set('text',$u->createNamedParameter($text))->set('done',$u->createNamedParameter($done?1:0))->set('updated_at',$u->createNamedParameter($now))->where($u->expr()->eq('id',$u->createNamedParameter($itemId)))->andWhere($u->expr()->eq('project_id',$u->createNamedParameter($projectId)))->executeStatement();return ['id'=>$itemId,'projectId'=>$projectId,'text'=>$text,'done'=>$done,'updatedAt'=>$now];
+ }
+ public function deleteChecklistItem(string $uid,int $projectId,int $itemId):array{
+  $this->assertProjectAccess($uid,$projectId);$q=$this->db->getQueryBuilder();$q->delete('re_erp_checklist')->where($q->expr()->eq('id',$q->createNamedParameter($itemId)))->andWhere($q->expr()->eq('project_id',$q->createNamedParameter($projectId)));if($q->executeStatement()<1)throw new \RuntimeException('Checklistenpunkt nicht gefunden.');return ['deleted'=>true,'id'=>$itemId,'projectId'=>$projectId];
+ }
+
  public function projectNotes(string $uid,int $projectId):array{
   $this->assertProjectAccess($uid,$projectId);
   $qb=$this->db->getQueryBuilder();
@@ -305,6 +328,7 @@ final class MobileService {
  public function projectDocuments(string $uid,int $id):array{
   $this->assertProjectAccess($uid,$id);
   $project=$this->projectRow($id);
+  $storageUid=$this->projectStorageUid($project,$uid);
   $documents=[];
   $knownPaths=[];
 
@@ -325,7 +349,7 @@ final class MobileService {
   $base=trim((string)($project['folder_path']??''),'/');
   if($base!==''){
    try{
-    $folder=$this->existingFolder($uid,$base);
+    $folder=$this->existingFolder($storageUid,$base);
     $files=[];
     $this->collectProjectFiles($folder,$base,0,5,$files,250);
     foreach($files as $file){
@@ -350,6 +374,7 @@ final class MobileService {
  public function projectDocumentContent(string $uid,int $projectId,string $filePath):array{
   $this->assertProjectAccess($uid,$projectId);
   $project=$this->projectRow($projectId);
+  $storageUid=$this->projectStorageUid($project,$uid);
   $base=trim((string)($project['folder_path']??''),'/');
   $path=trim($filePath,'/');
   if($base===''||$path===''||($path!==$base&&!str_starts_with($path,$base.'/')))throw new \RuntimeException('Ungültiger Dokumentpfad.');
@@ -360,7 +385,7 @@ final class MobileService {
    if(trim((string)($document['file_path']??''),'/')===$path){$visible=true;break;}
   }
   if(!$visible)throw new \RuntimeException('Keine Berechtigung für dieses Dokument.');
-  $node=$this->rootFolder->getUserFolder($uid);
+  $node=$this->rootFolder->getUserFolder($storageUid);
   foreach(explode('/',$path) as $part){if($part==='')continue;$node=$node->get($part);}
   if(!$node instanceof File)throw new \RuntimeException('Dokumentdatei nicht gefunden.');
   $name=$node->getName();
@@ -383,6 +408,8 @@ final class MobileService {
  }
  public function projectPhotoContent(string $uid,int $projectId,int $photoId):array{
   $this->assertProjectAccess($uid,$projectId);
+  $project=$this->projectRow($projectId);
+  $storageUid=$this->projectStorageUid($project,$uid);
   $q=$this->db->getQueryBuilder();
   $q->select('*')->from('re_erp_project_documents')
    ->where($q->expr()->eq('id',$q->createNamedParameter($photoId)))
@@ -394,7 +421,7 @@ final class MobileService {
   if(!str_starts_with($mime,'image/')&&$type!=='photo')throw new \RuntimeException('Datei ist kein Foto.');
   $path=trim((string)($row['file_path']??''),'/');
   if($path==='')throw new \RuntimeException('Fotopfad fehlt.');
-  $node=$this->rootFolder->getUserFolder($uid);
+  $node=$this->rootFolder->getUserFolder($storageUid);
   foreach(explode('/',$path) as $part){if($part==='')continue;$node=$node->get($part);}
   if(!$node instanceof File)throw new \RuntimeException('Fotodatei nicht gefunden.');
   $content=$node->getContent();
@@ -663,6 +690,7 @@ final class MobileService {
   if(($file['error']??UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_OK)throw new \InvalidArgumentException('Keine gültige Datei empfangen.');
   if((int)($file['size']??0)>100*1024*1024)throw new \InvalidArgumentException('Datei ist größer als 100 MB.');
   $project=$this->projectRow($projectId);
+  $storageUid=$this->projectStorageUid($project,$uid);
   $base=trim((string)($project['folder_path']??''),'/');
   if($base==='')throw new \RuntimeException('Projektordner fehlt.');
   $allowedCategories=['Vorher','Nachher','Montage','Schaden','Abnahme','Sonstige'];
@@ -681,9 +709,9 @@ final class MobileService {
    $stem=pathinfo($name,PATHINFO_FILENAME);
    $name=$this->safeFile(date('Y-m-d_H-i-s').'_'.$category.'_'.$stem.($extension!==''?'.'.$extension:''));
   }
-  $targetPath=$this->folders->ensureFolderPathForUser($uid,$base,$sub);
-  $path=$this->folders->writeFromLocalFileForUser($uid,$targetPath,$name,(string)$file['tmp_name']);
-  $node=$this->rootFolder->getUserFolder($uid)->get($path);
+  $targetPath=$this->folders->ensureFolderPathForUser($storageUid,$base,$sub);
+  $path=$this->folders->writeFromLocalFileForUser($storageUid,$targetPath,$name,(string)$file['tmp_name']);
+  $node=$this->rootFolder->getUserFolder($storageUid)->get($path);
   if(!$node instanceof File)throw new \RuntimeException('Upload wurde nicht als Datei gespeichert.');
   $q=$this->db->getQueryBuilder();
   $q->insert('re_erp_project_documents')->values([
@@ -777,6 +805,11 @@ final class MobileService {
    str_contains($path,'/11_auftraege/')=>'order',
    default=>'other',
   };
+ }
+ private function projectStorageUid(array $project,string $fallbackUid):string{
+  $owner=trim((string)($project['created_by']??''));
+  if($owner!==''&&$this->users->get($owner) instanceof IUser)return $owner;
+  return $fallbackUid;
  }
  private function existingFolder(string $uid,string $path):Folder{
   $node=$this->rootFolder->getUserFolder($uid);

@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace OCA\ReinhardtERP\Service;
 
 use OCP\IDBConnection;
+use OCP\ServerVersion;
 
 final class SystemCheckService {
     private const TABLES = [
@@ -47,6 +48,7 @@ final class SystemCheckService {
         private IDBConnection $db,
         private FolderService $folders,
         private PermissionService $permissions,
+        private ServerVersion $serverVersion,
     ) {}
 
     public function run(): array {
@@ -123,19 +125,14 @@ final class SystemCheckService {
 
         $ncVersion = 'unbekannt';
         try {
-            if (class_exists('\OC_Util') && method_exists('\OC_Util', 'getVersion')) {
-                $v = \OC_Util::getVersion();
-                if (is_array($v) && $v !== []) {
-                    $ncVersion = implode('.', array_map('strval', $v));
-                }
-            }
+            $ncVersion = $this->serverVersion->getVersionString();
         } catch (\Throwable) {
         }
-        if ($ncVersion === 'unbekannt') {
-            $checks[] = ['name' => 'Nextcloud-Version', 'status' => 'warning', 'message' => 'Version konnte nicht automatisch ermittelt werden', 'recommendation' => 'Nextcloud-Version mit sudo -u www-data php occ status prüfen. Laut den aktuellen Betrio-App-Metadaten werden Nextcloud 33–34 unterstützt.'];
+        if ($ncVersion === 'unbekannt' || trim($ncVersion) === '') {
+            $checks[] = ['name' => 'Nextcloud-Version', 'status' => 'warning', 'message' => 'Version konnte nicht automatisch ermittelt werden', 'recommendation' => 'Nextcloud-Version mit sudo -u www-data php occ status prüfen. Laut den aktuellen Betrio-App-Metadaten werden Nextcloud 33–35 unterstützt.'];
         } else {
-            $ncOk = version_compare($ncVersion, '33.0.0', '>=') && version_compare($ncVersion, '35.0.0', '<');
-            $checks[] = $this->check('Nextcloud-Version', $ncOk, $ncVersion.' (unterstützt: 33–34)', $ncOk ? null : 'Eine von Betrio unterstützte Nextcloud-Version (33 oder 34) verwenden. Vor einem Nextcloud-Upgrade zuerst Betrio-Kompatibilität prüfen.');
+            $ncOk = version_compare($ncVersion, '33.0.0', '>=') && version_compare($ncVersion, '36.0.0', '<');
+            $checks[] = $this->check('Nextcloud-Version', $ncOk, $ncVersion.' (unterstützt: 33–35)', $ncOk ? null : 'Eine von Betrio unterstützte Nextcloud-Version (33, 34 oder 35) verwenden. Vor einem Nextcloud-Upgrade zuerst Betrio-Kompatibilität prüfen.');
         }
 
         foreach (['mbstring', 'gd', 'curl', 'dom', 'xml', 'zip', 'openssl', 'iconv'] as $extension) {
