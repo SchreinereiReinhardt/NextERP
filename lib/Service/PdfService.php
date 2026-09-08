@@ -132,7 +132,7 @@ final class PdfService {
 
   $sender=trim(implode(' - ',array_filter([(string)($company['name']??''),(string)($company['street']??''),trim((string)($company['zip']??'').' '.(string)($company['city']??''))])));
   $pdf->SetY(58);$pdf->SetTextColor(90,90,90);$pdf->SetFont('Helvetica','',6.8);$pdf->Cell(103,4,$this->text($sender),0,0);
-  $pdf->SetTextColor(30,30,30);$pdf->SetFont('Helvetica','B',8.5);$pdf->Cell(27,4,$this->text('Sachbearbeiter/-in:'),0,0);$pdf->SetFont('Helvetica','',8.5);$pdf->Cell(50,4,$this->text((string)($doc['clerk_name']??$company['owner']??'')),0,1);
+  $pdf->SetTextColor(30,30,30);$pdf->SetFont('Helvetica','B',8.5);$pdf->Cell(28,4,$this->text('Sachbearbeiter/-in:'),0,0);$pdf->SetFont('Helvetica','',8.5);$pdf->Cell(50,4,$this->text((string)($doc['clerk_name']??$company['owner']??'')),0,1);
   $pdf->SetX(118);$pdf->SetFont('Helvetica','B',8.5);$pdf->Cell(27,4,$this->text('Datum:'),0,0);$pdf->SetFont('Helvetica','',8.5);$pdf->Cell(50,4,$this->text($this->deDate($date)),0,1);
   $pdf->SetX(118);$pdf->SetFont('Helvetica','B',8.5);$pdf->Cell(27,4,$this->text($label.'-Nr.:'),0,0);$pdf->SetFont('Helvetica','',8.5);$pdf->Cell(50,4,$this->text($number),0,1);
 
