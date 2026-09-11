@@ -9,7 +9,7 @@ final class Version000600Date20260802170000 extends SimpleMigrationStep {
  public function changeSchema(IOutput $output, Closure $schemaClosure, array $options): ?ISchemaWrapper {
   $s=$schemaClosure();
   if($s->hasTable('re_erp_reports')){$t=$s->getTable('re_erp_reports');
-   if(!$t->hasColumn('locked'))$t->addColumn('locked','boolean',['default'=>false,'notnull'=>true]);
+   if(!$t->hasColumn('locked'))$t->addColumn('locked','boolean',['default'=>0,'notnull'=>true]);
    if(!$t->hasColumn('customer_note'))$t->addColumn('customer_note','text',['notnull'=>false]);
   }
   if($s->hasTable('re_erp_report_hours')){$t=$s->getTable('re_erp_report_hours');

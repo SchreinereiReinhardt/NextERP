@@ -27,7 +27,7 @@ final class Version006300Date20260803153000 extends SimpleMigrationStep {
             $table=$schema->createTable('re_erp_document_rules');
             $table->addColumn('id','bigint',['autoincrement'=>true,'notnull'=>true]);
             $table->addColumn('name','string',['length'=>190,'notnull'=>true]);
-            $table->addColumn('enabled','boolean',['default'=>true,'notnull'=>true]);
+            $table->addColumn('enabled','boolean',['default'=>1,'notnull'=>true]);
             $table->addColumn('priority','integer',['default'=>100,'notnull'=>true]);
             $table->addColumn('match_field','string',['length'=>64,'default'=>'filename','notnull'=>true]);
             $table->addColumn('match_operator','string',['length'=>32,'default'=>'contains','notnull'=>true]);

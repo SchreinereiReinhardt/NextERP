@@ -69,7 +69,7 @@ final class Version000200Date20260802113000 extends SimpleMigrationStep {
   $t->addColumn('id','bigint',['autoincrement'=>true,'notnull'=>true]); $t->addColumn('article_no','string',['length'=>100,'notnull'=>false]);
   $t->addColumn('name','string',['length'=>255,'notnull'=>true]); $t->addColumn('material_group','string',['length'=>255,'notnull'=>false]);
   $t->addColumn('unit','string',['length'=>32,'notnull'=>false]); $t->addColumn('price','decimal',['precision'=>12,'scale'=>2,'default'=>0]);
-  $t->addColumn('active','boolean',['default'=>true,'notnull'=>true]); $t->addColumn('created_at','datetime',['notnull'=>true]);
+  $t->addColumn('active','boolean',['default'=>1,'notnull'=>true]); $t->addColumn('created_at','datetime',['notnull'=>true]);
   $t->setPrimaryKey(['id']); $t->addIndex(['name'],'re_erp_material_name');
  }
  private function createWorkdays(ISchemaWrapper $s): void {
