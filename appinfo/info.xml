@@ -96,7 +96,7 @@ XRechnung is already integrated and continues to be under development and valida
 
 Further accounting and data exchange functions, including DATEV, are planned.
   ]]></description>
-<version>2.4.24</version>
+<version>2.4.25</version>
   <licence>AGPL-3.0-or-later</licence>
 
   <author homepage="https://www.schreinerei-reinhardt.de">André Reinhardt</author>
