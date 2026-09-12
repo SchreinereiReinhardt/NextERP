@@ -222,7 +222,7 @@ final class NextcloudIntegrationService {
                 $qb->expr()->eq('uri', $qb->createNamedParameter($contactId)),
                 $qb->expr()->eq('uri', $qb->createNamedParameter(str_ends_with(strtolower($contactId), '.vcf') ? $contactId : $contactId . '.vcf'))
             ))->setMaxResults(1);
-        $row = $qb->executeQuery()->fetchAssociative();
+        $row = $qb->executeQuery()->fetch();
         return $row ? $this->nativeContactFromCard((int)$book['id'], (string)$row['uri'], (string)$row['carddata'], (string)$book['name']) : null;
     }
 
@@ -554,7 +554,7 @@ final class NextcloudIntegrationService {
             ->where($qb->expr()->eq('calendar_uri', $qb->createNamedParameter($calendarKey)))
             ->andWhere($qb->expr()->eq('calendar_object_uri', $qb->createNamedParameter($objectUri)))
             ->setMaxResults(1);
-        $row = $qb->executeQuery()->fetchAssociative();
+        $row = $qb->executeQuery()->fetch();
         return $row ?: null;
     }
 

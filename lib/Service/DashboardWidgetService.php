@@ -209,7 +209,7 @@ final class DashboardWidgetService {
                 ->where($qb->expr()->gte('start_at', $qb->createNamedParameter(date('Y-m-d H:i:s'))))
                 ->andWhere($qb->expr()->eq('is_deleted', $qb->createNamedParameter(0)))
                 ->orderBy('start_at', 'ASC')->setMaxResults(1);
-            $row = $qb->executeQuery()->fetchAssociative();
+            $row = $qb->executeQuery()->fetch();
             return $row ?: null;
         } catch (\Throwable) { return null; }
     }

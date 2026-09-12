@@ -606,7 +606,7 @@ final class BusinessController extends Controller {
   $q=$this->db->getQueryBuilder();$q->select('i.*','c.name AS customer_name','p.project_no','o.order_no')->from('re_erp_invoices','i')->leftJoin('i','re_erp_customers','c',$q->expr()->eq('c.id','i.customer_id'))->leftJoin('i','re_erp_projects','p',$q->expr()->eq('p.id','i.project_id'))->leftJoin('i','re_erp_orders','o',$q->expr()->eq('o.id','i.order_id'))->orderBy('i.invoice_date','DESC')->addOrderBy('i.id','DESC');return $q->executeQuery()->fetchAllAssociative();
  }
  private function invoice(int $id):?array{
-  $q=$this->db->getQueryBuilder();$q->select('i.*','c.name AS customer_name','p.project_no','p.title AS project_title','o.order_no')->from('re_erp_invoices','i')->leftJoin('i','re_erp_customers','c',$q->expr()->eq('c.id','i.customer_id'))->leftJoin('i','re_erp_projects','p',$q->expr()->eq('p.id','i.project_id'))->leftJoin('i','re_erp_orders','o',$q->expr()->eq('o.id','i.order_id'))->where($q->expr()->eq('i.id',$q->createNamedParameter($id)));$r=$q->executeQuery()->fetchAssociative();return $r?:null;
+  $q=$this->db->getQueryBuilder();$q->select('i.*','c.name AS customer_name','p.project_no','p.title AS project_title','o.order_no')->from('re_erp_invoices','i')->leftJoin('i','re_erp_customers','c',$q->expr()->eq('c.id','i.customer_id'))->leftJoin('i','re_erp_projects','p',$q->expr()->eq('p.id','i.project_id'))->leftJoin('i','re_erp_orders','o',$q->expr()->eq('o.id','i.order_id'))->where($q->expr()->eq('i.id',$q->createNamedParameter($id)));$r=$q->executeQuery()->fetch();return $r?:null;
  }
  private function invoiceCompany(array $invoice):array{
   $snapshot=trim((string)($invoice['company_snapshot']??''));if($snapshot!==''){$data=json_decode($snapshot,true);if(is_array($data))return $data;}return $this->companyData();
@@ -615,7 +615,7 @@ final class BusinessController extends Controller {
   $snapshot=trim((string)($invoice['customer_snapshot']??''));if($snapshot!==''){$data=json_decode($snapshot,true);if(is_array($data))return $data;}return $this->one('re_erp_customers',(int)$invoice['customer_id'])??[];
  }
  private function ordersRows():array{$q=$this->db->getQueryBuilder();$q->select('o.*','c.name AS customer_name','p.project_no')->from('re_erp_orders','o')->leftJoin('o','re_erp_customers','c',$q->expr()->eq('c.id','o.customer_id'))->leftJoin('o','re_erp_projects','p',$q->expr()->eq('p.id','o.project_id'))->orderBy('o.order_date','DESC');return $q->executeQuery()->fetchAllAssociative();}
- private function order(int $id):?array{$q=$this->db->getQueryBuilder();$q->select('o.*','c.name AS customer_name','p.project_no','p.title AS project_title')->from('re_erp_orders','o')->leftJoin('o','re_erp_customers','c',$q->expr()->eq('c.id','o.customer_id'))->leftJoin('o','re_erp_projects','p',$q->expr()->eq('p.id','o.project_id'))->where($q->expr()->eq('o.id',$q->createNamedParameter($id)));$r=$q->executeQuery()->fetchAssociative();if(!$r)return null;return $r;}
+ private function order(int $id):?array{$q=$this->db->getQueryBuilder();$q->select('o.*','c.name AS customer_name','p.project_no','p.title AS project_title')->from('re_erp_orders','o')->leftJoin('o','re_erp_customers','c',$q->expr()->eq('c.id','o.customer_id'))->leftJoin('o','re_erp_projects','p',$q->expr()->eq('p.id','o.project_id'))->where($q->expr()->eq('o.id',$q->createNamedParameter($id)));$r=$q->executeQuery()->fetch();if(!$r)return null;return $r;}
  private function projectNotes(int $projectId):array{
   $q=$this->db->getQueryBuilder();
   $q->select('*')
@@ -637,7 +637,7 @@ final class BusinessController extends Controller {
 }
  private function materialsWithMeta():array{$q=$this->db->getQueryBuilder();$q->select('m.*','g.name AS group_name','s.name AS supplier_name')->from('re_erp_materials','m')->leftJoin('m','re_erp_material_groups','g',$q->expr()->eq('g.id','m.material_group_id'))->leftJoin('m','re_erp_suppliers','s',$q->expr()->eq('s.id','m.supplier_id'))->orderBy('m.name','ASC');return $q->executeQuery()->fetchAllAssociative();}
  private function stockRows():array{$q=$this->db->getQueryBuilder();$q->select('s.*','m.article_no','m.name AS material_name','m.unit','p.project_no')->from('re_erp_stock_movements','s')->leftJoin('s','re_erp_materials','m',$q->expr()->eq('m.id','s.material_id'))->leftJoin('s','re_erp_projects','p',$q->expr()->eq('p.id','s.project_id'))->orderBy('s.created_at','DESC')->setMaxResults(100);return $q->executeQuery()->fetchAllAssociative();}
- private function activeTimer(string $uid):?array{$q=$this->db->getQueryBuilder();$q->select('t.*','p.project_no','p.title')->from('re_erp_time_timers','t')->leftJoin('t','re_erp_projects','p',$q->expr()->eq('p.id','t.project_id'))->where($q->expr()->eq('t.user_id',$q->createNamedParameter($uid)))->andWhere($q->expr()->in('t.status',[$q->createNamedParameter('running'),$q->createNamedParameter('paused')]))->orderBy('t.id','DESC')->setMaxResults(1);$r=$q->executeQuery()->fetchAssociative();return $r?:null;}
+ private function activeTimer(string $uid):?array{$q=$this->db->getQueryBuilder();$q->select('t.*','p.project_no','p.title')->from('re_erp_time_timers','t')->leftJoin('t','re_erp_projects','p',$q->expr()->eq('p.id','t.project_id'))->where($q->expr()->eq('t.user_id',$q->createNamedParameter($uid)))->andWhere($q->expr()->in('t.status',[$q->createNamedParameter('running'),$q->createNamedParameter('paused')]))->orderBy('t.id','DESC')->setMaxResults(1);$r=$q->executeQuery()->fetch();return $r?:null;}
  private function todayHours(string $uid):float{$q=$this->db->getQueryBuilder();$q->select($q->func()->sum('e.hours','s'))->from('re_erp_workday_entries','e')->innerJoin('e','re_erp_workdays','w',$q->expr()->eq('w.id','e.workday_id'))->where($q->expr()->eq('w.user_id',$q->createNamedParameter($uid)))->andWhere($q->expr()->eq('w.work_date',$q->createNamedParameter(date('Y-m-d'))));return (float)($q->executeQuery()->fetchOne()?:0);}
  private function recentEntries(string $uid):array{$q=$this->db->getQueryBuilder();$q->select('e.*','w.work_date','p.project_no','p.title')->from('re_erp_workday_entries','e')->innerJoin('e','re_erp_workdays','w',$q->expr()->eq('w.id','e.workday_id'))->leftJoin('e','re_erp_projects','p',$q->expr()->eq('p.id','e.project_id'))->where($q->expr()->eq('w.user_id',$q->createNamedParameter($uid)))->orderBy('w.work_date','DESC')->addOrderBy('e.id','DESC')->setMaxResults(10);return $q->executeQuery()->fetchAllAssociative();}
 
@@ -734,7 +734,7 @@ final class BusinessController extends Controller {
   $q->select('*')->from($table)
     ->where($q->expr()->eq($column,$q->createNamedParameter($value)))
     ->setMaxResults(1);
-  $row=$q->executeQuery()->fetchAssociative();
+  $row=$q->executeQuery()->fetch();
   return $row?:null;
  }
 
@@ -743,7 +743,7 @@ final class BusinessController extends Controller {
   $q->select('*')->from($table)
     ->where($q->expr()->eq('id',$q->createNamedParameter($id)))
     ->setMaxResults(1);
-  $row=$q->executeQuery()->fetchAssociative();
+  $row=$q->executeQuery()->fetch();
   return $row?:null;
  }
 
@@ -765,7 +765,7 @@ final class BusinessController extends Controller {
     ->leftJoin('o','re_erp_projects','p',$q->expr()->eq('p.id','o.project_id'))
     ->where($q->expr()->eq('o.id',$q->createNamedParameter($id)))
     ->setMaxResults(1);
-  $row=$q->executeQuery()->fetchAssociative();
+  $row=$q->executeQuery()->fetch();
   return $row?:null;
  }
 

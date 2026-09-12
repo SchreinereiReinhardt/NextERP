@@ -273,7 +273,7 @@ final class DocumentOfferImportService {
     private function one(string $table, int $id): ?array {
         $qb = $this->db->getQueryBuilder();
         $qb->select('*')->from($table)->where($qb->expr()->eq('id', $qb->createNamedParameter($id)));
-        $row = $qb->executeQuery()->fetchAssociative();
+        $row = $qb->executeQuery()->fetch();
         return $row ?: null;
     }
 
