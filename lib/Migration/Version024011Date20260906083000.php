@@ -13,7 +13,7 @@ final class Version024011Date20260906083000 extends SimpleMigrationStep {
    $table->addColumn('id','bigint',['autoincrement'=>true,'notnull'=>true]);
    $table->addColumn('project_id','bigint',['notnull'=>true]);
    $table->addColumn('text','text',['notnull'=>true]);
-   $table->addColumn('done','boolean',['notnull'=>true,'default'=>0]);
+   $table->addColumn('done','boolean',['notnull'=>false,'default'=>0]);
    $table->addColumn('client_id','string',['length'=>96,'notnull'=>false]);
    $table->addColumn('created_by','string',['length'=>64,'notnull'=>true]);
    $table->addColumn('created_at','datetime',['notnull'=>true]);

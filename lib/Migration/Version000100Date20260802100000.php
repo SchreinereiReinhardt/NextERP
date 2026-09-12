@@ -17,7 +17,7 @@ final class Version000100Date20260802100000 extends SimpleMigrationStep {
    $t->addColumn('email','string',['length'=>255,'notnull'=>false]);
    $t->addColumn('address','text',['notnull'=>false]);
    $t->addColumn('notes','text',['notnull'=>false]);
-   $t->addColumn('is_archived','boolean',['default'=>0,'notnull'=>true]);
+   $t->addColumn('is_archived','boolean',['default'=>0,'notnull'=>false]);
    $t->addColumn('created_by','string',['length'=>64,'notnull'=>true]);
    $t->addColumn('created_at','datetime',['notnull'=>true]);
    $t->addColumn('updated_at','datetime',['notnull'=>true]);
@@ -33,7 +33,7 @@ final class Version000100Date20260802100000 extends SimpleMigrationStep {
    $t->addColumn('start_date','date',['notnull'=>false]);
    $t->addColumn('due_date','date',['notnull'=>false]);
    $t->addColumn('description','text',['notnull'=>false]);
-   $t->addColumn('is_archived','boolean',['default'=>0,'notnull'=>true]);
+   $t->addColumn('is_archived','boolean',['default'=>0,'notnull'=>false]);
    $t->addColumn('created_by','string',['length'=>64,'notnull'=>true]);
    $t->addColumn('created_at','datetime',['notnull'=>true]);
    $t->addColumn('updated_at','datetime',['notnull'=>true]);

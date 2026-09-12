@@ -14,7 +14,7 @@ final class Version020104Date20260829193000 extends SimpleMigrationStep {
 			if ($schema->hasTable($tableName)) {
 				$table=$schema->getTable($tableName);
 				if (!$table->hasColumn('is_alternative')) {
-					$table->addColumn('is_alternative','boolean',['notnull'=>true,'default'=>0]);
+					$table->addColumn('is_alternative','boolean',['notnull'=>false,'default'=>0]);
 				}
 			}
 		}

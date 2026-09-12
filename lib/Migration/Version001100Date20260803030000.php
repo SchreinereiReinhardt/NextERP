@@ -16,7 +16,7 @@ final class Version001100Date20260803030000 extends SimpleMigrationStep {
    $t->addColumn('sales_rate','decimal',['precision'=>12,'scale'=>2,'default'=>0,'notnull'=>true]);
    $t->addColumn('cost_rate','decimal',['precision'=>12,'scale'=>2,'notnull'=>false]);
    $t->addColumn('valid_from','date',['notnull'=>false]);
-   $t->addColumn('active','boolean',['default'=>1,'notnull'=>true]);
+   $t->addColumn('active','boolean',['default'=>1,'notnull'=>false]);
    $t->addColumn('created_at','datetime',['notnull'=>true]);
    $t->setPrimaryKey(['id']);
    $t->addUniqueIndex(['code'],'re_erp_hourly_rate_code');
