@@ -32,6 +32,10 @@ final class MobileController extends Controller {
  #[PublicPage,NoCSRFRequired] public function projectDocuments(int $id):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->projectDocuments((string)$a['uid'],$id));}
  #[PublicPage,NoCSRFRequired] public function createProjectNote(int $id):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->createProjectNote((string)$a['uid'],$id,$this->jsonBody()));}
  #[PublicPage,NoCSRFRequired] public function projectNotes(int $id):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->projectNotes((string)$a['uid'],$id));}
+ #[PublicPage,NoCSRFRequired] public function projectChecklist(int $id):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->projectChecklist((string)$a['uid'],$id));}
+ #[PublicPage,NoCSRFRequired] public function createChecklistItem(int $id):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->createChecklistItem((string)$a['uid'],$id,$this->jsonBody()));}
+ #[PublicPage,NoCSRFRequired] public function updateChecklistItem(int $projectId,int $itemId):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->updateChecklistItem((string)$a['uid'],$projectId,$itemId,$this->jsonBody()));}
+ #[PublicPage,NoCSRFRequired] public function deleteChecklistItem(int $projectId,int $itemId):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->deleteChecklistItem((string)$a['uid'],$projectId,$itemId));}
  #[PublicPage,NoCSRFRequired] public function updateProjectNote(int $projectId,int $noteId):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->updateProjectNote((string)$a['uid'],$projectId,$noteId,$this->jsonBody()));}
  #[PublicPage,NoCSRFRequired] public function deleteProjectNote(int $projectId,int $noteId):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->deleteProjectNote((string)$a['uid'],$projectId,$noteId));}
  #[PublicPage,NoCSRFRequired] public function projectDocumentContent(int $id):DataDisplayResponse|JSONResponse{

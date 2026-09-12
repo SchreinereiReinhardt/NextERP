@@ -21,7 +21,7 @@ final class Version002400Date20260802190000 extends SimpleMigrationStep {
             $table->addColumn('mobile', 'string', ['length' => 80, 'notnull' => false]);
             $table->addColumn('email', 'string', ['length' => 255, 'notnull' => false]);
             $table->addColumn('notes', 'text', ['notnull' => false]);
-            $table->addColumn('is_primary', 'boolean', ['default' => false, 'notnull' => true]);
+            $table->addColumn('is_primary', 'boolean', ['default' => 0, 'notnull' => false]);
             $table->addColumn('created_by', 'string', ['length' => 64, 'notnull' => true]);
             $table->addColumn('created_at', 'datetime', ['notnull' => true]);
             $table->setPrimaryKey(['id']);
@@ -35,7 +35,7 @@ final class Version002400Date20260802190000 extends SimpleMigrationStep {
             $table->addColumn('title', 'string', ['length' => 255, 'notnull' => true]);
             $table->addColumn('due_date', 'date', ['notnull' => true]);
             $table->addColumn('notes', 'text', ['notnull' => false]);
-            $table->addColumn('is_done', 'boolean', ['default' => false, 'notnull' => true]);
+            $table->addColumn('is_done', 'boolean', ['default' => 0, 'notnull' => false]);
             $table->addColumn('created_by', 'string', ['length' => 64, 'notnull' => true]);
             $table->addColumn('created_at', 'datetime', ['notnull' => true]);
             $table->addColumn('completed_at', 'datetime', ['notnull' => false]);

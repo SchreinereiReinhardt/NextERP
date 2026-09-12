@@ -29,6 +29,7 @@ final class Application extends App implements IBootstrap {
 
     public function boot(IBootContext $context): void {
   Util::addScript('reinhardterp','pwa-guard');
+  Util::addScript('reinhardterp','i18n');
         $context->injectFn(static function (IJobList $jobs): void {
             $jobs->add(DocumentInboxScanJob::class);
         });

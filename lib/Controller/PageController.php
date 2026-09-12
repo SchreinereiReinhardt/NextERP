@@ -150,6 +150,7 @@ final class PageController extends Controller {
    'isProjectSupervisor'=>$this->permissions->isProjectSupervisor(),
    'projectMaterials'=>$this->projectMaterials($id),
    'projectNotes'=>$this->queryProjectNotes($id),
+   'projectChecklist'=>$this->queryProjectChecklist($id),
   ]);
  }
 
@@ -163,6 +164,51 @@ final class PageController extends Controller {
   Util::addHeader('meta',['name'=>'apple-mobile-web-app-capable','content'=>'yes']);
   Util::addHeader('meta',['name'=>'apple-mobile-web-app-title','content'=>'Betrio']);
   Util::addHeader('link',['rel'=>'apple-touch-icon','href'=>$icon]);
+ }
+ #[NoAdminRequired] public function saveProjectChecklistItem(int $id,?string $text=null):RedirectResponse{
+  $this->permissions->assertProjectAccess($id);
+  $text=trim((string)$text);
+  if($text==='')throw new \InvalidArgumentException('Bitte einen Checklistenpunkt eingeben.');
+  if(mb_strlen($text)>1000)$text=mb_substr($text,0,1000);
+  $now=date('Y-m-d H:i:s');
+  $qb=$this->db->getQueryBuilder();
+  $qb->insert('re_erp_checklist')->values([
+   'project_id'=>$qb->createNamedParameter($id),
+   'text'=>$qb->createNamedParameter($text),
+   'done'=>$qb->createNamedParameter(0),
+   'client_id'=>$qb->createNamedParameter(null),
+   'created_by'=>$qb->createNamedParameter($this->users->getUser()?->getUID()??''),
+   'created_at'=>$qb->createNamedParameter($now),
+   'updated_at'=>$qb->createNamedParameter($now),
+  ])->executeStatement();
+  return new RedirectResponse($this->url->linkToRoute('reinhardterp.page.projectDetail',['id'=>$id]).'#checklist');
+ }
+ #[NoAdminRequired] public function toggleProjectChecklistItem(int $id,int $itemId):RedirectResponse{
+  $this->permissions->assertProjectAccess($id);
+  $qb=$this->db->getQueryBuilder();
+  $qb->select('done')->from('re_erp_checklist')
+   ->where($qb->expr()->eq('id',$qb->createNamedParameter($itemId)))
+   ->andWhere($qb->expr()->eq('project_id',$qb->createNamedParameter($id)));
+  $current=$qb->executeQuery()->fetchOne();
+  if($current===false)throw new \InvalidArgumentException('Checklistenpunkt nicht gefunden.');
+  $done=((int)$current)===1?0:1;
+  $u=$this->db->getQueryBuilder();
+  $u->update('re_erp_checklist')
+   ->set('done',$u->createNamedParameter($done))
+   ->set('updated_at',$u->createNamedParameter(date('Y-m-d H:i:s')))
+   ->where($u->expr()->eq('id',$u->createNamedParameter($itemId)))
+   ->andWhere($u->expr()->eq('project_id',$u->createNamedParameter($id)))
+   ->executeStatement();
+  return new RedirectResponse($this->url->linkToRoute('reinhardterp.page.projectDetail',['id'=>$id]).'#checklist');
+ }
+ #[NoAdminRequired] public function deleteProjectChecklistItem(int $id,int $itemId):RedirectResponse{
+  $this->permissions->assertProjectAccess($id);
+  $qb=$this->db->getQueryBuilder();
+  $qb->delete('re_erp_checklist')
+   ->where($qb->expr()->eq('id',$qb->createNamedParameter($itemId)))
+   ->andWhere($qb->expr()->eq('project_id',$qb->createNamedParameter($id)))
+   ->executeStatement();
+  return new RedirectResponse($this->url->linkToRoute('reinhardterp.page.projectDetail',['id'=>$id]).'#checklist');
  }
  #[NoAdminRequired] public function saveProjectNote(int $id,?int $noteId=null,?string $noteType=null,?string $title=null,?string $content=null):RedirectResponse{
   $this->permissions->assertProjectAccess($id);
@@ -315,55 +361,55 @@ final class PageController extends Controller {
    ->where($qb->expr()->gte('start_at',$qb->createNamedParameter($today)))
    ->andWhere($qb->expr()->eq('is_deleted',$qb->createNamedParameter(0)))
    ->orderBy('start_at','ASC')->setMaxResults($limit);
-  return $qb->executeQuery()->fetchAllAssociative();
+  return $qb->executeQuery()->fetchAll();
  }
  private function count(string $table):int{$qb=$this->db->getQueryBuilder();$qb->select($qb->func()->count('*','c'))->from($table);return (int)$qb->executeQuery()->fetchOne();}
  private function dashboardOfferStats():array{
   $qb=$this->db->getQueryBuilder();
   $qb->select($qb->func()->count('*','c'))->addSelect($qb->func()->sum('gross_amount','gross'))->from('re_erp_offers')
    ->where($qb->expr()->in('status',[$qb->createNamedParameter('draft'),$qb->createNamedParameter('sent')]));
-  $row=$qb->executeQuery()->fetchAssociative()?:[];
+  $row=$qb->executeQuery()->fetch()?:[];
   return ['count'=>(int)($row['c']??0),'gross'=>(float)($row['gross']??0)];
  }
  private function dashboardInvoiceStats():array{
   $qb=$this->db->getQueryBuilder();
   $qb->select($qb->func()->count('*','c'))->addSelect($qb->func()->sum('gross_amount','gross'))->from('re_erp_invoices')
    ->where($qb->expr()->eq('status',$qb->createNamedParameter('open')));
-  $row=$qb->executeQuery()->fetchAssociative()?:[];
+  $row=$qb->executeQuery()->fetch()?:[];
   return ['count'=>(int)($row['c']??0),'gross'=>(float)($row['gross']??0)];
  }
- private function queryProjects(int $customerId):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_projects')->where($qb->expr()->eq('customer_id',$qb->createNamedParameter($customerId)))->orderBy('created_at','DESC');return $qb->executeQuery()->fetchAllAssociative();}
- private function queryProject(int $id):array{$qb=$this->db->getQueryBuilder();$qb->select('p.*','c.name AS customer_name','c.customer_no')->from('re_erp_projects','p')->leftJoin('p','re_erp_customers','c',$qb->expr()->eq('c.id','p.customer_id'))->where($qb->expr()->eq('p.id',$qb->createNamedParameter($id)));$r=$qb->executeQuery()->fetchAssociative();if(!$r)throw new \OCP\AppFramework\Http\NotFoundResponse();return $r;}
- private function queryReportsByCustomer(int $id):array{$qb=$this->db->getQueryBuilder();$qb->select('r.*','p.project_no','p.title AS project_title')->from('re_erp_reports','r')->leftJoin('r','re_erp_projects','p',$qb->expr()->eq('p.id','r.project_id'))->where($qb->expr()->eq('p.customer_id',$qb->createNamedParameter($id)))->andWhere($qb->expr()->eq('r.archived',$qb->createNamedParameter(0)))->orderBy('r.report_date','DESC');return $qb->executeQuery()->fetchAllAssociative();}
+ private function queryProjects(int $customerId):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_projects')->where($qb->expr()->eq('customer_id',$qb->createNamedParameter($customerId)))->orderBy('created_at','DESC');return $qb->executeQuery()->fetchAll();}
+ private function queryProject(int $id):array{$qb=$this->db->getQueryBuilder();$qb->select('p.*','c.name AS customer_name','c.customer_no')->from('re_erp_projects','p')->leftJoin('p','re_erp_customers','c',$qb->expr()->eq('c.id','p.customer_id'))->where($qb->expr()->eq('p.id',$qb->createNamedParameter($id)));$r=$qb->executeQuery()->fetch();if(!$r)throw new \OCP\AppFramework\Http\ForbiddenException('Projekt nicht gefunden.');return $r;}
+ private function queryReportsByCustomer(int $id):array{$qb=$this->db->getQueryBuilder();$qb->select('r.*','p.project_no','p.title AS project_title')->from('re_erp_reports','r')->leftJoin('r','re_erp_projects','p',$qb->expr()->eq('p.id','r.project_id'))->where($qb->expr()->eq('p.customer_id',$qb->createNamedParameter($id)))->andWhere($qb->expr()->eq('r.archived',$qb->createNamedParameter(0)))->orderBy('r.report_date','DESC');return $qb->executeQuery()->fetchAll();}
  private function queryProjectNotes(int $projectId):array{
   $qb=$this->db->getQueryBuilder();
   $qb->select('*')->from('re_erp_order_notes')
    ->where($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))
    ->orderBy('created_at','DESC')->addOrderBy('id','DESC');
-  return $qb->executeQuery()->fetchAllAssociative();
+  return $qb->executeQuery()->fetchAll();
  }
  private function queryProjectNote(int $projectId,int $noteId):array|false{
   $qb=$this->db->getQueryBuilder();
   $qb->select('*')->from('re_erp_order_notes')
    ->where($qb->expr()->eq('id',$qb->createNamedParameter($noteId)))
    ->andWhere($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)));
-  return $qb->executeQuery()->fetchAssociative();
+  return $qb->executeQuery()->fetch();
  }
- private function queryReportsByProject(int $id):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_reports')->where($qb->expr()->eq('project_id',$qb->createNamedParameter($id)))->andWhere($qb->expr()->eq('archived',$qb->createNamedParameter(0)))->orderBy('report_date','DESC');return $qb->executeQuery()->fetchAllAssociative();}
- private function queryTimes(int $id):array{$qb=$this->db->getQueryBuilder();$qb->select('e.*','w.work_date','w.user_id')->from('re_erp_workday_entries','e')->leftJoin('e','re_erp_workdays','w',$qb->expr()->eq('w.id','e.workday_id'))->where($qb->expr()->eq('e.project_id',$qb->createNamedParameter($id)))->orderBy('w.work_date','DESC');return $qb->executeQuery()->fetchAllAssociative();}
+ private function queryReportsByProject(int $id):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_reports')->where($qb->expr()->eq('project_id',$qb->createNamedParameter($id)))->andWhere($qb->expr()->eq('archived',$qb->createNamedParameter(0)))->orderBy('report_date','DESC');return $qb->executeQuery()->fetchAll();}
+ private function queryTimes(int $id):array{$qb=$this->db->getQueryBuilder();$qb->select('e.*','w.work_date','w.user_id')->from('re_erp_workday_entries','e')->leftJoin('e','re_erp_workdays','w',$qb->expr()->eq('w.id','e.workday_id'))->where($qb->expr()->eq('e.project_id',$qb->createNamedParameter($id)))->orderBy('w.work_date','DESC');return $qb->executeQuery()->fetchAll();}
 
- private function queryOffersByProject(int $projectId):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_offers')->where($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))->orderBy('offer_date','DESC')->setMaxResults(20);return $qb->executeQuery()->fetchAllAssociative();}
- private function queryOrdersByProject(int $projectId):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_orders')->where($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))->orderBy('order_date','DESC')->setMaxResults(20);return $qb->executeQuery()->fetchAllAssociative();}
- private function queryInvoicesByProject(int $projectId):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_invoices')->where($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))->orderBy('invoice_date','DESC')->addOrderBy('id','DESC')->setMaxResults(30);return $qb->executeQuery()->fetchAllAssociative();}
- private function queryProjectPayments(int $projectId):array{$qb=$this->db->getQueryBuilder();$qb->select('p.*','i.invoice_no','i.invoice_type')->from('re_erp_invoice_payments','p')->innerJoin('p','re_erp_invoices','i',$qb->expr()->eq('i.id','p.invoice_id'))->where($qb->expr()->eq('i.project_id',$qb->createNamedParameter($projectId)))->orderBy('p.payment_date','DESC')->setMaxResults(50);return $qb->executeQuery()->fetchAllAssociative();}
- private function queryProjectEvents(int $projectId):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_team_events')->where($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))->andWhere($qb->expr()->eq('is_deleted',$qb->createNamedParameter(0)))->orderBy('start_at','ASC')->setMaxResults(20);return $qb->executeQuery()->fetchAllAssociative();}
- private function queryProjectDocuments(int $projectId):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_project_documents')->where($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))->orderBy('created_at','DESC')->setMaxResults(50);return $qb->executeQuery()->fetchAllAssociative();}
+ private function queryOffersByProject(int $projectId):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_offers')->where($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))->orderBy('offer_date','DESC')->setMaxResults(20);return $qb->executeQuery()->fetchAll();}
+ private function queryOrdersByProject(int $projectId):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_orders')->where($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))->orderBy('order_date','DESC')->setMaxResults(20);return $qb->executeQuery()->fetchAll();}
+ private function queryInvoicesByProject(int $projectId):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_invoices')->where($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))->orderBy('invoice_date','DESC')->addOrderBy('id','DESC')->setMaxResults(30);return $qb->executeQuery()->fetchAll();}
+ private function queryProjectPayments(int $projectId):array{$qb=$this->db->getQueryBuilder();$qb->select('p.*','i.invoice_no','i.invoice_type')->from('re_erp_invoice_payments','p')->innerJoin('p','re_erp_invoices','i',$qb->expr()->eq('i.id','p.invoice_id'))->where($qb->expr()->eq('i.project_id',$qb->createNamedParameter($projectId)))->orderBy('p.payment_date','DESC')->setMaxResults(50);return $qb->executeQuery()->fetchAll();}
+ private function queryProjectEvents(int $projectId):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_team_events')->where($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))->andWhere($qb->expr()->eq('is_deleted',$qb->createNamedParameter(0)))->orderBy('start_at','ASC')->setMaxResults(20);return $qb->executeQuery()->fetchAll();}
+ private function queryProjectDocuments(int $projectId):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_project_documents')->where($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))->orderBy('created_at','DESC')->setMaxResults(50);return $qb->executeQuery()->fetchAll();}
  private function projectCosts(int $projectId,array $project,array $times):array{
   $hours=array_sum(array_map(static fn(array $x):float=>(float)($x['hours']??0),$times));
   $special=(float)($project['special_hourly_rate']??0);$labor=0.0;
   if($special>0){$labor=$hours*$special;}else{
    $qb=$this->db->getQueryBuilder();$qb->select('e.hours','w.user_id','ur.individual_hourly_rate','hr.sales_rate')->from('re_erp_workday_entries','e')->innerJoin('e','re_erp_workdays','w',$qb->expr()->eq('w.id','e.workday_id'))->leftJoin('w','re_erp_user_roles','ur',$qb->expr()->eq('ur.user_id','w.user_id'))->leftJoin('ur','re_erp_hourly_rates','hr',$qb->expr()->eq('hr.id','ur.hourly_rate_id'))->where($qb->expr()->eq('e.project_id',$qb->createNamedParameter($projectId)));
-   foreach($qb->executeQuery()->fetchAllAssociative() as $r){$rate=(float)($r['individual_hourly_rate']??0);if($rate<=0)$rate=(float)($r['sales_rate']??0);$labor+=(float)$r['hours']*$rate;}
+   foreach($qb->executeQuery()->fetchAll() as $r){$rate=(float)($r['individual_hourly_rate']??0);if($rate<=0)$rate=(float)($r['sales_rate']??0);$labor+=(float)$r['hours']*$rate;}
   }
   $qb=$this->db->getQueryBuilder();$qb->selectAlias($qb->createFunction('SUM(i.quantity * i.unit_price)'),'v')->from('re_erp_report_items','i')->innerJoin('i','re_erp_reports','r',$qb->expr()->eq('r.id','i.report_id'))->where($qb->expr()->eq('r.project_id',$qb->createNamedParameter($projectId)));$material=(float)($qb->executeQuery()->fetchOne()?:0);
   $qb=$this->db->getQueryBuilder();$qb->selectAlias($qb->createFunction('SUM(gross_amount)'),'v')->from('re_erp_orders')->where($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)));$orderValue=(float)($qb->executeQuery()->fetchOne()?:0);
@@ -374,12 +420,19 @@ final class PageController extends Controller {
  private function projectMembers(int $projectId):array{
   $qb=$this->db->getQueryBuilder();
   $qb->select('pu.user_id','pu.role','pu.folder_permissions')->from('re_erp_project_users','pu')->where($qb->expr()->eq('pu.project_id',$qb->createNamedParameter($projectId)))->orderBy('pu.role','ASC')->addOrderBy('pu.user_id','ASC');
-  $rows=$qb->executeQuery()->fetchAllAssociative();foreach($rows as &$row){$u=$this->userManager->get((string)$row['user_id']);$row['display_name']=$u?->getDisplayName()??(string)$row['user_id'];$decoded=json_decode((string)($row['folder_permissions']??''),true);$row['folders']=is_array($decoded)?$decoded:PermissionService::EMPLOYEE_DEFAULT_FOLDERS;}unset($row);return $rows;
+  $rows=$qb->executeQuery()->fetchAll();foreach($rows as &$row){$u=$this->userManager->get((string)$row['user_id']);$row['display_name']=$u?->getDisplayName()??(string)$row['user_id'];$decoded=json_decode((string)($row['folder_permissions']??''),true);$row['folders']=is_array($decoded)?$decoded:PermissionService::EMPLOYEE_DEFAULT_FOLDERS;}unset($row);return $rows;
+ }
+ private function queryProjectChecklist(int $projectId):array{
+  $qb=$this->db->getQueryBuilder();
+  $qb->select('*')->from('re_erp_checklist')
+   ->where($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))
+   ->orderBy('done','ASC')->addOrderBy('id','ASC');
+  return $qb->executeQuery()->fetchAll();
  }
  private function projectMaterials(int $projectId):array{
   $qb=$this->db->getQueryBuilder();
   $qb->select('i.description','i.quantity','i.unit','r.report_no','r.report_date')->from('re_erp_report_items','i')->innerJoin('i','re_erp_reports','r',$qb->expr()->eq('r.id','i.report_id'))->where($qb->expr()->eq('r.project_id',$qb->createNamedParameter($projectId)))->orderBy('r.report_date','DESC')->addOrderBy('i.id','DESC')->setMaxResults(12);
-  return $qb->executeQuery()->fetchAllAssociative();
+  return $qb->executeQuery()->fetchAll();
  }
  private function projectCockpit(int $projectId,array $project,array $reports,array $times,array $documents):array{
   $today=date('Y-m-d');
@@ -415,8 +468,8 @@ final class PageController extends Controller {
   ];
  }
 
- private function customerContacts(int $customerId):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_customer_contacts')->where($qb->expr()->eq('customer_id',$qb->createNamedParameter($customerId)))->orderBy('is_primary','DESC')->addOrderBy('name','ASC');return $qb->executeQuery()->fetchAllAssociative();}
- private function customerReminders(int $customerId):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_customer_reminders')->where($qb->expr()->eq('customer_id',$qb->createNamedParameter($customerId)))->orderBy('is_done','ASC')->addOrderBy('due_date','ASC');return $qb->executeQuery()->fetchAllAssociative();}
+ private function customerContacts(int $customerId):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_customer_contacts')->where($qb->expr()->eq('customer_id',$qb->createNamedParameter($customerId)))->orderBy('is_primary','DESC')->addOrderBy('name','ASC');return $qb->executeQuery()->fetchAll();}
+ private function customerReminders(int $customerId):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_customer_reminders')->where($qb->expr()->eq('customer_id',$qb->createNamedParameter($customerId)))->orderBy('is_done','ASC')->addOrderBy('due_date','ASC');return $qb->executeQuery()->fetchAll();}
  private function customerStats(int $customerId,array $projects,array $reports,array $documents):array{$qb=$this->db->getQueryBuilder();$qb->select($qb->func()->sum('e.hours','s'))->from('re_erp_workday_entries','e')->innerJoin('e','re_erp_workdays','w',$qb->expr()->eq('w.id','e.workday_id'))->innerJoin('e','re_erp_projects','p',$qb->expr()->eq('p.id','e.project_id'))->where($qb->expr()->eq('p.customer_id',$qb->createNamedParameter($customerId)));$hours=(float)($qb->executeQuery()->fetchOne()?:0);$openReports=0;foreach($reports as $report){if(empty($report['locked']))$openReports++;}return ['projects'=>count($projects),'reports'=>count($reports),'openReports'=>$openReports,'documents'=>count($documents),'hours'=>$hours];}
  private function countWhere(string $table,string $column,int $value):int{$qb=$this->db->getQueryBuilder();$qb->select($qb->func()->count('*','c'))->from($table)->where($qb->expr()->eq($column,$qb->createNamedParameter($value)));return (int)$qb->executeQuery()->fetchOne();}
  private function todayHours():float{$qb=$this->db->getQueryBuilder();$qb->select($qb->func()->sum('e.hours','s'))->from('re_erp_workday_entries','e')->innerJoin('e','re_erp_workdays','w',$qb->expr()->eq('w.id','e.workday_id'))->where($qb->expr()->eq('w.work_date',$qb->createNamedParameter(date('Y-m-d'))));if(!$this->permissions->isProjectSupervisor())$qb->andWhere($qb->expr()->eq('w.user_id',$qb->createNamedParameter($this->permissions->uid())));return (float)($qb->executeQuery()->fetchOne()?:0);}

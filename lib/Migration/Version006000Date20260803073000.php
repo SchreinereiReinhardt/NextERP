@@ -31,7 +31,7 @@ final class Version006000Date20260803073000 extends SimpleMigrationStep {
    $t->addColumn('created_at','datetime',['notnull'=>true]);
    $t->setPrimaryKey(['id']);
    $t->addIndex(['project_id','document_type'],'re_erp_project_document_type');
-   $t->addIndex(['customer_id','created_at'],'re_erp_project_document_customer');
+   $t->addIndex(['customer_id','created_at'],'re_erp_proj_doc_cust');
   }
   return $schema;
  }

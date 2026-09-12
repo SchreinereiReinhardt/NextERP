@@ -25,7 +25,7 @@ final class Version005100Date20260803110000 extends SimpleMigrationStep {
     }
     public function postSchemaChange(IOutput $output, Closure $schemaClosure, array $options): void {
         $qb=$this->db->getQueryBuilder();
-        $rows=$qb->select('id','address')->from('re_erp_customers')->where($qb->expr()->isNotNull('address'))->executeQuery()->fetchAllAssociative();
+        $rows=$qb->select('id','address')->from('re_erp_customers')->where($qb->expr()->isNotNull('address'))->executeQuery()->fetchAll();
         foreach($rows as $row){
             $address=trim((string)$row['address']); if($address==='') continue;
             $lines=array_values(array_filter(array_map('trim',preg_split('/\R+/',$address)?:[])));

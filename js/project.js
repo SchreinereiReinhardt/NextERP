@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const tabIds = [
         'offers', 'orders', 'invoices', 'appointments', 'reports', 'time',
-        'material', 'notes', 'photos', 'documents', 'permissions', 'costs', 'timeline'
+        'material', 'notes', 'checklist', 'photos', 'documents', 'permissions', 'costs', 'timeline'
     ]
     const overviewOnlyIds = ['billing', 'payments']
 

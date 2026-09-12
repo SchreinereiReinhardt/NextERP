@@ -285,7 +285,7 @@ final class DocumentInboxService {
         }
 
         $qb->orderBy('d.created_at', 'DESC')->setMaxResults(500);
-        return $qb->executeQuery()->fetchAllAssociative();
+        return $qb->executeQuery()->fetchAll();
     }
 
     public function get(int $id): ?array {
@@ -304,10 +304,10 @@ final class DocumentInboxService {
         $out = ['unassigned'=>0,'assigned'=>0,'error'=>0,'all'=>0,'new'=>0,'review'=>0];
         $qb=$this->db->getQueryBuilder();
         $qb->select('status',$qb->func()->count('*','c'))->from('re_erp_documents')->groupBy('status');
-        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) { $out[$row['status']]=(int)$row['c']; $out['all']+=(int)$row['c']; }
+        foreach ($qb->executeQuery()->fetchAll() as $row) { $out[$row['status']]=(int)$row['c']; $out['all']+=(int)$row['c']; }
         $qb=$this->db->getQueryBuilder();
         $qb->select('processing_status',$qb->func()->count('*','c'))->from('re_erp_documents')->groupBy('processing_status');
-        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) { $out[$row['processing_status']]=(int)$row['c']; }
+        foreach ($qb->executeQuery()->fetchAll() as $row) { $out[$row['processing_status']]=(int)$row['c']; }
         return $out;
     }
 
@@ -618,28 +618,28 @@ final class DocumentInboxService {
     private function one(int $id): ?array {
         $qb = $this->db->getQueryBuilder();
         $qb->select('*')->from('re_erp_documents')->where($qb->expr()->eq('id', $qb->createNamedParameter($id)));
-        $row = $qb->executeQuery()->fetchAssociative();
+        $row = $qb->executeQuery()->fetch();
         return $row ?: null;
     }
 
     private function findByPath(string $path): ?array {
         $qb = $this->db->getQueryBuilder();
         $qb->select('*')->from('re_erp_documents')->where($qb->expr()->eq('file_path', $qb->createNamedParameter($path)));
-        $row = $qb->executeQuery()->fetchAssociative();
+        $row = $qb->executeQuery()->fetch();
         return $row ?: null;
     }
 
     private function tableOne(string $table, int $id): ?array {
         $qb = $this->db->getQueryBuilder();
         $qb->select('*')->from($table)->where($qb->expr()->eq('id', $qb->createNamedParameter($id)));
-        $row = $qb->executeQuery()->fetchAssociative();
+        $row = $qb->executeQuery()->fetch();
         return $row ?: null;
     }
 
     private function tableRows(string $table, string $order): array {
         $qb = $this->db->getQueryBuilder();
         $qb->select('*')->from($table)->orderBy($order, 'ASC');
-        return $qb->executeQuery()->fetchAllAssociative();
+        return $qb->executeQuery()->fetchAll();
     }
 
     private function insert(array $data): int {

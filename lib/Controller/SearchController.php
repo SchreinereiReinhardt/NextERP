@@ -43,7 +43,7 @@ final class SearchController extends Controller {
                     $qb->expr()->iLike('email', $qb->createNamedParameter($like))
                 ))
                 ->setMaxResults(6)
-                ->executeQuery()->fetchAllAssociative();
+                ->executeQuery()->fetchAll();
             foreach ($rows as $row) {
                 $results[] = [
                     'type' => 'Kunde',
@@ -66,7 +66,7 @@ final class SearchController extends Controller {
                     $qb->expr()->iLike('c.name', $qb->createNamedParameter($like))
                 ))
                 ->setMaxResults(6)
-                ->executeQuery()->fetchAllAssociative();
+                ->executeQuery()->fetchAll();
             foreach ($rows as $row) {
                 if (!$this->permissions->canAccessProject((int)$row['id'])) { continue; }
                 $results[] = [
@@ -91,7 +91,7 @@ final class SearchController extends Controller {
                 ))
                 ->andWhere($qb->expr()->eq('r.archived', $qb->createNamedParameter(0)))
                 ->setMaxResults(5)
-                ->executeQuery()->fetchAllAssociative();
+                ->executeQuery()->fetchAll();
             foreach ($rows as $row) {
                 if (!$this->permissions->canAccessProject((int)$row['project_id'])) { continue; }
                 $results[] = [
@@ -122,7 +122,7 @@ final class SearchController extends Controller {
                 ))
                 ->orderBy('d.created_at', 'DESC')
                 ->setMaxResults(6)
-                ->executeQuery()->fetchAllAssociative();
+                ->executeQuery()->fetchAll();
             foreach ($rows as $row) {
                 $number = (string)($row['document_no'] ?: ($row['suggested_document_no'] ?? ''));
                 $context = array_filter([(string)($row['customer_name'] ?? ''), (string)($row['project_no'] ?? ''), (string)($row['supplier_name'] ?? '')]);

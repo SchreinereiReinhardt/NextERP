@@ -49,7 +49,7 @@ final class ActivityService {
     public function recent(int $limit = 15): array {
         $qb = $this->db->getQueryBuilder();
         $qb->select('*')->from('re_erp_activities')->orderBy('created_at', 'DESC')->setMaxResults($limit);
-        return $this->decorate($qb->executeQuery()->fetchAllAssociative());
+        return $this->decorate($qb->executeQuery()->fetchAll());
     }
 
     private function find(string $column, int $id, int $limit): array {
@@ -57,7 +57,7 @@ final class ActivityService {
         $qb->select('*')->from('re_erp_activities')
             ->where($qb->expr()->eq($column, $qb->createNamedParameter($id)))
             ->orderBy('created_at', 'DESC')->setMaxResults($limit);
-        return $this->decorate($qb->executeQuery()->fetchAllAssociative());
+        return $this->decorate($qb->executeQuery()->fetchAll());
     }
 
     private function decorate(array $rows): array {

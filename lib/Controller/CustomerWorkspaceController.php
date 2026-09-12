@@ -79,7 +79,7 @@ final class CustomerWorkspaceController extends Controller {
         $this->permissions->assert('customers');
         $qb = $this->db->getQueryBuilder();
         $qb->select('is_done', 'title')->from('re_erp_customer_reminders')->where($qb->expr()->eq('id', $qb->createNamedParameter($id)))->andWhere($qb->expr()->eq('customer_id', $qb->createNamedParameter($customerId)));
-        $row = $qb->executeQuery()->fetchAssociative();
+        $row = $qb->executeQuery()->fetch();
         if (!$row) return $this->back($customerId);
         $done = !(bool)$row['is_done'];
         $qb = $this->db->getQueryBuilder();

@@ -11,7 +11,7 @@ final class DocumentRuleService {
     public function all(): array {
         $qb = $this->db->getQueryBuilder();
         $qb->select('*')->from('re_erp_document_rules')->orderBy('priority', 'ASC')->addOrderBy('id', 'ASC');
-        return $qb->executeQuery()->fetchAllAssociative();
+        return $qb->executeQuery()->fetchAll();
     }
 
     public function create(array $data): int {

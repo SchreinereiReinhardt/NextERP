@@ -194,7 +194,7 @@ final class NextcloudIntegrationService {
                 $qb->select('uri', 'carddata')->from('cards')
                     ->where($qb->expr()->eq('addressbookid', $qb->createNamedParameter((int)$book['id'])))
                     ->orderBy('id', 'ASC')->setMaxResults($limitPerBook);
-                foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+                foreach ($qb->executeQuery()->fetchAll() as $row) {
                     try {
                         $result[] = $this->nativeContactFromCard((int)$book['id'], (string)$row['uri'], (string)$row['carddata'], (string)$book['name']);
                     } catch (\Throwable) {
@@ -222,7 +222,7 @@ final class NextcloudIntegrationService {
                 $qb->expr()->eq('uri', $qb->createNamedParameter($contactId)),
                 $qb->expr()->eq('uri', $qb->createNamedParameter(str_ends_with(strtolower($contactId), '.vcf') ? $contactId : $contactId . '.vcf'))
             ))->setMaxResults(1);
-        $row = $qb->executeQuery()->fetchAssociative();
+        $row = $qb->executeQuery()->fetch();
         return $row ? $this->nativeContactFromCard((int)$book['id'], (string)$row['uri'], (string)$row['carddata'], (string)$book['name']) : null;
     }
 
@@ -293,7 +293,7 @@ final class NextcloudIntegrationService {
             ->andWhere($qb->expr()->lte('firstoccurence',$qb->createNamedParameter($to->getTimestamp())))
             ->andWhere($qb->expr()->gte('lastoccurence',$qb->createNamedParameter($from->getTimestamp())))
             ->orderBy('firstoccurence','ASC');
-        $rows=$qb->executeQuery()->fetchAllAssociative();
+        $rows=$qb->executeQuery()->fetchAll();
         $found=[];$imported=0;$updated=0;
         foreach($rows as $row){
             try{$event=$this->nativeEventFromIcs((string)$row['uri'],(string)$row['calendardata'],$selectedKey);}catch(\Throwable){$event=null;}
@@ -554,7 +554,7 @@ final class NextcloudIntegrationService {
             ->where($qb->expr()->eq('calendar_uri', $qb->createNamedParameter($calendarKey)))
             ->andWhere($qb->expr()->eq('calendar_object_uri', $qb->createNamedParameter($objectUri)))
             ->setMaxResults(1);
-        $row = $qb->executeQuery()->fetchAssociative();
+        $row = $qb->executeQuery()->fetch();
         return $row ?: null;
     }
 
@@ -564,7 +564,7 @@ final class NextcloudIntegrationService {
             ->where($qb->expr()->eq('calendar_uri', $qb->createNamedParameter($calendarKey)))
             ->andWhere($qb->expr()->gte('start_at', $qb->createNamedParameter($from->format('Y-m-d H:i:s'))))
             ->andWhere($qb->expr()->lte('start_at', $qb->createNamedParameter($to->format('Y-m-d H:i:s'))));
-        return $qb->executeQuery()->fetchAllAssociative();
+        return $qb->executeQuery()->fetchAll();
     }
 
     private function insertTeamEvent(array $data): void {
@@ -596,7 +596,7 @@ final class NextcloudIntegrationService {
         $uid=$this->userSession->getUser()?->getUID();if($uid===null)return [];
         $principal='principals/users/'.$uid;$qb=$this->db->getQueryBuilder();
         $qb->select('id','uri','displayname')->from('addressbooks')->where($qb->expr()->eq('principaluri',$qb->createNamedParameter($principal)))->orderBy('displayname','ASC');
-        $result=[];foreach($qb->executeQuery()->fetchAllAssociative() as $row){$result[]=['id'=>(int)$row['id'],'uri'=>(string)$row['uri'],'name'=>(string)($row['displayname']?:$row['uri'])];}return $result;
+        $result=[];foreach($qb->executeQuery()->fetchAll() as $row){$result[]=['id'=>(int)$row['id'],'uri'=>(string)$row['uri'],'name'=>(string)($row['displayname']?:$row['uri'])];}return $result;
     }
 
     private function nativeAddressBookByKey(string $key): ?array {
@@ -607,7 +607,7 @@ final class NextcloudIntegrationService {
     private function nativeCalendars(): array {
         $uid=$this->userSession->getUser()?->getUID();if($uid===null)return [];$principal='principals/users/'.$uid;
         $qb=$this->db->getQueryBuilder();$qb->select('id','uri','displayname')->from('calendars')->where($qb->expr()->eq('principaluri',$qb->createNamedParameter($principal)))->andWhere($qb->expr()->orX($qb->expr()->isNull('deleted_at'),$qb->expr()->eq('deleted_at',$qb->createNamedParameter(0))))->orderBy('displayname','ASC');
-        $result=[];foreach($qb->executeQuery()->fetchAllAssociative() as $row){$result[]=['id'=>(int)$row['id'],'uri'=>(string)$row['uri'],'name'=>(string)($row['displayname']?:$row['uri'])];}return $result;
+        $result=[];foreach($qb->executeQuery()->fetchAll() as $row){$result[]=['id'=>(int)$row['id'],'uri'=>(string)$row['uri'],'name'=>(string)($row['displayname']?:$row['uri'])];}return $result;
     }
 
     private function nativeCalendarByUri(string $uri): ?array {foreach($this->nativeCalendars() as $calendar){if((string)$calendar['uri']===$uri||(string)$calendar['id']===$uri)return $calendar;}return null;}

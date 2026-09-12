@@ -25,7 +25,7 @@ final class Version002601Date20260802214500 extends SimpleMigrationStep {
             $table->addColumn('sync_hash', 'string', ['length' => 64, 'notnull' => false]);
         }
         if (!$table->hasColumn('is_deleted')) {
-            $table->addColumn('is_deleted', 'boolean', ['default' => false, 'notnull' => true]);
+            $table->addColumn('is_deleted', 'boolean', ['default' => 0, 'notnull' => false]);
         }
         if (!$table->hasColumn('last_synced_at')) {
             $table->addColumn('last_synced_at', 'datetime', ['notnull' => false]);

@@ -95,7 +95,7 @@ final class DashboardWidgetService {
             ->where($qb->expr()->eq('is_archived', $qb->createNamedParameter(false, $qb::PARAM_BOOL)))
             ->orderBy('updated_at', 'DESC')
             ->setMaxResults(40);
-        $rows = $qb->executeQuery()->fetchAllAssociative();
+        $rows = $qb->executeQuery()->fetchAll();
         $items = [];
         foreach ($rows as $row) {
             $id = (int)$row['id'];
@@ -146,7 +146,7 @@ final class DashboardWidgetService {
     private function accessibleProjectIds(string $userId): array {
         $qb = $this->db->getQueryBuilder();
         $qb->select('id')->from('re_erp_projects')->where($qb->expr()->eq('is_archived', $qb->createNamedParameter(false, $qb::PARAM_BOOL)));
-        $ids = array_map('intval', $qb->executeQuery()->fetchFirstColumn());
+        $ids = array_map('intval', $qb->executeQuery()->fetchAll(\PDO::FETCH_COLUMN));
         return array_values(array_filter($ids, fn(int $id): bool => $this->permissions->canAccessProject($id, $userId)));
     }
 
@@ -174,7 +174,7 @@ final class DashboardWidgetService {
                 ->andWhere($qb->expr()->isNotNull('due_date'))
                 ->andWhere($qb->expr()->lt('due_date', $qb->createNamedParameter(date('Y-m-d'))));
             $count = 0;
-            foreach ($qb->executeQuery()->fetchFirstColumn() as $id) {
+            foreach ($qb->executeQuery()->fetchAll(\PDO::FETCH_COLUMN) as $id) {
                 if ($this->permissions->canAccessProject((int)$id, $userId)) $count++;
             }
             return $count;
@@ -209,7 +209,7 @@ final class DashboardWidgetService {
                 ->where($qb->expr()->gte('start_at', $qb->createNamedParameter(date('Y-m-d H:i:s'))))
                 ->andWhere($qb->expr()->eq('is_deleted', $qb->createNamedParameter(0)))
                 ->orderBy('start_at', 'ASC')->setMaxResults(1);
-            $row = $qb->executeQuery()->fetchAssociative();
+            $row = $qb->executeQuery()->fetch();
             return $row ?: null;
         } catch (\Throwable) { return null; }
     }

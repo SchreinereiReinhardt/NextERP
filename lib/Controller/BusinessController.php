@@ -182,7 +182,7 @@ final class BusinessController extends Controller {
      ->where($q->expr()->eq('order_id',$q->createNamedParameter($orderId)))
      ->andWhere($q->expr()->eq('invoice_type',$q->createNamedParameter('advance')))
      ->andWhere($q->expr()->neq('status',$q->createNamedParameter('cancelled')));
-   foreach($q->executeQuery()->fetchAllAssociative() as $a){
+   foreach($q->executeQuery()->fetchAll() as $a){
     $advanceNet+=(float)$a['net_amount'];
     $advanceGross+=(float)$a['gross_amount'];
    }
@@ -587,13 +587,13 @@ final class BusinessController extends Controller {
   return $value;
  }
  private function offerForOrder(int $orderId):?array{$order=$this->order($orderId);if(!$order||empty($order['offer_id']))return null;return $this->offer((int)$order['offer_id']);}
- private function creditNotesForInvoice(int $invoiceId):array{$q=$this->db->getQueryBuilder();$q->select('*')->from('re_erp_invoices')->where($q->expr()->eq('related_invoice_id',$q->createNamedParameter($invoiceId)))->andWhere($q->expr()->eq('invoice_type',$q->createNamedParameter('credit')))->orderBy('id','DESC');return $q->executeQuery()->fetchAllAssociative();}
- private function paymentsForOrder(int $orderId):array{$q=$this->db->getQueryBuilder();$q->select('p.*','i.invoice_no','i.invoice_type')->from('re_erp_invoice_payments','p')->innerJoin('p','re_erp_invoices','i',$q->expr()->eq('i.id','p.invoice_id'))->where($q->expr()->eq('i.order_id',$q->createNamedParameter($orderId)))->orderBy('p.payment_date','DESC');return $q->executeQuery()->fetchAllAssociative();}
+ private function creditNotesForInvoice(int $invoiceId):array{$q=$this->db->getQueryBuilder();$q->select('*')->from('re_erp_invoices')->where($q->expr()->eq('related_invoice_id',$q->createNamedParameter($invoiceId)))->andWhere($q->expr()->eq('invoice_type',$q->createNamedParameter('credit')))->orderBy('id','DESC');return $q->executeQuery()->fetchAll();}
+ private function paymentsForOrder(int $orderId):array{$q=$this->db->getQueryBuilder();$q->select('p.*','i.invoice_no','i.invoice_type')->from('re_erp_invoice_payments','p')->innerJoin('p','re_erp_invoices','i',$q->expr()->eq('i.id','p.invoice_id'))->where($q->expr()->eq('i.order_id',$q->createNamedParameter($orderId)))->orderBy('p.payment_date','DESC');return $q->executeQuery()->fetchAll();}
  private function projectInvoiceItems(int $projectId,bool $times,bool $materials,bool $reports):array{
   $items=[];
-  if($times){$q=$this->db->getQueryBuilder();$q->select('e.activity','e.hours','w.user_id','w.work_date','ur.individual_hourly_rate','hr.sales_rate')->from('re_erp_workday_entries','e')->innerJoin('e','re_erp_workdays','w',$q->expr()->eq('w.id','e.workday_id'))->leftJoin('w','re_erp_user_roles','ur',$q->expr()->eq('ur.user_id','w.user_id'))->leftJoin('ur','re_erp_hourly_rates','hr',$q->expr()->eq('hr.id','ur.hourly_rate_id'))->where($q->expr()->eq('e.project_id',$q->createNamedParameter($projectId)))->orderBy('w.work_date','ASC');foreach($q->executeQuery()->fetchAllAssociative() as $r){$rate=(float)($r['individual_hourly_rate']??0);if($rate<=0)$rate=(float)($r['sales_rate']??0);$hours=(float)($r['hours']??0);if($hours<=0)continue;$items[]=['description'=>'Arbeitszeit '.(string)($r['work_date']??'').' · '.trim((string)($r['activity']??'Arbeitsleistung')).' · '.(string)($r['user_id']??''),'quantity'=>$hours,'unit'=>'Std.','unit_price'=>$rate,'total_price'=>round($hours*$rate,2)];}}
-  if($materials){$q=$this->db->getQueryBuilder();$q->select('ri.description','ri.quantity','ri.unit','m.sale_price','m.price','r.report_no')->from('re_erp_report_items','ri')->innerJoin('ri','re_erp_reports','r',$q->expr()->eq('r.id','ri.report_id'))->leftJoin('ri','re_erp_materials','m',$q->expr()->eq('m.id','ri.material_id'))->where($q->expr()->eq('r.project_id',$q->createNamedParameter($projectId)))->orderBy('r.report_date','ASC');foreach($q->executeQuery()->fetchAllAssociative() as $r){$qty=(float)($r['quantity']??0);if($qty<=0)continue;$price=(float)($r['sale_price']??0);if($price<=0)$price=(float)($r['price']??0);$items[]=['description'=>trim((string)$r['description']).(!empty($r['report_no'])?' · Rapport '.$r['report_no']:''),'quantity'=>$qty,'unit'=>trim((string)($r['unit']??''))?:'Stk.','unit_price'=>$price,'total_price'=>round($qty*$price,2)];}}
-  if($reports){$q=$this->db->getQueryBuilder();$q->select('report_no','report_date','title','signed_at')->from('re_erp_reports')->where($q->expr()->eq('project_id',$q->createNamedParameter($projectId)))->andWhere($q->expr()->eq('archived',$q->createNamedParameter(0)))->orderBy('report_date','ASC');foreach($q->executeQuery()->fetchAllAssociative() as $r){$desc='Rapport '.(string)$r['report_no'].' vom '.(string)$r['report_date'].' · '.(string)$r['title'];if(!empty($r['signed_at']))$desc.=' · unterschrieben';$items[]=['description'=>$desc,'quantity'=>1,'unit'=>'Info','unit_price'=>0.0,'total_price'=>0.0,'is_alternative'=>1];}}
+  if($times){$q=$this->db->getQueryBuilder();$q->select('e.activity','e.hours','w.user_id','w.work_date','ur.individual_hourly_rate','hr.sales_rate')->from('re_erp_workday_entries','e')->innerJoin('e','re_erp_workdays','w',$q->expr()->eq('w.id','e.workday_id'))->leftJoin('w','re_erp_user_roles','ur',$q->expr()->eq('ur.user_id','w.user_id'))->leftJoin('ur','re_erp_hourly_rates','hr',$q->expr()->eq('hr.id','ur.hourly_rate_id'))->where($q->expr()->eq('e.project_id',$q->createNamedParameter($projectId)))->orderBy('w.work_date','ASC');foreach($q->executeQuery()->fetchAll() as $r){$rate=(float)($r['individual_hourly_rate']??0);if($rate<=0)$rate=(float)($r['sales_rate']??0);$hours=(float)($r['hours']??0);if($hours<=0)continue;$items[]=['description'=>'Arbeitszeit '.(string)($r['work_date']??'').' · '.trim((string)($r['activity']??'Arbeitsleistung')).' · '.(string)($r['user_id']??''),'quantity'=>$hours,'unit'=>'Std.','unit_price'=>$rate,'total_price'=>round($hours*$rate,2)];}}
+  if($materials){$q=$this->db->getQueryBuilder();$q->select('ri.description','ri.quantity','ri.unit','m.sale_price','m.price','r.report_no')->from('re_erp_report_items','ri')->innerJoin('ri','re_erp_reports','r',$q->expr()->eq('r.id','ri.report_id'))->leftJoin('ri','re_erp_materials','m',$q->expr()->eq('m.id','ri.material_id'))->where($q->expr()->eq('r.project_id',$q->createNamedParameter($projectId)))->orderBy('r.report_date','ASC');foreach($q->executeQuery()->fetchAll() as $r){$qty=(float)($r['quantity']??0);if($qty<=0)continue;$price=(float)($r['sale_price']??0);if($price<=0)$price=(float)($r['price']??0);$items[]=['description'=>trim((string)$r['description']).(!empty($r['report_no'])?' · Rapport '.$r['report_no']:''),'quantity'=>$qty,'unit'=>trim((string)($r['unit']??''))?:'Stk.','unit_price'=>$price,'total_price'=>round($qty*$price,2)];}}
+  if($reports){$q=$this->db->getQueryBuilder();$q->select('report_no','report_date','title','signed_at')->from('re_erp_reports')->where($q->expr()->eq('project_id',$q->createNamedParameter($projectId)))->andWhere($q->expr()->eq('archived',$q->createNamedParameter(0)))->orderBy('report_date','ASC');foreach($q->executeQuery()->fetchAll() as $r){$desc='Rapport '.(string)$r['report_no'].' vom '.(string)$r['report_date'].' · '.(string)$r['title'];if(!empty($r['signed_at']))$desc.=' · unterschrieben';$items[]=['description'=>$desc,'quantity'=>1,'unit'=>'Info','unit_price'=>0.0,'total_price'=>0.0,'is_alternative'=>1];}}
   return $items;
  }
  private function invoicePaidAmount(int $invoiceId):float{
@@ -603,10 +603,10 @@ final class BusinessController extends Controller {
   $gross=(float)$invoice['gross_amount'];if(($invoice['invoice_type']??'invoice')==='final')$gross-=(float)($invoice['advance_gross_amount']??0);return max(0,round($gross,2));
  }
  private function invoiceRows():array{
-  $q=$this->db->getQueryBuilder();$q->select('i.*','c.name AS customer_name','p.project_no','o.order_no')->from('re_erp_invoices','i')->leftJoin('i','re_erp_customers','c',$q->expr()->eq('c.id','i.customer_id'))->leftJoin('i','re_erp_projects','p',$q->expr()->eq('p.id','i.project_id'))->leftJoin('i','re_erp_orders','o',$q->expr()->eq('o.id','i.order_id'))->orderBy('i.invoice_date','DESC')->addOrderBy('i.id','DESC');return $q->executeQuery()->fetchAllAssociative();
+  $q=$this->db->getQueryBuilder();$q->select('i.*','c.name AS customer_name','p.project_no','o.order_no')->from('re_erp_invoices','i')->leftJoin('i','re_erp_customers','c',$q->expr()->eq('c.id','i.customer_id'))->leftJoin('i','re_erp_projects','p',$q->expr()->eq('p.id','i.project_id'))->leftJoin('i','re_erp_orders','o',$q->expr()->eq('o.id','i.order_id'))->orderBy('i.invoice_date','DESC')->addOrderBy('i.id','DESC');return $q->executeQuery()->fetchAll();
  }
  private function invoice(int $id):?array{
-  $q=$this->db->getQueryBuilder();$q->select('i.*','c.name AS customer_name','p.project_no','p.title AS project_title','o.order_no')->from('re_erp_invoices','i')->leftJoin('i','re_erp_customers','c',$q->expr()->eq('c.id','i.customer_id'))->leftJoin('i','re_erp_projects','p',$q->expr()->eq('p.id','i.project_id'))->leftJoin('i','re_erp_orders','o',$q->expr()->eq('o.id','i.order_id'))->where($q->expr()->eq('i.id',$q->createNamedParameter($id)));$r=$q->executeQuery()->fetchAssociative();return $r?:null;
+  $q=$this->db->getQueryBuilder();$q->select('i.*','c.name AS customer_name','p.project_no','p.title AS project_title','o.order_no')->from('re_erp_invoices','i')->leftJoin('i','re_erp_customers','c',$q->expr()->eq('c.id','i.customer_id'))->leftJoin('i','re_erp_projects','p',$q->expr()->eq('p.id','i.project_id'))->leftJoin('i','re_erp_orders','o',$q->expr()->eq('o.id','i.order_id'))->where($q->expr()->eq('i.id',$q->createNamedParameter($id)));$r=$q->executeQuery()->fetch();return $r?:null;
  }
  private function invoiceCompany(array $invoice):array{
   $snapshot=trim((string)($invoice['company_snapshot']??''));if($snapshot!==''){$data=json_decode($snapshot,true);if(is_array($data))return $data;}return $this->companyData();
@@ -614,8 +614,8 @@ final class BusinessController extends Controller {
  private function invoiceCustomer(array $invoice):array{
   $snapshot=trim((string)($invoice['customer_snapshot']??''));if($snapshot!==''){$data=json_decode($snapshot,true);if(is_array($data))return $data;}return $this->one('re_erp_customers',(int)$invoice['customer_id'])??[];
  }
- private function ordersRows():array{$q=$this->db->getQueryBuilder();$q->select('o.*','c.name AS customer_name','p.project_no')->from('re_erp_orders','o')->leftJoin('o','re_erp_customers','c',$q->expr()->eq('c.id','o.customer_id'))->leftJoin('o','re_erp_projects','p',$q->expr()->eq('p.id','o.project_id'))->orderBy('o.order_date','DESC');return $q->executeQuery()->fetchAllAssociative();}
- private function order(int $id):?array{$q=$this->db->getQueryBuilder();$q->select('o.*','c.name AS customer_name','p.project_no','p.title AS project_title')->from('re_erp_orders','o')->leftJoin('o','re_erp_customers','c',$q->expr()->eq('c.id','o.customer_id'))->leftJoin('o','re_erp_projects','p',$q->expr()->eq('p.id','o.project_id'))->where($q->expr()->eq('o.id',$q->createNamedParameter($id)));$r=$q->executeQuery()->fetchAssociative();if(!$r)return null;return $r;}
+ private function ordersRows():array{$q=$this->db->getQueryBuilder();$q->select('o.*','c.name AS customer_name','p.project_no')->from('re_erp_orders','o')->leftJoin('o','re_erp_customers','c',$q->expr()->eq('c.id','o.customer_id'))->leftJoin('o','re_erp_projects','p',$q->expr()->eq('p.id','o.project_id'))->orderBy('o.order_date','DESC');return $q->executeQuery()->fetchAll();}
+ private function order(int $id):?array{$q=$this->db->getQueryBuilder();$q->select('o.*','c.name AS customer_name','p.project_no','p.title AS project_title')->from('re_erp_orders','o')->leftJoin('o','re_erp_customers','c',$q->expr()->eq('c.id','o.customer_id'))->leftJoin('o','re_erp_projects','p',$q->expr()->eq('p.id','o.project_id'))->where($q->expr()->eq('o.id',$q->createNamedParameter($id)));$r=$q->executeQuery()->fetch();if(!$r)return null;return $r;}
  private function projectNotes(int $projectId):array{
   $q=$this->db->getQueryBuilder();
   $q->select('*')
@@ -623,7 +623,7 @@ final class BusinessController extends Controller {
    ->where($q->expr()->eq('project_id',$q->createNamedParameter($projectId)))
    ->orderBy('created_at','DESC')
    ->addOrderBy('id','DESC');
-  return $q->executeQuery()->fetchAllAssociative();
+  return $q->executeQuery()->fetchAll();
  }
 
  private function orderNotes(int $orderId):array{
@@ -633,13 +633,13 @@ final class BusinessController extends Controller {
 		->where($q->expr()->eq('order_id',$q->createNamedParameter($orderId)))
 		->orderBy('created_at','DESC')
 		->addOrderBy('id','DESC');
-	return $q->executeQuery()->fetchAllAssociative();
+	return $q->executeQuery()->fetchAll();
 }
- private function materialsWithMeta():array{$q=$this->db->getQueryBuilder();$q->select('m.*','g.name AS group_name','s.name AS supplier_name')->from('re_erp_materials','m')->leftJoin('m','re_erp_material_groups','g',$q->expr()->eq('g.id','m.material_group_id'))->leftJoin('m','re_erp_suppliers','s',$q->expr()->eq('s.id','m.supplier_id'))->orderBy('m.name','ASC');return $q->executeQuery()->fetchAllAssociative();}
- private function stockRows():array{$q=$this->db->getQueryBuilder();$q->select('s.*','m.article_no','m.name AS material_name','m.unit','p.project_no')->from('re_erp_stock_movements','s')->leftJoin('s','re_erp_materials','m',$q->expr()->eq('m.id','s.material_id'))->leftJoin('s','re_erp_projects','p',$q->expr()->eq('p.id','s.project_id'))->orderBy('s.created_at','DESC')->setMaxResults(100);return $q->executeQuery()->fetchAllAssociative();}
- private function activeTimer(string $uid):?array{$q=$this->db->getQueryBuilder();$q->select('t.*','p.project_no','p.title')->from('re_erp_time_timers','t')->leftJoin('t','re_erp_projects','p',$q->expr()->eq('p.id','t.project_id'))->where($q->expr()->eq('t.user_id',$q->createNamedParameter($uid)))->andWhere($q->expr()->in('t.status',[$q->createNamedParameter('running'),$q->createNamedParameter('paused')]))->orderBy('t.id','DESC')->setMaxResults(1);$r=$q->executeQuery()->fetchAssociative();return $r?:null;}
+ private function materialsWithMeta():array{$q=$this->db->getQueryBuilder();$q->select('m.*','g.name AS group_name','s.name AS supplier_name')->from('re_erp_materials','m')->leftJoin('m','re_erp_material_groups','g',$q->expr()->eq('g.id','m.material_group_id'))->leftJoin('m','re_erp_suppliers','s',$q->expr()->eq('s.id','m.supplier_id'))->orderBy('m.name','ASC');return $q->executeQuery()->fetchAll();}
+ private function stockRows():array{$q=$this->db->getQueryBuilder();$q->select('s.*','m.article_no','m.name AS material_name','m.unit','p.project_no')->from('re_erp_stock_movements','s')->leftJoin('s','re_erp_materials','m',$q->expr()->eq('m.id','s.material_id'))->leftJoin('s','re_erp_projects','p',$q->expr()->eq('p.id','s.project_id'))->orderBy('s.created_at','DESC')->setMaxResults(100);return $q->executeQuery()->fetchAll();}
+ private function activeTimer(string $uid):?array{$q=$this->db->getQueryBuilder();$q->select('t.*','p.project_no','p.title')->from('re_erp_time_timers','t')->leftJoin('t','re_erp_projects','p',$q->expr()->eq('p.id','t.project_id'))->where($q->expr()->eq('t.user_id',$q->createNamedParameter($uid)))->andWhere($q->expr()->in('t.status',[$q->createNamedParameter('running'),$q->createNamedParameter('paused')]))->orderBy('t.id','DESC')->setMaxResults(1);$r=$q->executeQuery()->fetch();return $r?:null;}
  private function todayHours(string $uid):float{$q=$this->db->getQueryBuilder();$q->select($q->func()->sum('e.hours','s'))->from('re_erp_workday_entries','e')->innerJoin('e','re_erp_workdays','w',$q->expr()->eq('w.id','e.workday_id'))->where($q->expr()->eq('w.user_id',$q->createNamedParameter($uid)))->andWhere($q->expr()->eq('w.work_date',$q->createNamedParameter(date('Y-m-d'))));return (float)($q->executeQuery()->fetchOne()?:0);}
- private function recentEntries(string $uid):array{$q=$this->db->getQueryBuilder();$q->select('e.*','w.work_date','p.project_no','p.title')->from('re_erp_workday_entries','e')->innerJoin('e','re_erp_workdays','w',$q->expr()->eq('w.id','e.workday_id'))->leftJoin('e','re_erp_projects','p',$q->expr()->eq('p.id','e.project_id'))->where($q->expr()->eq('w.user_id',$q->createNamedParameter($uid)))->orderBy('w.work_date','DESC')->addOrderBy('e.id','DESC')->setMaxResults(10);return $q->executeQuery()->fetchAllAssociative();}
+ private function recentEntries(string $uid):array{$q=$this->db->getQueryBuilder();$q->select('e.*','w.work_date','p.project_no','p.title')->from('re_erp_workday_entries','e')->innerJoin('e','re_erp_workdays','w',$q->expr()->eq('w.id','e.workday_id'))->leftJoin('e','re_erp_projects','p',$q->expr()->eq('p.id','e.project_id'))->where($q->expr()->eq('w.user_id',$q->createNamedParameter($uid)))->orderBy('w.work_date','DESC')->addOrderBy('e.id','DESC')->setMaxResults(10);return $q->executeQuery()->fetchAll();}
 
  private function positionImages(int $count,array $existing=[]):array{
   $upload=$this->request->getUploadedFile('itemImages');$keep=$this->request->getParam('keepImages',[]);$out=[];
@@ -686,14 +686,56 @@ final class BusinessController extends Controller {
  private function rows(string $table,string $orderBy='id',string $direction='DESC'):array{
   $q=$this->db->getQueryBuilder();
   $q->select('*')->from($table)->orderBy($orderBy,strtoupper($direction)==='ASC'?'ASC':'DESC');
-  return $q->executeQuery()->fetchAllAssociative();
+  return $q->executeQuery()->fetchAll();
  }
  private function where(string $table,string $column,mixed $value,string $orderBy='id',string $direction='ASC'):array{
   $q=$this->db->getQueryBuilder();
   $q->select('*')->from($table)
     ->where($q->expr()->eq($column,$q->createNamedParameter($value)))
     ->orderBy($orderBy,strtoupper($direction)==='DESC'?'DESC':'ASC');
-  return $q->executeQuery()->fetchAllAssociative();
+  return $q->executeQuery()->fetchAll();
+ }
+
+ private function communications():array{
+  $q=$this->db->getQueryBuilder();
+  $q->select('c.*','cu.name AS customer_name','p.project_no','p.title AS project_title')
+    ->from('re_erp_communications','c')
+    ->leftJoin('c','re_erp_customers','cu',$q->expr()->eq('cu.id','c.customer_id'))
+    ->leftJoin('c','re_erp_projects','p',$q->expr()->eq('p.id','c.project_id'))
+    ->orderBy('c.contact_at','DESC')
+    ->addOrderBy('c.id','DESC')
+    ->setMaxResults(100);
+  return $q->executeQuery()->fetchAll();
+ }
+
+ private function dueFollowUps():array{
+  $q=$this->db->getQueryBuilder();
+  $q->select('c.*','cu.name AS customer_name','p.project_no','p.title AS project_title')
+    ->from('re_erp_communications','c')
+    ->leftJoin('c','re_erp_customers','cu',$q->expr()->eq('cu.id','c.customer_id'))
+    ->leftJoin('c','re_erp_projects','p',$q->expr()->eq('p.id','c.project_id'))
+    ->where($q->expr()->isNotNull('c.follow_up_at'))
+    ->andWhere($q->expr()->lte('c.follow_up_at',$q->createNamedParameter(date('Y-m-d H:i:s'))))
+    ->orderBy('c.follow_up_at','ASC')
+    ->addOrderBy('c.id','ASC');
+  return $q->executeQuery()->fetchAll();
+ }
+
+ private function dt(?string $value):?string{
+  $value=trim((string)$value);
+  if($value==='')return null;
+  $ts=strtotime($value);
+  if($ts===false)throw new \InvalidArgumentException('Ungültiges Datum oder ungültige Uhrzeit.');
+  return date('Y-m-d H:i:s',$ts);
+ }
+
+ private function oneBy(string $table,string $column,mixed $value):?array{
+  $q=$this->db->getQueryBuilder();
+  $q->select('*')->from($table)
+    ->where($q->expr()->eq($column,$q->createNamedParameter($value)))
+    ->setMaxResults(1);
+  $row=$q->executeQuery()->fetch();
+  return $row?:null;
  }
 
  private function one(string $table,int $id):?array{
@@ -701,7 +743,7 @@ final class BusinessController extends Controller {
   $q->select('*')->from($table)
     ->where($q->expr()->eq('id',$q->createNamedParameter($id)))
     ->setMaxResults(1);
-  $row=$q->executeQuery()->fetchAssociative();
+  $row=$q->executeQuery()->fetch();
   return $row?:null;
  }
 
@@ -712,7 +754,7 @@ final class BusinessController extends Controller {
     ->leftJoin('o','re_erp_customers','c',$q->expr()->eq('c.id','o.customer_id'))
     ->leftJoin('o','re_erp_projects','p',$q->expr()->eq('p.id','o.project_id'))
     ->orderBy('o.offer_date','DESC')->addOrderBy('o.id','DESC');
-  return $q->executeQuery()->fetchAllAssociative();
+  return $q->executeQuery()->fetchAll();
  }
 
  private function offer(int $id):?array{
@@ -723,7 +765,7 @@ final class BusinessController extends Controller {
     ->leftJoin('o','re_erp_projects','p',$q->expr()->eq('p.id','o.project_id'))
     ->where($q->expr()->eq('o.id',$q->createNamedParameter($id)))
     ->setMaxResults(1);
-  $row=$q->executeQuery()->fetchAssociative();
+  $row=$q->executeQuery()->fetch();
   return $row?:null;
  }
 
@@ -737,6 +779,6 @@ final class BusinessController extends Controller {
     ->andWhere($q->expr()->neq('status',$q->createNamedParameter('cancelled')))
     ->andWhere($q->expr()->lt('id',$q->createNamedParameter((int)($invoice['id']??PHP_INT_MAX))))
     ->orderBy('id','ASC');
-  return $q->executeQuery()->fetchAllAssociative();
+  return $q->executeQuery()->fetchAll();
  }
 }

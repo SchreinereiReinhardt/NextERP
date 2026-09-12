@@ -101,6 +101,6 @@ final class DocumentBackgroundScanService {
         return $qb->executeQuery()->fetchOne()!==false;
     }
     private function rows(string $table,string $order): array {
-        $qb=$this->db->getQueryBuilder();$qb->select('*')->from($table)->orderBy($order,'ASC');return $qb->executeQuery()->fetchAllAssociative();
+        $qb=$this->db->getQueryBuilder();$qb->select('*')->from($table)->orderBy($order,'ASC');return $qb->executeQuery()->fetchAll();
     }
 }
