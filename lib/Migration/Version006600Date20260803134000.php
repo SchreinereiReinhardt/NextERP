@@ -20,7 +20,7 @@ final class Version006600Date20260803134000 extends SimpleMigrationStep {
    $t->addColumn('last_used_at','datetime',['notnull'=>false]);
    $t->addColumn('created_at','datetime',['notnull'=>true]);
    $t->addColumn('revoked_at','datetime',['notnull'=>false]);
-   $t->setPrimaryKey(['id']);
+   $t->setPrimaryKey(['id'], 're_erp_mob_tok_pk');
    $t->addUniqueIndex(['token_hash'],'re_erp_mobile_token_hash');
    $t->addUniqueIndex(['refresh_hash'],'re_erp_mobile_refresh_hash');
    $t->addIndex(['user_id','revoked_at'],'re_erp_mobile_user_active');

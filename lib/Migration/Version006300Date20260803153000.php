@@ -38,7 +38,7 @@ final class Version006300Date20260803153000 extends SimpleMigrationStep {
             $table->addColumn('supplier_id','bigint',['notnull'=>false]);
             $table->addColumn('created_at','datetime',['notnull'=>true]);
             $table->addColumn('updated_at','datetime',['notnull'=>true]);
-            $table->setPrimaryKey(['id']);
+            $table->setPrimaryKey(['id'], 're_erp_doc_rule_pk');
             $table->addIndex(['enabled','priority'],'re_erp_rules_active');
         }
         return $schema;

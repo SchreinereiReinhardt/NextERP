@@ -25,7 +25,7 @@ final class Version020004Date20260829190000 extends SimpleMigrationStep {
    $t->addColumn('note','string',['length'=>512,'notnull'=>false]);
    $t->addColumn('created_by','string',['length'=>64,'notnull'=>true]);
    $t->addColumn('created_at','datetime',['notnull'=>true]);
-   $t->setPrimaryKey(['id']);
+   $t->setPrimaryKey(['id'], 're_erp_inv_pay_pk');
    $t->addIndex(['invoice_id','payment_date'],'re_erp_payment_invoice_date');
   }
   return $schema;

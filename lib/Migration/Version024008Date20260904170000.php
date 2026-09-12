@@ -16,7 +16,7 @@ final class Version024008Date20260904170000 extends SimpleMigrationStep {
             $table->addColumn('id', 'bigint', ['autoincrement' => true, 'notnull' => true]);
             $table->addColumn('event_id', 'bigint', ['notnull' => true]);
             $table->addColumn('user_id', 'string', ['length' => 64, 'notnull' => true]);
-            $table->setPrimaryKey(['id']);
+            $table->setPrimaryKey(['id'], 're_erp_team_usr_pk');
             $table->addUniqueIndex(['event_id', 'user_id'], 're_erp_event_user_unique');
             $table->addIndex(['user_id', 'event_id'], 're_erp_event_user_lookup');
         }

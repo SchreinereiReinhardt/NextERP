@@ -18,7 +18,7 @@ final class Version024011Date20260906083000 extends SimpleMigrationStep {
    $table->addColumn('created_by','string',['length'=>64,'notnull'=>true]);
    $table->addColumn('created_at','datetime',['notnull'=>true]);
    $table->addColumn('updated_at','datetime',['notnull'=>true]);
-   $table->setPrimaryKey(['id']);
+   $table->setPrimaryKey(['id'], 're_erp_check_pk');
    $table->addIndex(['project_id','done','id'],'re_erp_checklist_project');
    $table->addUniqueIndex(['project_id','client_id'],'re_erp_checklist_client');
   }

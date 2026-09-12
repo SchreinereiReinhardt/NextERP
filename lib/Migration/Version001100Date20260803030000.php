@@ -18,7 +18,7 @@ final class Version001100Date20260803030000 extends SimpleMigrationStep {
    $t->addColumn('valid_from','date',['notnull'=>false]);
    $t->addColumn('active','boolean',['default'=>1,'notnull'=>false]);
    $t->addColumn('created_at','datetime',['notnull'=>true]);
-   $t->setPrimaryKey(['id']);
+   $t->setPrimaryKey(['id'], 're_erp_hour_rate_pk');
    $t->addUniqueIndex(['code'],'re_erp_hourly_rate_code');
   }
   if($s->hasTable('re_erp_user_roles')){

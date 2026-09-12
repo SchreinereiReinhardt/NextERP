@@ -55,7 +55,7 @@ final class Version019914Date20260819153000 extends SimpleMigrationStep {
 				'notnull' => false,
 			]);
 
-			$table->setPrimaryKey(['id']);
+			$table->setPrimaryKey(['id'], 're_erp_ord_note_pk');
 
 			$table->addIndex(
 				['order_id', 'created_at'],

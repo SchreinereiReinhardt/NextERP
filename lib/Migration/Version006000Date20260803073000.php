@@ -29,7 +29,7 @@ final class Version006000Date20260803073000 extends SimpleMigrationStep {
    $t->addColumn('metadata_json','text',['notnull'=>false]);
    $t->addColumn('created_by','string',['length'=>64,'notnull'=>true]);
    $t->addColumn('created_at','datetime',['notnull'=>true]);
-   $t->setPrimaryKey(['id']);
+   $t->setPrimaryKey(['id'], 're_erp_proj_doc_pk');
    $t->addIndex(['project_id','document_type'],'re_erp_project_document_type');
    $t->addIndex(['customer_id','created_at'],'re_erp_proj_doc_cust');
   }

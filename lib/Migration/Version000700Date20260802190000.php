@@ -15,7 +15,7 @@ final class Version000700Date20260802190000 extends SimpleMigrationStep {
    $t->addColumn('role','string',['length'=>32,'default'=>'employee','notnull'=>true]);
    $t->addColumn('updated_by','string',['length'=>64,'notnull'=>false]);
    $t->addColumn('updated_at','datetime',['notnull'=>true]);
-   $t->setPrimaryKey(['id']);
+   $t->setPrimaryKey(['id'], 're_erp_usr_role_pk');
    $t->addUniqueIndex(['user_id'],'re_erp_user_role_unique');
   }
   return $schema;

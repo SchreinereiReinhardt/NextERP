@@ -22,7 +22,7 @@ final class Version001900Date20260802150000 extends SimpleMigrationStep {
             $table->addColumn('details', 'text', ['notnull' => false]);
             $table->addColumn('created_by', 'string', ['length' => 64, 'notnull' => true]);
             $table->addColumn('created_at', 'datetime', ['notnull' => true]);
-            $table->setPrimaryKey(['id']);
+            $table->setPrimaryKey(['id'], 're_erp_act_pk');
             $table->addIndex(['project_id', 'created_at'], 're_erp_activity_project');
             $table->addIndex(['customer_id', 'created_at'], 're_erp_activity_customer');
             $table->addIndex(['entity_type', 'entity_id'], 're_erp_activity_entity');

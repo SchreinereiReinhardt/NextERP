@@ -37,7 +37,7 @@ final class Version006101Date20260803100000 extends SimpleMigrationStep {
    $t->addColumn('created_at','datetime',['notnull'=>true]);
    $t->addColumn('assigned_at','datetime',['notnull'=>false]);
    $t->addColumn('updated_at','datetime',['notnull'=>true]);
-   $t->setPrimaryKey(['id']);
+   $t->setPrimaryKey(['id'], 're_erp_document_pk');
    $t->addIndex(['status','created_at'],'re_erp_docs_status_created');
    $t->addIndex(['document_type','document_date'],'re_erp_docs_type_date');
    $t->addIndex(['project_id','document_type'],'re_erp_docs_project_type');

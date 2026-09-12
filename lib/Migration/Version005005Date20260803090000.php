@@ -23,7 +23,7 @@ final class Version005005Date20260803090000 extends SimpleMigrationStep {
    $t->addColumn('invoice_id','bigint',['notnull'=>false]);
    $t->addColumn('created_by','string',['length'=>64,'notnull'=>true]);
    $t->addColumn('created_at','datetime',['notnull'=>true]);
-   $t->setPrimaryKey(['id']);
+   $t->setPrimaryKey(['id'], 're_erp_work_mat_pk');
    $t->addIndex(['workday_entry_id'],'re_erp_wdm_entry');
    $t->addIndex(['timer_id'],'re_erp_wdm_timer');
    $t->addIndex(['material_id'],'re_erp_wdm_material');

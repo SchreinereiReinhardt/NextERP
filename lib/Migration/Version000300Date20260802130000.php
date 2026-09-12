@@ -14,7 +14,7 @@ final class Version000300Date20260802130000 extends SimpleMigrationStep {
    $t->addColumn('sequence_key','string',['length'=>64,'notnull'=>true]);
    $t->addColumn('current_value','bigint',['default'=>0,'notnull'=>true]);
    $t->addColumn('updated_at','datetime',['notnull'=>true]);
-   $t->setPrimaryKey(['sequence_key']);
+   $t->setPrimaryKey(['sequence_key'], 're_erp_seq_pk');
   }
   if($s->hasTable('re_erp_reports')){
    $t=$s->getTable('re_erp_reports');

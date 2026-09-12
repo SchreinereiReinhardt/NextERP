@@ -21,7 +21,7 @@ final class Version000100Date20260802100000 extends SimpleMigrationStep {
    $t->addColumn('created_by','string',['length'=>64,'notnull'=>true]);
    $t->addColumn('created_at','datetime',['notnull'=>true]);
    $t->addColumn('updated_at','datetime',['notnull'=>true]);
-   $t->setPrimaryKey(['id']); $t->addIndex(['name'],'re_erp_customer_name');
+   $t->setPrimaryKey(['id'], 're_erp_customer_pk'); $t->addIndex(['name'],'re_erp_customer_name');
   }
   if(!$schema->hasTable('re_erp_projects')) {
    $t=$schema->createTable('re_erp_projects');
@@ -37,7 +37,7 @@ final class Version000100Date20260802100000 extends SimpleMigrationStep {
    $t->addColumn('created_by','string',['length'=>64,'notnull'=>true]);
    $t->addColumn('created_at','datetime',['notnull'=>true]);
    $t->addColumn('updated_at','datetime',['notnull'=>true]);
-   $t->setPrimaryKey(['id']); $t->addUniqueIndex(['project_no'],'re_erp_project_no'); $t->addIndex(['customer_id'],'re_erp_project_customer');
+   $t->setPrimaryKey(['id'], 're_erp_project_pk'); $t->addUniqueIndex(['project_no'],'re_erp_project_no'); $t->addIndex(['customer_id'],'re_erp_project_customer');
   }
   return $schema;
  }

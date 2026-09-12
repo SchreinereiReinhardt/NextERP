@@ -24,7 +24,7 @@ final class Version002400Date20260802190000 extends SimpleMigrationStep {
             $table->addColumn('is_primary', 'boolean', ['default' => 0, 'notnull' => false]);
             $table->addColumn('created_by', 'string', ['length' => 64, 'notnull' => true]);
             $table->addColumn('created_at', 'datetime', ['notnull' => true]);
-            $table->setPrimaryKey(['id']);
+            $table->setPrimaryKey(['id'], 're_erp_cust_cont_pk');
             $table->addIndex(['customer_id', 'is_primary'], 're_erp_contact_customer');
         }
 
@@ -39,7 +39,7 @@ final class Version002400Date20260802190000 extends SimpleMigrationStep {
             $table->addColumn('created_by', 'string', ['length' => 64, 'notnull' => true]);
             $table->addColumn('created_at', 'datetime', ['notnull' => true]);
             $table->addColumn('completed_at', 'datetime', ['notnull' => false]);
-            $table->setPrimaryKey(['id']);
+            $table->setPrimaryKey(['id'], 're_erp_cust_rem_pk');
             $table->addIndex(['customer_id', 'is_done', 'due_date'], 're_erp_reminder_customer_due');
         }
 

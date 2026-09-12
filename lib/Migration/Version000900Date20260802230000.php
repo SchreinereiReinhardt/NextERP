@@ -20,7 +20,7 @@ final class Version000900Date20260802230000 extends SimpleMigrationStep {
    $t->addColumn('status','string',['length'=>16,'default'=>'running','notnull'=>true]);
    $t->addColumn('created_by','string',['length'=>64,'notnull'=>true]);
    $t->addColumn('created_at','datetime',['notnull'=>true]);
-   $t->setPrimaryKey(['id']);
+   $t->setPrimaryKey(['id'], 're_erp_timer_pk');
    $t->addIndex(['status','user_id'],'re_erp_timer_status_user');
   }
   return $s;
