@@ -58,6 +58,7 @@ final class CustomerController extends Controller {
         ?string $purchaseOrderReference = null,
         ?string $costCenter = null,
         ?string $invoiceFormat = null,
+        ?string $datevDebtorAccount = null,
         ?string $saveToNextcloudContacts = null,
         ?string $addressBookKey = null,
     ): RedirectResponse {
@@ -93,6 +94,7 @@ final class CustomerController extends Controller {
         $customer->setPurchaseOrderReference($this->nullable($purchaseOrderReference));
         $customer->setCostCenter($this->nullable($costCenter));
         $customer->setInvoiceFormat(in_array($invoiceFormat, ['pdf','xrechnung','zugferd'], true) ? $invoiceFormat : 'pdf');
+        $da=preg_replace('/[^0-9]/','',(string)$datevDebtorAccount);$customer->setDatevDebtorAccount($da!==''?$da:null);
         $customer->setUpdatedAt($now);
         $customer->setFolderPath($this->folders->ensureCustomerFolder($number, $name));
 

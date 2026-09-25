@@ -41,6 +41,7 @@ $isLinked = $customer && $customer->getNcContactId();
 <div><label>Käuferreferenz / Buyer Reference</label><input name="buyerReference" value="<?php p($customer?->getBuyerReference() ?? ''); ?>"></div>
 <div><label>Standard-Bestellreferenz</label><input name="purchaseOrderReference" value="<?php p($customer?->getPurchaseOrderReference() ?? ''); ?>"></div>
 <div><label>Kostenstelle</label><input name="costCenter" value="<?php p($customer?->getCostCenter() ?? ''); ?>"></div>
+<div><label>DATEV-Debitorenkonto</label><input name="datevDebtorAccount" inputmode="numeric" value="<?php p($customer?->getDatevDebtorAccount() ?? ''); ?>" placeholder="leer = automatisch"><small class="erp-muted">Optional. Überschreibt die automatische Debitorennummer für diesen Kunden.</small></div>
 </div>
 </section>
 <label>Notizen</label><textarea name="notes" rows="4"><?php p($customer?->getNotes() ?? ''); ?></textarea>

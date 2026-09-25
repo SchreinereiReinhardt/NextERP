@@ -30,7 +30,7 @@ $groups = [
     [
         'label' => 'Verkauf', 'icon' => 'document', 'key' => 'sales',
         'items' => [
-            ['Übersicht', 'reinhardterp.business.offers', 'offers', '/offers'],
+            ['Übersicht', 'reinhardterp.business.salesOverview', 'offers', '/sales'],
             ['Angebote', 'reinhardterp.business.offers', 'offers', '/offers'],
             ['Aufträge', 'reinhardterp.business.orders', 'orders', '/orders'],
             ['Rechnungen', 'reinhardterp.business.invoices', 'invoices', '/invoices'],
@@ -67,9 +67,9 @@ $groups = [
         'label' => 'Finanzen', 'icon' => 'statistics', 'key' => 'finance',
         'items' => [
             ['Übersicht', 'reinhardterp.document.finance', 'documents', '/finance'],
-            ['Kontoauszüge', 'reinhardterp.document.finance', 'documents', '/finance?type=bank_statement'],
-            ['Kasse', 'reinhardterp.document.finance', 'documents', '/finance?type=cash'],
-            ['Steuern', 'reinhardterp.document.finance', 'documents', '/finance?type=tax'],
+            ['Kontoauszüge', 'reinhardterp.document.bankStatements', 'documents', '/finance/bank-statements'],
+            ['Kasse', 'reinhardterp.document.cashbook', 'documents', '/finance/cash'],
+            ['Steuern', 'reinhardterp.document.taxes', 'documents', '/finance/taxes'],
         ],
     ],
     [

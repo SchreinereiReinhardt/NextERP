@@ -23,6 +23,14 @@ final class BusinessController extends Controller {
  public function __construct(string $appName,IRequest $request,private IDBConnection $db,private IURLGenerator $url,private IUserSession $session,private PermissionService $permissions,private NumberService $numbers,private IConfig $config,private FolderService $folders,private PdfService $pdf,private XRechnungService $xrechnung,private MailService $mail){parent::__construct($appName,$request);}
  #[NoAdminRequired,NoCSRFRequired] public function crm():TemplateResponse{$this->permissions->assert('crm');$view=(string)$this->request->getParam('view','overview');if(!in_array($view,['overview','new','followups','history'],true)){$view='overview';}return $this->page('crm',['view'=>$view,'communications'=>$this->communications(),'customers'=>$this->rows('re_erp_customers','name'),'projects'=>$this->rows('re_erp_projects','project_no'),'dueFollowUps'=>$this->dueFollowUps(),'urlGenerator'=>$this->url]);}
  #[NoAdminRequired] public function saveCommunication(int $customerId,string $type,string $subject,?string $details=null,?int $projectId=null,?string $contactAt=null,?string $followUpAt=null):RedirectResponse{$this->permissions->assert('crm');if(trim($subject)==='')throw new \InvalidArgumentException('Betreff fehlt.');$this->insert('re_erp_communications',['customer_id'=>$customerId,'project_id'=>$projectId&&$projectId>0?$projectId:null,'type'=>$type,'subject'=>trim($subject),'details'=>$details,'contact_at'=>$this->dt($contactAt)??date('Y-m-d H:i:s'),'follow_up_at'=>$this->dt($followUpAt),'created_by'=>$this->uid(),'created_at'=>date('Y-m-d H:i:s')]);return $this->go('reinhardterp.business.crm');}
+ #[NoAdminRequired,NoCSRFRequired] public function salesOverview():TemplateResponse{
+  $this->permissions->assert('offers');
+  $offers=$this->offersRows();$orders=$this->ordersRows();$invoices=$this->invoiceRows();
+  $offerOpen=0;$offerGross=0.0;foreach($offers as $r){if(in_array((string)($r['status']??''),['draft','sent'],true)){$offerOpen++;$offerGross+=(float)($r['gross_amount']??0);}}
+  $orderOpen=0;$orderGross=0.0;foreach($orders as $r){if(!in_array((string)($r['status']??''),['completed','cancelled'],true)){$orderOpen++;$orderGross+=(float)($r['gross_amount']??0);}}
+  $invoiceOpen=0;$invoiceOpenGross=0.0;$invoicePaid=0.0;foreach($invoices as $r){$status=(string)($r['status']??'');$type=(string)($r['invoice_type']??'invoice');if($status==='cancelled'||$status==='draft'||$type==='credit')continue;if($status==='paid')$invoicePaid+=(float)($r['gross_amount']??0);else{$invoiceOpen++;$invoiceOpenGross+=(float)($r['gross_amount']??0);}}
+  return $this->page('sales_overview',['offers'=>array_slice($offers,0,5),'orders'=>array_slice($orders,0,5),'invoices'=>array_slice($invoices,0,5),'stats'=>['offerOpen'=>$offerOpen,'offerGross'=>$offerGross,'orderOpen'=>$orderOpen,'orderGross'=>$orderGross,'invoiceOpen'=>$invoiceOpen,'invoiceOpenGross'=>$invoiceOpenGross,'invoicePaid'=>$invoicePaid]]);
+ }
  #[NoAdminRequired,NoCSRFRequired] public function offers():TemplateResponse{$this->permissions->assert('offers');return $this->page('offers',['offers'=>$this->offersRows()]);}
  #[NoAdminRequired,NoCSRFRequired] public function offerForm():TemplateResponse{$this->permissions->assert('offers');return $this->page('offer_form',['offer'=>null,'items'=>[],'customers'=>$this->rows('re_erp_customers','name'),'projects'=>$this->rows('re_erp_projects','project_no')]);}
  #[NoAdminRequired,NoCSRFRequired] public function editOffer(int $id):TemplateResponse|\OCP\AppFramework\Http\NotFoundResponse{
@@ -115,7 +123,27 @@ final class BusinessController extends Controller {
 
  #[NoAdminRequired,NoCSRFRequired] public function invoices():TemplateResponse{
   $this->permissions->assert('invoices');
-  return $this->page('invoices',['invoices'=>$this->invoiceRows()]);
+  return $this->page('invoices',['invoices'=>$this->invoiceRows(),'datevSettings'=>$this->datevSettings(),'datevError'=>(string)$this->request->getParam('datev_error','')]);
+ }
+ #[NoAdminRequired,NoCSRFRequired] public function datevExport(?string $from=null,?string $to=null):DataDownloadResponse|RedirectResponse{
+  $this->permissions->assert('invoices');$settings=$this->datevSettings();$from=$from?:date('Y-m-01');$to=$to?:date('Y-m-t');
+  if(!preg_match('/^\d{4}-\d{2}-\d{2}$/',$from)||!preg_match('/^\d{4}-\d{2}-\d{2}$/',$to)||$from>$to)return $this->go('reinhardterp.business.invoices',['datev_error'=>'Ungültiger DATEV-Zeitraum.']);
+  if($settings['consultant_no']===''||$settings['client_no']==='')return $this->go('reinhardterp.business.invoices',['datev_error'=>'DATEV-Export nicht möglich: Bitte zuerst Beraternummer und Mandantennummer in den DATEV-Einstellungen hinterlegen.']);
+  if(!preg_match('/^\d{1,7}$/',(string)$settings['consultant_no'])||!preg_match('/^\d{1,5}$/',(string)$settings['client_no']))return $this->go('reinhardterp.business.invoices',['datev_error'=>'DATEV-Export nicht möglich: Beraternummer oder Mandantennummer haben kein gültiges Zahlenformat.']);
+  $accountLength=(int)$settings['account_length'];if($accountLength<4||$accountLength>8)return $this->go('reinhardterp.business.invoices',['datev_error'=>'DATEV-Export nicht möglich: Bitte die Sachkontenlänge in den DATEV-Einstellungen prüfen.']);
+  foreach(['revenue19','revenue7','revenue0'] as $accountKey){if(!preg_match('/^\d{'.$accountLength.'}$/',(string)$settings[$accountKey]))return $this->go('reinhardterp.business.invoices',['datev_error'=>'DATEV-Export nicht möglich: Die Erlöskonten müssen zur eingestellten Sachkontenlänge passen.']);}
+  $q=$this->db->getQueryBuilder();$q->select('i.*','c.name AS customer_name','c.datev_debtor_account','o.order_no')->from('re_erp_invoices','i')->leftJoin('i','re_erp_customers','c',$q->expr()->eq('c.id','i.customer_id'))->leftJoin('i','re_erp_orders','o',$q->expr()->eq('o.id','i.order_id'))->where($q->expr()->gte('i.invoice_date',$q->createNamedParameter($from)))->andWhere($q->expr()->lte('i.invoice_date',$q->createNamedParameter($to)))->andWhere($q->expr()->neq('i.status',$q->createNamedParameter('draft')))->andWhere($q->expr()->isNotNull('i.finalized_at'))->orderBy('i.invoice_date','ASC')->addOrderBy('i.id','ASC');$rows=$q->executeQuery()->fetchAll();
+  $fh=fopen('php://temp','w+');if($fh===false)throw new \RuntimeException('DATEV-Export konnte nicht erstellt werden.');$d=';';
+  $fyYear=(int)substr($from,0,4);$md=(string)$settings['fiscal_year_start'];$fyStart=sprintf('%04d%s',$fyYear,str_replace('-','',$md));if($from<substr($from,0,4).'-'.$md)$fyStart=sprintf('%04d%s',$fyYear-1,str_replace('-','',$md));
+  $created=date('YmdHis000');$header=['EXTF','700','21','Buchungsstapel','12',$created,'','RE','Betrio','', (string)$settings['consultant_no'],(string)$settings['client_no'],$fyStart,(string)$settings['account_length'],date('Ymd',strtotime($from)),date('Ymd',strtotime($to)),'Betrio Ausgangsrechnungen','','','', '', '', '', '', '', '', '', '', '', '', 'EUR'];fputcsv($fh,$header,$d,'"','\\');
+  $cols=['Umsatz (ohne Soll/Haben-Kz)','Soll/Haben-Kennzeichen','WKZ Umsatz','Kurs','Basis-Umsatz','WKZ Basis-Umsatz','Konto','Gegenkonto (ohne BU-Schlüssel)','BU-Schlüssel','Belegdatum','Belegfeld 1','Belegfeld 2','Skonto','Buchungstext','Postensperre','Diverse Adressnummer','Geschäftspartnerbank','Sachverhalt','Zinssperre','Beleglink','Beleginfo - Art 1','Beleginfo - Inhalt 1','Beleginfo - Art 2','Beleginfo - Inhalt 2','Beleginfo - Art 3','Beleginfo - Inhalt 3','Beleginfo - Art 4','Beleginfo - Inhalt 4','Beleginfo - Art 5','Beleginfo - Inhalt 5','Beleginfo - Art 6','Beleginfo - Inhalt 6','Beleginfo - Art 7','Beleginfo - Inhalt 7','Beleginfo - Art 8','Beleginfo - Inhalt 8','KOST1 - Kostenstelle','KOST2 - Kostenstelle','KOST-Menge','EU-Land u. UStID','EU-Steuersatz','Abw. Versteuerungsart','Sachverhalt L+L','Funktionsergänzung L+L','BU 49 Hauptfunktionstyp','BU 49 Hauptfunktionsnummer','BU 49 Funktionsergänzung','Zusatzinformation - Art 1','Zusatzinformation - Inhalt 1','Stück','Gewicht','Zahlweise','Forderungsart','Veranlagungsjahr','Zugeordnete Fälligkeit','Skontotyp','Auftragsnummer','Buchungstyp','USt-Schlüssel (Anzahlungen)','EU-Land (Anzahlungen)','Sachverhalt L+L (Anzahlungen)','EU-Steuersatz (Anzahlungen)','Erlöskonto (Anzahlungen)','Herkunft-Kz','Buchungs GUID','KOST-Datum','SEPA-Mandatsreferenz','Skontosperre','Gesellschaftername','Beteiligtennummer','Identifikationsnummer','Zeichnernummer','Postensperre bis','Bezeichnung SoBil-Sachverhalt','Kennzeichen SoBil-Buchung','Festschreibung','Leistungsdatum','Datum Zuord. Steuerperiode'];fputcsv($fh,$cols,$d,'"','\\');
+  foreach($rows as $r){$gross=abs((float)$r['gross_amount']);if($gross<=0)continue;$isCredit=(($r['invoice_type']??'')==='credit'||($r['status']??'')==='cancelled');$debtor=trim((string)($r['datev_debtor_account']??''));if($debtor==='')$debtor=(string)((int)$settings['debtor_base']+(int)$r['customer_id']);$vat=(float)($r['vat_rate']??0);$revenue=(string)($vat>=18.5?$settings['revenue19']:($vat>=6.5?$settings['revenue7']:$settings['revenue0']));$text=trim((string)($r['customer_name']??''))?:'Ausgangsrechnung';$row=array_fill(0,count($cols),'');$row[0]=number_format($gross,2,',','');$row[1]=$isCredit?'H':'S';$row[2]='EUR';$row[6]=$debtor;$row[7]=$revenue;$row[9]=date('dm',strtotime((string)$r['invoice_date']));$row[10]=(string)($r['invoice_no']??'');$row[13]=mb_substr('Betrio '.$text,0,60);$row[56]=(string)($r['order_no']??'');$row[75]='1';if(!empty($r['service_date'])){$row[76]=date('dmY',strtotime((string)$r['service_date']));$row[77]=$row[76];}fputcsv($fh,$row,$d,'"','\\');}
+  rewind($fh);$csv=stream_get_contents($fh);fclose($fh);if($csv===false)$csv='';
+  // DATEV-Format: Windows-1252 and CRLF line endings for a stable Windows import.
+  $csv=str_replace(["\r\n","\r"],"\n",$csv);$csv=str_replace("\n","\r\n",$csv);
+  $encoded=@iconv('UTF-8','Windows-1252//TRANSLIT',$csv);if($encoded!==false)$csv=$encoded;
+  foreach($rows as $r){if(!empty($r['id']))$this->auditInvoice((int)$r['id'],'datev_exported',['from'=>$from,'to'=>$to,'format'=>'EXTF','version'=>'700/12']);}
+  return new DataDownloadResponse($csv,'EXTF_Buchungsstapel_Betrio_'.$from.'_'.$to.'.csv','text/csv; charset=Windows-1252');
  }
  #[NoAdminRequired,NoCSRFRequired] public function invoiceForm(?int $orderId=null,?string $invoiceType=null,?string $installmentMode=null,?float $installmentPercent=null,?float $installmentAmount=null,?int $projectId=null,?int $includeTimes=0,?int $includeMaterials=0,?int $includeReports=0):TemplateResponse{
   $this->permissions->assert('invoices');
@@ -204,7 +232,7 @@ final class BusinessController extends Controller {
  #[NoAdminRequired,NoCSRFRequired] public function invoiceDetail(int $id):TemplateResponse|\OCP\AppFramework\Http\NotFoundResponse{
   $this->permissions->assert('invoices');$invoice=$this->invoice($id);if(!$invoice)return new \OCP\AppFramework\Http\NotFoundResponse();
   $company=$this->invoiceCompany($invoice);$customer=$this->invoiceCustomer($invoice);$items=$this->where('re_erp_invoice_items','invoice_id',$id,'id');
-  return $this->page('invoice_detail',['invoice'=>$invoice,'items'=>$items,'company'=>$company,'invoiceCustomer'=>$customer,'eInvoiceWarnings'=>$this->xrechnung->warnings($invoice,$customer,$items,$company),'previousInstallments'=>$this->previousInstallments($invoice),'payments'=>$this->where('re_erp_invoice_payments','invoice_id',$id,'payment_date'),'clerkName'=>trim((string)($invoice['clerk_name']??''))!==''?(string)$invoice['clerk_name']:$this->currentClerkName(),'sourceOrder'=>!empty($invoice['order_id'])?$this->order((int)$invoice['order_id']):null,'sourceOffer'=>!empty($invoice['order_id'])?$this->offerForOrder((int)$invoice['order_id']):null,'relatedInvoice'=>!empty($invoice['related_invoice_id'])?$this->invoice((int)$invoice['related_invoice_id']):null,'creditNotes'=>$this->creditNotesForInvoice($id)]);
+  return $this->page('invoice_detail',['invoice'=>$invoice,'items'=>$items,'company'=>$company,'invoiceCustomer'=>$customer,'eInvoiceWarnings'=>$this->xrechnung->warnings($invoice,$customer,$items,$company),'previousInstallments'=>$this->previousInstallments($invoice),'payments'=>$this->where('re_erp_invoice_payments','invoice_id',$id,'payment_date'),'clerkName'=>trim((string)($invoice['clerk_name']??''))!==''?(string)$invoice['clerk_name']:$this->currentClerkName(),'sourceOrder'=>!empty($invoice['order_id'])?$this->order((int)$invoice['order_id']):null,'sourceOffer'=>!empty($invoice['order_id'])?$this->offerForOrder((int)$invoice['order_id']):null,'relatedInvoice'=>!empty($invoice['related_invoice_id'])?$this->invoice((int)$invoice['related_invoice_id']):null,'creditNotes'=>$this->creditNotesForInvoice($id),'auditTrail'=>$this->invoiceAudit($id)]);
  }
  #[NoAdminRequired,NoCSRFRequired] public function invoicePrint(int $id):TemplateResponse|\OCP\AppFramework\Http\NotFoundResponse{
   $this->permissions->assert('invoices');$invoice=$this->invoice($id);if(!$invoice)return new \OCP\AppFramework\Http\NotFoundResponse();if(trim((string)($invoice['clerk_name']??''))==='')$invoice['clerk_name']=$this->currentClerkName();$logo=$this->folders->companyLogo();
@@ -253,6 +281,7 @@ final class BusinessController extends Controller {
   }
   if($attachments===[])throw new \InvalidArgumentException('Bitte mindestens PDF oder XRechnung als Anhang auswählen.');
   $this->mail->send($to,$subject,$body,$attachments,(string)($company['email']??''));
+  $this->auditInvoice($id,'email_sent',['to'=>$to,'pdf'=>$attachPdf===1,'xrechnung'=>$attachXml===1]);
   return $this->go('reinhardterp.business.invoiceDetail',['id'=>$id]);
  }
  #[NoAdminRequired] public function finalizeInvoice(int $id):RedirectResponse|\OCP\AppFramework\Http\NotFoundResponse{
@@ -274,6 +303,7 @@ final class BusinessController extends Controller {
    $customerName=trim((string)($finalCustomer['name']??''));
    $fileName=preg_replace('/[^A-Za-z0-9ÄÖÜäöüß._-]+/u','_',trim($invoiceNo.'_'.$suffix.($customerName!==''?'_'.$customerName:''))).'.pdf';
    $this->folders->write($archive,$fileName,$pdfContent);
+   $this->auditInvoice($id,'finalized',['invoice_no'=>$invoiceNo,'archive'=>$fileName],hash('sha256',$pdfContent));
   }
   return $this->go('reinhardterp.business.invoiceDetail',['id'=>$id]);
  }
@@ -284,7 +314,7 @@ final class BusinessController extends Controller {
   $data=['status'=>$status,'updated_at'=>date('Y-m-d H:i:s')];
   if($status==='paid')$data['paid_at']=date('Y-m-d H:i:s');
   if($status==='cancelled')$data['cancelled_at']=date('Y-m-d H:i:s');
-  $this->update('re_erp_invoices',$id,$data);return $this->go('reinhardterp.business.invoiceDetail',['id'=>$id]);
+  $oldStatus=(string)($invoice['status']??'');$this->update('re_erp_invoices',$id,$data);$this->auditInvoice($id,'status_changed',['from'=>$oldStatus,'to'=>$status]);return $this->go('reinhardterp.business.invoiceDetail',['id'=>$id]);
  }
  #[NoAdminRequired] public function deleteInvoice(int $id):RedirectResponse|\OCP\AppFramework\Http\NotFoundResponse{
   $this->permissions->assert('invoices');$invoice=$this->invoice($id);if(!$invoice)return new \OCP\AppFramework\Http\NotFoundResponse();
@@ -542,14 +572,17 @@ final class BusinessController extends Controller {
   $this->permissions->assert('invoices');$invoice=$this->invoice($id);if(!$invoice)return new \OCP\AppFramework\Http\NotFoundResponse();
   if((string)$invoice['status']==='draft'||(string)$invoice['status']==='cancelled')throw new \InvalidArgumentException('Für diese Rechnung kann keine Zahlung erfasst werden.');
   if($amount<=0)throw new \InvalidArgumentException('Der Zahlbetrag muss größer als 0 sein.');
-  $this->insert('re_erp_invoice_payments',['invoice_id'=>$id,'payment_date'=>$paymentDate?:date('Y-m-d'),'amount'=>$amount,'note'=>trim((string)$note)?:null,'created_by'=>$this->uid(),'created_at'=>date('Y-m-d H:i:s')]);
+  $paymentId=$this->insert('re_erp_invoice_payments',['invoice_id'=>$id,'payment_date'=>$paymentDate?:date('Y-m-d'),'amount'=>$amount,'note'=>trim((string)$note)?:null,'created_by'=>$this->uid(),'created_at'=>date('Y-m-d H:i:s')]);
+  $this->auditInvoice($id,'payment_added',['payment_id'=>$paymentId,'amount'=>round($amount,2),'payment_date'=>$paymentDate?:date('Y-m-d'),'note'=>trim((string)$note)]);
   $paid=$this->invoicePaidAmount($id);$due=$this->invoicePayableAmount($invoice);
   if($paid+0.005 >= $due)$this->update('re_erp_invoices',$id,['status'=>'paid','paid_at'=>date('Y-m-d H:i:s'),'updated_at'=>date('Y-m-d H:i:s')]);
   return $this->go('reinhardterp.business.invoiceDetail',['id'=>$id]);
  }
  #[NoAdminRequired] public function deleteInvoicePayment(int $id,int $paymentId):RedirectResponse|\OCP\AppFramework\Http\NotFoundResponse{
   $this->permissions->assert('invoices');$invoice=$this->invoice($id);if(!$invoice)return new \OCP\AppFramework\Http\NotFoundResponse();
+  $payment=$this->one('re_erp_invoice_payments',$paymentId);
   $q=$this->db->getQueryBuilder();$q->delete('re_erp_invoice_payments')->where($q->expr()->eq('id',$q->createNamedParameter($paymentId)))->andWhere($q->expr()->eq('invoice_id',$q->createNamedParameter($id)))->executeStatement();
+  if($payment && (int)($payment['invoice_id']??0)===$id)$this->auditInvoice($id,'payment_deleted',['payment_id'=>$paymentId,'amount'=>(float)($payment['amount']??0),'payment_date'=>$payment['payment_date']??null,'note'=>$payment['note']??null]);
   if((string)$invoice['status']==='paid'&&$this->invoicePaidAmount($id)+0.005<$this->invoicePayableAmount($invoice))$this->update('re_erp_invoices',$id,['status'=>'open','paid_at'=>null,'updated_at'=>date('Y-m-d H:i:s')]);
   return $this->go('reinhardterp.business.invoiceDetail',['id'=>$id]);
  }
@@ -558,6 +591,7 @@ final class BusinessController extends Controller {
   if((string)$invoice['status']!=='open')throw new \InvalidArgumentException('Mahnungen sind nur für offene Rechnungen möglich.');
   $level=min(3,(int)($invoice['reminder_level']??0)+1);
   $this->update('re_erp_invoices',$id,['reminder_level'=>$level,'last_reminder_at'=>date('Y-m-d H:i:s'),'updated_at'=>date('Y-m-d H:i:s')]);
+  $this->auditInvoice($id,'reminder_advanced',['level'=>$level]);
   return $this->go('reinhardterp.business.invoiceDetail',['id'=>$id]);
  }
  #[NoAdminRequired] public function createCreditNote(int $id):RedirectResponse|\OCP\AppFramework\Http\NotFoundResponse{
@@ -574,9 +608,17 @@ final class BusinessController extends Controller {
     'folder_path'=>null,'notes'=>'Gutschrift zu Rechnung '.$source['invoice_no'],'created_by'=>$this->uid(),'created_at'=>$now,'updated_at'=>$now
    ]);
    foreach($items as $x)$this->insert('re_erp_invoice_items',['invoice_id'=>$newId,'source_type'=>'credit','source_id'=>$id,'description'=>$x['description'],'quantity'=>-(float)$x['quantity'],'unit'=>$x['unit'],'unit_price'=>(float)$x['unit_price'],'total_price'=>-(float)$x['total_price'],'is_alternative'=>!empty($x['is_alternative'])]);
+   $this->auditInvoice($id,'credit_note_created',['credit_invoice_id'=>$newId]);
+   $this->auditInvoice($newId,'created_from_invoice',['source_invoice_id'=>$id]);
    $this->db->commit();
   }catch(\Throwable $e){$this->db->rollBack();throw $e;}
   return $this->go('reinhardterp.business.invoiceDetail',['id'=>$newId]);
+ }
+ private function auditInvoice(int $invoiceId,string $eventType,array $details=[],?string $snapshotHash=null):void{
+  $this->insert('re_erp_invoice_audit',['invoice_id'=>$invoiceId,'event_type'=>$eventType,'user_id'=>$this->uid()?:null,'event_at'=>date('Y-m-d H:i:s'),'details'=>$details!==[]?json_encode($details,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES):null,'snapshot_hash'=>$snapshotHash]);
+ }
+ private function invoiceAudit(int $invoiceId):array{
+  $q=$this->db->getQueryBuilder();$q->select('*')->from('re_erp_invoice_audit')->where($q->expr()->eq('invoice_id',$q->createNamedParameter($invoiceId)))->orderBy('event_at','DESC')->addOrderBy('id','DESC');return $q->executeQuery()->fetchAll();
  }
  private function cleanRichText(?string $value):?string{
   $value=trim((string)$value);if($value==='')return null;
@@ -601,6 +643,10 @@ final class BusinessController extends Controller {
  }
  private function invoicePayableAmount(array $invoice):float{
   $gross=(float)$invoice['gross_amount'];if(($invoice['invoice_type']??'invoice')==='final')$gross-=(float)($invoice['advance_gross_amount']??0);return max(0,round($gross,2));
+ }
+ private function datevSettings():array{
+  $skr=$this->config->getAppValue($this->appName,'datev_skr','03');if(!in_array($skr,['03','04'],true))$skr='03';
+  return ['skr'=>$skr,'debtor_base'=>(int)$this->config->getAppValue($this->appName,'datev_debtor_base','10000'),'revenue19'=>$this->config->getAppValue($this->appName,'datev_revenue19',$skr==='04'?'4400':'8400'),'revenue7'=>$this->config->getAppValue($this->appName,'datev_revenue7',$skr==='04'?'4300':'8300'),'revenue0'=>$this->config->getAppValue($this->appName,'datev_revenue0',$skr==='04'?'4120':'8120'),'consultant_no'=>$this->config->getAppValue($this->appName,'datev_consultant_no',''),'client_no'=>$this->config->getAppValue($this->appName,'datev_client_no',''),'account_length'=>(int)$this->config->getAppValue($this->appName,'datev_account_length','4'),'fiscal_year_start'=>$this->config->getAppValue($this->appName,'datev_fiscal_year_start','01-01')];
  }
  private function invoiceRows():array{
   $q=$this->db->getQueryBuilder();$q->select('i.*','c.name AS customer_name','p.project_no','o.order_no')->from('re_erp_invoices','i')->leftJoin('i','re_erp_customers','c',$q->expr()->eq('c.id','i.customer_id'))->leftJoin('i','re_erp_projects','p',$q->expr()->eq('p.id','i.project_id'))->leftJoin('i','re_erp_orders','o',$q->expr()->eq('o.id','i.order_id'))->orderBy('i.invoice_date','DESC')->addOrderBy('i.id','DESC');return $q->executeQuery()->fetchAll();

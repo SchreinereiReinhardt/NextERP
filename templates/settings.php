@@ -139,6 +139,33 @@ require __DIR__ . '/_nav.php';
 			</section>
 
 			<section class="erp-card erp-wide">
+				<h2>DATEV</h2>
+				<p class="erp-muted">Kontierung für den Export von Ausgangsrechnungen. Bitte die Konten einmal mit dem Steuerbüro abstimmen.</p>
+				<?php if (!empty($_['datevSaved'])): ?><div class="erp-notice"><strong>✓ DATEV-Einstellungen gespeichert.</strong></div><?php endif; ?>
+				<?php if (!empty($_['datevReset'])): ?><div class="erp-notice"><strong>✓ DATEV Berater- und Mandantennummer wurden geleert.</strong></div><?php endif; ?>
+				<?php if (!empty($_['datevError'])): ?><div class="erp-notice"><strong><?php p($_['datevError']); ?></strong></div><?php endif; ?>
+				<form class="erp-settings-form" method="post" action="<?php p($url->linkToRoute('reinhardterp.module.saveDatevSettings')); ?>">
+					<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
+				<div class="erp-form-grid">
+					<div><label>Kontenrahmen</label><select name="datev_skr"><option value="03" <?php if(($_['datevSettings']['skr']??'03')==='03'):?>selected<?php endif;?>>SKR 03</option><option value="04" <?php if(($_['datevSettings']['skr']??'03')==='04'):?>selected<?php endif;?>>SKR 04</option></select></div>
+					<div><label>Debitorenbasis</label><input name="datev_debtor_base" inputmode="numeric" value="<?php p($_['datevSettings']['debtor_base']??'10000');?>"><small class="erp-muted">Kundennummer = Basis + interne Kunden-ID</small></div>
+					<div><label>DATEV Beraternummer</label><input name="datev_consultant_no" inputmode="numeric" value="<?php p($_['datevSettings']['consultant_no']??'');?>"></div>
+					<div><label>DATEV Mandantennummer</label><input name="datev_client_no" inputmode="numeric" value="<?php p($_['datevSettings']['client_no']??'');?>"></div>
+					<div><label>Sachkontenlänge</label><input name="datev_account_length" inputmode="numeric" value="<?php p($_['datevSettings']['account_length']??'4');?>" min="4" max="8"></div>
+					<div><label>Wirtschaftsjahr beginnt (MM-TT)</label><input name="datev_fiscal_year_start" value="<?php p($_['datevSettings']['fiscal_year_start']??'01-01');?>" placeholder="01-01"></div>
+					<div><label>Erlöskonto 19 %</label><input name="datev_revenue19" inputmode="numeric" value="<?php p($_['datevSettings']['revenue19']??'8400');?>"></div>
+					<div><label>Erlöskonto 7 %</label><input name="datev_revenue7" inputmode="numeric" value="<?php p($_['datevSettings']['revenue7']??'8300');?>"></div>
+					<div><label>Erlöskonto 0 %</label><input name="datev_revenue0" inputmode="numeric" value="<?php p($_['datevSettings']['revenue0']??'8120');?>"></div>
+				</div>
+				<div class="erp-actions"><button class="button primary" type="submit">DATEV-Einstellungen speichern</button></div>
+				</form>
+				<form method="post" action="<?php p($url->linkToRoute('reinhardterp.module.resetDatevSettings')); ?>" onsubmit="return confirm('DATEV Beraternummer und Mandantennummer wirklich leeren? Kontenrahmen und Sachkonten bleiben erhalten.');" style="margin-top:10px">
+					<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
+					<button class="button" type="submit">Berater- und Mandantennummer leeren</button>
+				</form>
+			</section>
+
+			<section class="erp-card erp-wide">
 				<h2>Dateiablage</h2>
 				<p>Kunden- und Projektordner werden im persönlichen Nextcloud-Dateibereich des jeweiligen Benutzers unter <code>ERP/Kunden</code> erzeugt.</p>
 				<p>Angemeldeter Benutzer: <strong class="erp-inline-strong"><?php p($_['uid']); ?></strong></p>

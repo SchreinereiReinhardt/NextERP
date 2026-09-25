@@ -29,6 +29,7 @@ final class Customer extends Entity {
     protected ?string $purchaseOrderReference = null;
     protected ?string $costCenter = null;
     protected ?string $invoiceFormat = null;
+    protected ?string $datevDebtorAccount = null;
     protected ?string $ncAddressbookKey = null;
     protected ?string $ncContactId = null;
     protected ?string $ncContactUid = null;

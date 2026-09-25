@@ -51,7 +51,7 @@ $statusLabels=['draft'=>'Entwurf','open'=>'Offen','paid'=>'Bezahlt','cancelled'=
     <div class="erp-notice"><strong>Entwurf:</strong> Noch keine endgültige Rechnungsnummer. Beim Finalisieren werden Rechnungsnummer sowie Firmen- und Kundendaten festgeschrieben.</div>
     <form method="post" action="<?php p($url->linkToRoute('reinhardterp.business.finalizeInvoice',['id'=>$i['id']]));?>"><input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']);?>"><button class="button primary">Rechnung finalisieren</button></form>
    <?php else:?>
-    <form method="post" action="<?php p($url->linkToRoute('reinhardterp.business.updateInvoiceStatus',['id'=>$i['id']]));?>"><input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']);?>"><label>Status</label><select name="status"><option value="open" <?php if($i['status']==='open'):?>selected<?php endif;?>>Offen</option><option value="paid" <?php if($i['status']==='paid'):?>selected<?php endif;?>>Bezahlt</option><option value="cancelled" <?php if($i['status']==='cancelled'):?>selected<?php endif;?>>Storniert</option></select><button class="button primary">Status speichern</button></form>
+    <form method="post" action="<?php p($url->linkToRoute('reinhardterp.business.updateInvoiceStatus',['id'=>$i['id']]));?>" onsubmit="var s=this.querySelector('select[name=status]'); if(s && s.value==='cancelled'){ return confirm('Rechnung wirklich stornieren?\n\nDie Rechnung wird als storniert gekennzeichnet und der Vorgang im Rechnungsprotokoll dokumentiert. Diese Aktion kann nicht rückgängig gemacht werden.'); } return true;"><input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']);?>"><label>Status</label><select name="status"><option value="open" <?php if($i['status']==='open'):?>selected<?php endif;?>>Offen</option><option value="paid" <?php if($i['status']==='paid'):?>selected<?php endif;?>>Bezahlt</option><option value="cancelled" <?php if($i['status']==='cancelled'):?>selected<?php endif;?>>Storniert</option></select><button class="button primary">Status speichern</button></form>
    <?php endif;?>
   </div>
  </div>
@@ -63,6 +63,20 @@ $statusLabels=['draft'=>'Entwurf','open'=>'Offen','paid'=>'Bezahlt','cancelled'=
   <div class="erp-card"><h2>Mahnwesen</h2><p>Aktuelle Mahnstufe: <strong><?php p((int)($i['reminder_level']??0));?></strong><?php if(!empty($i['last_reminder_at'])):?> · zuletzt <?php p(date('d.m.Y',strtotime($i['last_reminder_at'])));?><?php endif;?></p>
   <?php if($i['status']==='open' && $remaining>0.005 && (int)($i['reminder_level']??0)<3):?><form method="post" action="<?php p($url->linkToRoute('reinhardterp.business.advanceReminder',['id'=>$i['id']]));?>"><input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']);?>"><button class="button">Mahnstufe <?php p((int)($i['reminder_level']??0)+1);?> setzen</button></form><?php elseif($remaining<=0.005):?><p class="erp-muted">Vollständig bezahlt – keine Mahnung erforderlich.</p><?php endif;?></div>
  </div><?php endif;?>
+<?php if(($i['status']??'draft')!=='draft'): ?>
+<section class="erp-card">
+ <h2>Rechnungsprotokoll</h2>
+ <p class="erp-muted">Nachvollziehbare Ereignisse ab Betrio 2.4.26. Bereits vor dem Update erfolgte Vorgänge werden nicht rückwirkend erzeugt.</p>
+ <?php $auditLabels=['finalized'=>'Rechnung festgeschrieben','status_changed'=>'Status geändert','payment_added'=>'Zahlung gebucht','payment_deleted'=>'Zahlung entfernt','reminder_advanced'=>'Mahnstufe geändert','email_sent'=>'Rechnung per E-Mail versendet','credit_note_created'=>'Gutschrift erstellt','created_from_invoice'=>'Aus Rechnung erzeugt']; ?>
+ <?php if(empty($_['auditTrail'])):?><p class="erp-muted">Noch keine protokollierten Ereignisse.</p><?php else:?>
+  <?php foreach($_['auditTrail'] as $a): $d=json_decode((string)($a['details']??''),true)?:[]; ?>
+   <div class="erp-list-row"><span><strong><?php p($auditLabels[$a['event_type']]??$a['event_type']);?></strong><br><span class="erp-muted"><?php p(date('d.m.Y H:i',strtotime((string)$a['event_at'])).' · '.((string)($a['user_id']??'System')));?></span><?php if(($a['event_type']??'')==='status_changed'):?><br><?php p(($d['from']??'').' → '.($d['to']??''));?><?php elseif(($a['event_type']??'')==='payment_added'||($a['event_type']??'')==='payment_deleted'):?><br><?php p(number_format((float)($d['amount']??0),2,',','.').' € · '.($d['payment_date']??''));?><?php elseif(($a['event_type']??'')==='email_sent'):?><br><?php p('An: '.($d['to']??''));?><?php endif;?></span><?php if(!empty($a['snapshot_hash'])):?><span class="erp-muted" title="SHA-256 des beim Festschreiben archivierten PDF">PDF-Prüfsumme: <?php p(substr((string)$a['snapshot_hash'],0,12));?>…</span><?php endif;?></div>
+  <?php endforeach;?>
+ <?php endif;?>
+</section>
+<?php endif;?>
+
+
 </div></div>
 
 <?php if(($i['invoice_type']??'')==='final' && !empty($_['previousInstallments'])): ?>

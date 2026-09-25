@@ -20,7 +20,7 @@ use OCP\IURLGenerator;
 final class DocumentController extends Controller {
  public function __construct(string $appName,IRequest $request,private DocumentInboxService $documents,private FolderService $folders,private PermissionService $permissions,private IDBConnection $db,private IURLGenerator $url,private DocumentRuleService $rules,private DocumentOfferImportService $offerImport,private DocumentPdfOfferExtractorService $offerExtractor){parent::__construct($appName,$request);}
  #[NoAdminRequired,NoCSRFRequired] public function index(string $status='all',string $type='all',string $q='',string $processing='all',string $year='',string $month='',?int $supplierId=null,?int $customerId=null,?int $projectId=null,string $view='overview'):TemplateResponse{$this->permissions->assert('documents');$this->documents->ensureStructure();return new TemplateResponse($this->appName,'document_inbox',['documents'=>$this->documents->rows($status,$type,$q,$processing,$year,$month,(int)$supplierId,(int)$customerId,(int)$projectId),'counts'=>$this->documents->counts(),'status'=>$status,'type'=>$type,'q'=>$q,'processing'=>$processing,'year'=>$year,'month'=>$month,'supplierId'=>(int)$supplierId,'customerId'=>(int)$customerId,'projectId'=>(int)$projectId,'view'=>$view,'suppliers'=>$this->documents->lookupRows('re_erp_suppliers','name'),'customers'=>$this->documents->lookupRows('re_erp_customers','name'),'projects'=>$this->documents->lookupRows('re_erp_projects','project_no'),'scanInfo'=>$this->documents->scanInfo(),'rules'=>$this->rules->all(),'message'=>(string)$this->request->getParam('message',''),'error'=>(string)$this->request->getParam('error','')]);}
- #[NoAdminRequired,NoCSRFRequired] public function finance(string $type='all',string $q='',string $year='',string $month='',?int $supplierId=null,?int $customerId=null,?int $projectId=null):TemplateResponse{
+ #[NoAdminRequired,NoCSRFRequired] public function finance(string $type='all',string $q='',string $year='',string $month='',?int $supplierId=null,?int $customerId=null,?int $projectId=null,string $metricPeriod='year'):TemplateResponse{
   $this->permissions->assert('documents');
   $this->documents->ensureStructure();
   $filters=['type'=>$type,'q'=>$q,'year'=>$year,'month'=>$month,'supplier_id'=>$supplierId,'customer_id'=>$customerId,'project_id'=>$projectId];
@@ -32,9 +32,71 @@ final class DocumentController extends Controller {
    'suppliers'=>$this->documents->lookupRows('re_erp_suppliers','name'),
    'customers'=>$this->documents->lookupRows('re_erp_customers','name'),
    'projects'=>$this->documents->lookupRows('re_erp_projects','project_no'),
+   'financeDashboard'=>$this->financeDashboard($metricPeriod),
+   'metricPeriod'=>$metricPeriod,
    'message'=>(string)$this->request->getParam('message',''),
    'error'=>(string)$this->request->getParam('error',''),
   ]);
+ }
+ #[NoAdminRequired,NoCSRFRequired] public function bankStatements(string $q='',string $year='',string $month=''):TemplateResponse{
+  return $this->financeSection('finance_bank_statements','bank_statement',$q,$year,$month);
+ }
+ #[NoAdminRequired,NoCSRFRequired] public function cashbook(string $q='',string $year='',string $month=''):TemplateResponse{
+  $this->permissions->assert('documents');$this->documents->ensureStructure();
+  $qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_cash_entries')->orderBy('entry_date','ASC')->addOrderBy('id','ASC');$entries=$qb->executeQuery()->fetchAll();
+  $balance=0.0;$income=0.0;$expense=0.0;foreach($entries as &$e){if(!empty($e['cancelled_at'])){$e['running_balance']=$balance;continue;}$amount=(float)$e['amount'];$type=(string)$e['entry_type'];if($type==='expense'){$balance-=$amount;$expense+=$amount;}else{$balance+=$amount;if($type==='income')$income+=$amount;}$e['running_balance']=$balance;}unset($e);
+  $entries=array_reverse($entries);
+  return new TemplateResponse($this->appName,'finance_cash',['entries'=>$entries,'balance'=>$balance,'income'=>$income,'expense'=>$expense,'count'=>count($entries),'message'=>(string)$this->request->getParam('message',''),'error'=>(string)$this->request->getParam('error','')]);
+ }
+ #[NoAdminRequired] public function cashAdd(string $entryType,float $amount,string $description,?string $entryDate=null,?float $vatRate=null,?string $category=null,?string $receiptNo=null):RedirectResponse{
+  $this->permissions->assert('documents');$entryType=in_array($entryType,['income','expense','opening'],true)?$entryType:'';if($entryType===''||$amount<=0||trim($description)==='')return new RedirectResponse($this->url->linkToRoute('reinhardterp.document.cashbook',['error'=>'Bitte Art, Betrag und Beschreibung vollständig angeben.']));
+  $date=$entryDate?:date('Y-m-d');if(!preg_match('/^\d{4}-\d{2}-\d{2}$/',$date))$date=date('Y-m-d');$vat=$vatRate===null?null:max(0,min(100,$vatRate));
+  $qb=$this->db->getQueryBuilder();$qb->insert('re_erp_cash_entries')->values(['entry_date'=>$qb->createNamedParameter($date),'entry_type'=>$qb->createNamedParameter($entryType),'amount'=>$qb->createNamedParameter(round($amount,2)),'vat_rate'=>$qb->createNamedParameter($vat),'category'=>$qb->createNamedParameter(trim((string)$category)?:null),'description'=>$qb->createNamedParameter(trim($description)),'receipt_no'=>$qb->createNamedParameter(trim((string)$receiptNo)?:null),'created_at'=>$qb->createNamedParameter(date('Y-m-d H:i:s'))])->executeStatement();
+  return new RedirectResponse($this->url->linkToRoute('reinhardterp.document.cashbook',['message'=>'Kassenbuchung gespeichert.']));
+ }
+ #[NoAdminRequired] public function cashCancel(int $id,string $reason):RedirectResponse{
+  $this->permissions->assert('documents');if(trim($reason)==='')return new RedirectResponse($this->url->linkToRoute('reinhardterp.document.cashbook',['error'=>'Für ein Storno ist ein Grund erforderlich.']));
+  $qb=$this->db->getQueryBuilder();$qb->update('re_erp_cash_entries')->set('cancelled_at',$qb->createNamedParameter(date('Y-m-d H:i:s')))->set('cancel_reason',$qb->createNamedParameter(trim($reason)))->where($qb->expr()->eq('id',$qb->createNamedParameter($id)))->andWhere($qb->expr()->isNull('cancelled_at'))->executeStatement();
+  return new RedirectResponse($this->url->linkToRoute('reinhardterp.document.cashbook',['message'=>'Kassenbuchung storniert; der ursprüngliche Eintrag bleibt nachvollziehbar erhalten.']));
+ }
+ #[NoAdminRequired,NoCSRFRequired] public function taxes(string $q='',string $year='',string $month=''):TemplateResponse{
+  $this->permissions->assert('documents');$this->documents->ensureStructure();$year=preg_match('/^\d{4}$/',$year)?$year:date('Y');$from=$year.'-01-01';$to=$year.'-12-31';if(preg_match('/^(0[1-9]|1[0-2])$/',$month)){$from=$year.'-'.$month.'-01';$to=date('Y-m-t',strtotime($from));}
+  $qb=$this->db->getQueryBuilder();$qb->select('invoice_type','status','net_amount','gross_amount','vat_rate','finalized_at')->from('re_erp_invoices')->where($qb->expr()->gte('invoice_date',$qb->createNamedParameter($from)))->andWhere($qb->expr()->lte('invoice_date',$qb->createNamedParameter($to)))->andWhere($qb->expr()->isNotNull('finalized_at'));$rows=$qb->executeQuery()->fetchAll();
+  $tax=['net'=>0.0,'gross'=>0.0,'vat'=>0.0,'rates'=>['19'=>0.0,'7'=>0.0,'0'=>0.0],'count'=>0];foreach($rows as $r){if(($r['status']??'')==='cancelled')continue;$sign=(($r['invoice_type']??'')==='credit')?-1:1;$net=$sign*(float)$r['net_amount'];$gross=$sign*(float)$r['gross_amount'];$vat=$gross-$net;$tax['net']+=$net;$tax['gross']+=$gross;$tax['vat']+=$vat;$rate=(float)($r['vat_rate']??0);$key=$rate>=18.5?'19':($rate>=6.5?'7':'0');$tax['rates'][$key]+=$vat;$tax['count']++;}
+  $filters=['type'=>'tax','q'=>$q,'year'=>$year,'month'=>$month];$docs=$this->documents->financeRows($filters);return new TemplateResponse($this->appName,'finance_taxes',['documents'=>$docs,'count'=>count($docs),'tax'=>$tax,'year'=>$year,'month'=>$month,'from'=>$from,'to'=>$to,'message'=>(string)$this->request->getParam('message',''),'error'=>(string)$this->request->getParam('error','')]);
+ }
+ private function financeSection(string $template,string $type,string $q,string $year,string $month):TemplateResponse{
+  $this->permissions->assert('documents');
+  $this->documents->ensureStructure();
+  $filters=['type'=>$type,'q'=>$q,'year'=>$year,'month'=>$month];
+  $rows=$this->documents->financeRows($filters);
+  return new TemplateResponse($this->appName,$template,[
+   'documents'=>$rows,'count'=>count($rows),'q'=>$q,'year'=>$year,'month'=>$month,
+   'message'=>(string)$this->request->getParam('message',''),'error'=>(string)$this->request->getParam('error',''),
+  ]);
+ }
+ private function financeDashboard(string $period):array{
+  $allowed=['month','quarter','year','previous_year'];if(!in_array($period,$allowed,true))$period='year';
+  $today=new \DateTimeImmutable('today');
+  if($period==='month'){$start=$today->modify('first day of this month');$end=$today->modify('last day of this month');$label=$start->format('m/Y');}
+  elseif($period==='quarter'){$m=(int)$today->format('n');$qm=(int)(floor(($m-1)/3)*3+1);$start=$today->setDate((int)$today->format('Y'),$qm,1);$end=$start->modify('+2 months')->modify('last day of this month');$label='Q'.(int)ceil($m/3).' '.$today->format('Y');}
+  elseif($period==='previous_year'){$y=(int)$today->format('Y')-1;$start=new \DateTimeImmutable($y.'-01-01');$end=new \DateTimeImmutable($y.'-12-31');$label=(string)$y;}
+  else{$start=new \DateTimeImmutable($today->format('Y').'-01-01');$end=new \DateTimeImmutable($today->format('Y').'-12-31');$label=$today->format('Y');}
+  $q=$this->db->getQueryBuilder();$q->select('i.id','i.invoice_no','i.customer_id','i.project_id','i.invoice_date','i.due_date','i.status','i.invoice_type','i.gross_amount','i.net_amount','i.advance_gross_amount','c.name AS customer_name','p.project_no')
+   ->from('re_erp_invoices','i')->leftJoin('i','re_erp_customers','c',$q->expr()->eq('c.id','i.customer_id'))->leftJoin('i','re_erp_projects','p',$q->expr()->eq('p.id','i.project_id'))
+   ->where($q->expr()->gte('i.invoice_date',$q->createNamedParameter($start->format('Y-m-d'))))->andWhere($q->expr()->lte('i.invoice_date',$q->createNamedParameter($end->format('Y-m-d'))))->orderBy('i.invoice_date','DESC');$invoices=$q->executeQuery()->fetchAll();
+  $paymentByInvoice=[];$paymentsTotal=0.0;$q=$this->db->getQueryBuilder();$q->select('p.invoice_id','p.amount','p.payment_date')->from('re_erp_invoice_payments','p')->where($q->expr()->gte('p.payment_date',$q->createNamedParameter($start->format('Y-m-d'))))->andWhere($q->expr()->lte('p.payment_date',$q->createNamedParameter($end->format('Y-m-d'))));foreach($q->executeQuery()->fetchAll() as $x){$paymentsTotal+=(float)$x['amount'];}
+  $ids=array_fill_keys(array_map(static fn(array $x):int=>(int)$x['id'],$invoices),true);if($ids){$q=$this->db->getQueryBuilder();$q->select('invoice_id','amount')->from('re_erp_invoice_payments');foreach($q->executeQuery()->fetchAll() as $x){$iid=(int)$x['invoice_id'];if(isset($ids[$iid]))$paymentByInvoice[$iid]=($paymentByInvoice[$iid]??0)+(float)$x['amount'];}}
+  $gross=0.0;$net=0.0;$open=0.0;$overdue=0.0;$openRows=[];$monthly=[];$customers=[];$status=['draft'=>0,'open'=>0,'partial'=>0,'paid'=>0,'overdue'=>0,'cancelled'=>0,'credit'=>0];
+  foreach($invoices as $i){$st=(string)$i['status'];$type=(string)($i['invoice_type']??'invoice');if($st==='cancelled'){$status['cancelled']++;continue;}if($st==='draft'){$status['draft']++;continue;}$amount=(float)$i['gross_amount'];$netAmount=(float)$i['net_amount'];if($type==='final')$amount-=(float)($i['advance_gross_amount']??0);$gross+=$amount;$net+=$netAmount;$month=substr((string)$i['invoice_date'],0,7);$monthly[$month]=($monthly[$month]??0)+$amount;$customer=(string)($i['customer_name']??'Ohne Kunde');$customers[$customer]=($customers[$customer]??0)+$amount;if($type==='credit')$status['credit']++;
+   $paid=(float)($paymentByInvoice[(int)$i['id']]??0);$rest=max(0,round($amount-$paid,2));$isOver=$rest>0&&!empty($i['due_date'])&&(string)$i['due_date']<$today->format('Y-m-d');if($rest<=0.009){$status['paid']++;}elseif($isOver){$status['overdue']++;$overdue+=$rest;}elseif($paid>0){$status['partial']++;}else{$status['open']++;}if($rest>0){$open+=$rest;$i['paid_amount']=$paid;$i['open_amount']=$rest;$i['days_overdue']=$isOver?max(0,(int)(new \DateTimeImmutable((string)$i['due_date']))->diff($today)->format('%a')):0;$openRows[]=$i;}
+  }
+  // Offene Forderungen sind eine Stichtagsgröße und werden deshalb unabhängig vom gewählten Umsatzzeitraum vollständig betrachtet.
+  $open=0.0;$overdue=0.0;$openRows=[];$q=$this->db->getQueryBuilder();$q->select('i.id','i.invoice_no','i.invoice_date','i.due_date','i.status','i.invoice_type','i.gross_amount','i.advance_gross_amount','c.name AS customer_name','p.project_no')->from('re_erp_invoices','i')->leftJoin('i','re_erp_customers','c',$q->expr()->eq('c.id','i.customer_id'))->leftJoin('i','re_erp_projects','p',$q->expr()->eq('p.id','i.project_id'))->where($q->expr()->neq('i.status',$q->createNamedParameter('draft')))->andWhere($q->expr()->neq('i.status',$q->createNamedParameter('cancelled')));$receivables=$q->executeQuery()->fetchAll();
+  $allIds=array_fill_keys(array_map(static fn(array $x):int=>(int)$x['id'],$receivables),true);$allPaid=[];if($allIds){$q=$this->db->getQueryBuilder();$q->select('invoice_id','amount')->from('re_erp_invoice_payments');foreach($q->executeQuery()->fetchAll() as $x){$iid=(int)$x['invoice_id'];if(isset($allIds[$iid]))$allPaid[$iid]=($allPaid[$iid]??0)+(float)$x['amount'];}}
+  foreach($receivables as $i){$amount=(float)$i['gross_amount'];if((string)($i['invoice_type']??'invoice')==='final')$amount-=(float)($i['advance_gross_amount']??0);if($amount<=0)continue;$paid=(float)($allPaid[(int)$i['id']]??0);$rest=max(0,round($amount-$paid,2));if($rest<=0.009)continue;$isOver=!empty($i['due_date'])&&(string)$i['due_date']<$today->format('Y-m-d');$open+=$rest;if($isOver)$overdue+=$rest;$i['paid_amount']=$paid;$i['open_amount']=$rest;$i['days_overdue']=$isOver?max(0,(int)(new \DateTimeImmutable((string)$i['due_date']))->diff($today)->format('%a')):0;$openRows[]=$i;}
+  usort($openRows,static fn(array $a,array $b):int=>($b['days_overdue']<=>$a['days_overdue'])?:strcmp((string)($a['due_date']??'9999'),(string)($b['due_date']??'9999')));$openRows=array_slice($openRows,0,12);arsort($customers);$top=[];foreach(array_slice($customers,0,5,true) as $name=>$value)$top[]=['name'=>$name,'amount'=>$value];ksort($monthly);
+  return ['period'=>$period,'label'=>$label,'from'=>$start->format('d.m.Y'),'to'=>$end->format('d.m.Y'),'gross'=>round($gross,2),'net'=>round($net,2),'payments'=>round($paymentsTotal,2),'open'=>round($open,2),'overdue'=>round($overdue,2),'invoices'=>count($invoices),'status'=>$status,'openRows'=>$openRows,'monthly'=>$monthly,'topCustomers'=>$top];
  }
  #[NoAdminRequired,NoCSRFRequired] public function financeExport(string $type='all',string $q='',string $year='',string $month='',?int $supplierId=null,?int $customerId=null,?int $projectId=null):DataDisplayResponse{
   $this->permissions->assert('documents');

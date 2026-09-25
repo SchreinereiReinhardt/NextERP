@@ -1,3 +1,13 @@
+## 2.4.33 – Finanzen 2.0
+
+- Finanz-Dashboard mit Fakturierung, Zahlungseingängen, offenen und überfälligen Forderungen.
+- Zeitraumwahl für Monat, Quartal, aktuelles Jahr und Vorjahr.
+- Umsatzentwicklung nach Monat und Rechnungsstatus-Auswertung.
+- Offene-Posten-Liste mit Teilzahlungen, Fälligkeit und Überfälligkeit.
+- Top-Kunden im gewählten Zeitraum.
+- Zahlungseingänge werden bewusst getrennt vom fakturierten Umsatz dargestellt.
+- Bestehende Belegverwaltung, Dokumentenupload und Steuerbüro-Export bleiben erhalten.
+
 ## 2.3.13 – Projekt-Tabs
 - Projekt-Tabs Angebote, Aufträge und Rechnungen reagieren wieder korrekt.
 - Jeder Tab zeigt gezielt den zugehörigen Projektbereich.
