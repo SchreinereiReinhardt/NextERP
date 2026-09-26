@@ -23,8 +23,9 @@ use OCP\AppFramework\Http\DataDisplayResponse;
 use OCA\ReinhardtERP\Service\PermissionService;
 use OCA\ReinhardtERP\Service\ActivityService;
 use OCA\ReinhardtERP\Service\NextcloudIntegrationService;
+use OCA\ReinhardtERP\Service\CollaborativeTagService;
 final class PageController extends Controller {
- public function __construct(string $appName,IRequest $request,private CustomerMapper $customers,private ProjectMapper $projects,private IUserSession $users,private IDBConnection $db,private PermissionService $permissions,private FolderService $folders,private IURLGenerator $url,private ActivityService $activities,private NextcloudIntegrationService $integration,private IUserManager $userManager,private IConfig $config){parent::__construct($appName,$request);}
+ public function __construct(string $appName,IRequest $request,private CustomerMapper $customers,private ProjectMapper $projects,private IUserSession $users,private IDBConnection $db,private PermissionService $permissions,private FolderService $folders,private IURLGenerator $url,private ActivityService $activities,private NextcloudIntegrationService $integration,private IUserManager $userManager,private IConfig $config,private CollaborativeTagService $collaborativeTags){parent::__construct($appName,$request);}
  #[NoAdminRequired,NoCSRFRequired] public function pwaManifest():DataDisplayResponse{
   $start=$this->url->linkToRoute('reinhardterp.business.mobile').'?pwa=1&v=betrio';
   $scopeBase=$this->url->linkToRoute('reinhardterp.business.mobile');
@@ -124,6 +125,7 @@ final class PageController extends Controller {
   $times=$this->queryTimes($id);
   $owner=(string)($p['created_by']??'');if($owner==='')$owner=$this->users->getUser()?->getUID()??'';$allowedFolders=$this->permissions->projectFolders($id);
   $documents=$this->filterDocumentsByFolders($this->documentsForUser($owner,(string)($p['folder_path']??''),60,4),$p['folder_path']??'', $allowedFolders);
+  $documents=$this->collaborativeTags->enrichFiles($documents);$documentTags=$this->collaborativeTags->availableTags($documents);$selectedDocumentTag=trim((string)$this->request->getParam('documentTag',''));$documents=$this->collaborativeTags->filter($documents,$selectedDocumentTag);
   $offers=$this->queryOffersByProject($id);
   $orders=$this->queryOrdersByProject($id);
   $invoices=$this->queryInvoicesByProject($id);
@@ -134,6 +136,8 @@ final class PageController extends Controller {
    'reports'=>$reports,
    'times'=>$times,
    'documents'=>$documents,
+   'documentTags'=>$documentTags,
+   'selectedDocumentTag'=>$selectedDocumentTag,
    'documentRecords'=>$documentRecords,
    'offers'=>$offers,
    'orders'=>$orders,
@@ -151,6 +155,9 @@ final class PageController extends Controller {
    'projectMaterials'=>$this->projectMaterials($id),
    'projectNotes'=>$this->queryProjectNotes($id),
    'projectChecklist'=>$this->queryProjectChecklist($id),
+   'projectSuppliers'=>$this->queryProjectSuppliers($id),
+   'suppliers'=>$this->queryActiveSuppliers(),
+   'supplierDocuments'=>$this->querySupplierDocumentsForProject($id),
   ]);
  }
 
@@ -403,6 +410,11 @@ final class PageController extends Controller {
  private function queryInvoicesByProject(int $projectId):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_invoices')->where($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))->orderBy('invoice_date','DESC')->addOrderBy('id','DESC')->setMaxResults(30);return $qb->executeQuery()->fetchAll();}
  private function queryProjectPayments(int $projectId):array{$qb=$this->db->getQueryBuilder();$qb->select('p.*','i.invoice_no','i.invoice_type')->from('re_erp_invoice_payments','p')->innerJoin('p','re_erp_invoices','i',$qb->expr()->eq('i.id','p.invoice_id'))->where($qb->expr()->eq('i.project_id',$qb->createNamedParameter($projectId)))->orderBy('p.payment_date','DESC')->setMaxResults(50);return $qb->executeQuery()->fetchAll();}
  private function queryProjectEvents(int $projectId):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_team_events')->where($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))->andWhere($qb->expr()->eq('is_deleted',$qb->createNamedParameter(0)))->orderBy('start_at','ASC')->setMaxResults(20);return $qb->executeQuery()->fetchAll();}
+ private function queryProjectSuppliers(int $projectId):array{
+  $qb=$this->db->getQueryBuilder();$qb->select('ps.*','s.name AS supplier_name','ab.file_name AS confirmation_file','ab.file_path AS confirmation_path','ls.file_name AS delivery_file','ls.file_path AS delivery_path')->from('re_erp_project_suppliers','ps')->leftJoin('ps','re_erp_suppliers','s',$qb->expr()->eq('s.id','ps.supplier_id'))->leftJoin('ps','re_erp_documents','ab',$qb->expr()->eq('ab.id','ps.confirmation_document_id'))->leftJoin('ps','re_erp_documents','ls',$qb->expr()->eq('ls.id','ps.delivery_document_id'))->where($qb->expr()->eq('ps.project_id',$qb->createNamedParameter($projectId)))->orderBy('ps.mounting_relevant','DESC')->addOrderBy('ps.id','ASC');return $qb->executeQuery()->fetchAll();
+ }
+ private function queryActiveSuppliers():array{$qb=$this->db->getQueryBuilder();$qb->select('id','name')->from('re_erp_suppliers')->where($qb->expr()->eq('active',$qb->createNamedParameter(1)))->orderBy('name','ASC');return $qb->executeQuery()->fetchAll();}
+ private function querySupplierDocumentsForProject(int $projectId):array{$qb=$this->db->getQueryBuilder();$qb->select('id','file_name','document_type','document_no','supplier_id')->from('re_erp_documents')->where($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))->orderBy('created_at','DESC')->setMaxResults(200);return $qb->executeQuery()->fetchAll();}
  private function queryProjectDocuments(int $projectId):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_project_documents')->where($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)))->orderBy('created_at','DESC')->setMaxResults(50);return $qb->executeQuery()->fetchAll();}
  private function projectCosts(int $projectId,array $project,array $times):array{
   $hours=array_sum(array_map(static fn(array $x):float=>(float)($x['hours']??0),$times));

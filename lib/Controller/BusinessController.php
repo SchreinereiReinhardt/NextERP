@@ -137,7 +137,7 @@ final class BusinessController extends Controller {
   $fyYear=(int)substr($from,0,4);$md=(string)$settings['fiscal_year_start'];$fyStart=sprintf('%04d%s',$fyYear,str_replace('-','',$md));if($from<substr($from,0,4).'-'.$md)$fyStart=sprintf('%04d%s',$fyYear-1,str_replace('-','',$md));
   $created=date('YmdHis000');$header=['EXTF','700','21','Buchungsstapel','12',$created,'','RE','Betrio','', (string)$settings['consultant_no'],(string)$settings['client_no'],$fyStart,(string)$settings['account_length'],date('Ymd',strtotime($from)),date('Ymd',strtotime($to)),'Betrio Ausgangsrechnungen','','','', '', '', '', '', '', '', '', '', '', '', 'EUR'];fputcsv($fh,$header,$d,'"','\\');
   $cols=['Umsatz (ohne Soll/Haben-Kz)','Soll/Haben-Kennzeichen','WKZ Umsatz','Kurs','Basis-Umsatz','WKZ Basis-Umsatz','Konto','Gegenkonto (ohne BU-Schlüssel)','BU-Schlüssel','Belegdatum','Belegfeld 1','Belegfeld 2','Skonto','Buchungstext','Postensperre','Diverse Adressnummer','Geschäftspartnerbank','Sachverhalt','Zinssperre','Beleglink','Beleginfo - Art 1','Beleginfo - Inhalt 1','Beleginfo - Art 2','Beleginfo - Inhalt 2','Beleginfo - Art 3','Beleginfo - Inhalt 3','Beleginfo - Art 4','Beleginfo - Inhalt 4','Beleginfo - Art 5','Beleginfo - Inhalt 5','Beleginfo - Art 6','Beleginfo - Inhalt 6','Beleginfo - Art 7','Beleginfo - Inhalt 7','Beleginfo - Art 8','Beleginfo - Inhalt 8','KOST1 - Kostenstelle','KOST2 - Kostenstelle','KOST-Menge','EU-Land u. UStID','EU-Steuersatz','Abw. Versteuerungsart','Sachverhalt L+L','Funktionsergänzung L+L','BU 49 Hauptfunktionstyp','BU 49 Hauptfunktionsnummer','BU 49 Funktionsergänzung','Zusatzinformation - Art 1','Zusatzinformation - Inhalt 1','Stück','Gewicht','Zahlweise','Forderungsart','Veranlagungsjahr','Zugeordnete Fälligkeit','Skontotyp','Auftragsnummer','Buchungstyp','USt-Schlüssel (Anzahlungen)','EU-Land (Anzahlungen)','Sachverhalt L+L (Anzahlungen)','EU-Steuersatz (Anzahlungen)','Erlöskonto (Anzahlungen)','Herkunft-Kz','Buchungs GUID','KOST-Datum','SEPA-Mandatsreferenz','Skontosperre','Gesellschaftername','Beteiligtennummer','Identifikationsnummer','Zeichnernummer','Postensperre bis','Bezeichnung SoBil-Sachverhalt','Kennzeichen SoBil-Buchung','Festschreibung','Leistungsdatum','Datum Zuord. Steuerperiode'];fputcsv($fh,$cols,$d,'"','\\');
-  foreach($rows as $r){$gross=abs((float)$r['gross_amount']);if($gross<=0)continue;$isCredit=(($r['invoice_type']??'')==='credit'||($r['status']??'')==='cancelled');$debtor=trim((string)($r['datev_debtor_account']??''));if($debtor==='')$debtor=(string)((int)$settings['debtor_base']+(int)$r['customer_id']);$vat=(float)($r['vat_rate']??0);$revenue=(string)($vat>=18.5?$settings['revenue19']:($vat>=6.5?$settings['revenue7']:$settings['revenue0']));$text=trim((string)($r['customer_name']??''))?:'Ausgangsrechnung';$row=array_fill(0,count($cols),'');$row[0]=number_format($gross,2,',','');$row[1]=$isCredit?'H':'S';$row[2]='EUR';$row[6]=$debtor;$row[7]=$revenue;$row[9]=date('dm',strtotime((string)$r['invoice_date']));$row[10]=(string)($r['invoice_no']??'');$row[13]=mb_substr('Betrio '.$text,0,60);$row[56]=(string)($r['order_no']??'');$row[75]='1';if(!empty($r['service_date'])){$row[76]=date('dmY',strtotime((string)$r['service_date']));$row[77]=$row[76];}fputcsv($fh,$row,$d,'"','\\');}
+  foreach($rows as $r){$gross=abs((float)$r['gross_amount']);if($gross<=0)continue;$isCredit=(($r['invoice_type']??'')==='credit');$debtor=trim((string)($r['datev_debtor_account']??''));if($debtor==='')$debtor=(string)((int)$settings['debtor_base']+(int)$r['customer_id']);$vat=(float)($r['vat_rate']??0);$revenue=(string)($vat>=18.5?$settings['revenue19']:($vat>=6.5?$settings['revenue7']:$settings['revenue0']));$text=trim((string)($r['customer_name']??''))?:'Ausgangsrechnung';$row=array_fill(0,count($cols),'');$row[0]=number_format($gross,2,',','');$row[1]=$isCredit?'H':'S';$row[2]='EUR';$row[6]=$debtor;$row[7]=$revenue;$row[9]=date('dm',strtotime((string)$r['invoice_date']));$row[10]=(string)($r['invoice_no']??'');$row[13]=mb_substr('Betrio '.$text,0,60);$row[56]=(string)($r['order_no']??'');$docRef=$this->datevDocumentReference($r);if($docRef['file']!==''){$row[20]='Belegdatei';$row[21]=$docRef['file'];}$row[22]='Beleg-GUID';$row[23]=$docRef['guid'];$row[64]=$docRef['guid'];$row[75]='1';if(!empty($r['service_date'])){$row[76]=date('dmY',strtotime((string)$r['service_date']));$row[77]=$row[76];}fputcsv($fh,$row,$d,'"','\\');}
   rewind($fh);$csv=stream_get_contents($fh);fclose($fh);if($csv===false)$csv='';
   // DATEV-Format: Windows-1252 and CRLF line endings for a stable Windows import.
   $csv=str_replace(["\r\n","\r"],"\n",$csv);$csv=str_replace("\n","\r\n",$csv);
@@ -232,7 +232,7 @@ final class BusinessController extends Controller {
  #[NoAdminRequired,NoCSRFRequired] public function invoiceDetail(int $id):TemplateResponse|\OCP\AppFramework\Http\NotFoundResponse{
   $this->permissions->assert('invoices');$invoice=$this->invoice($id);if(!$invoice)return new \OCP\AppFramework\Http\NotFoundResponse();
   $company=$this->invoiceCompany($invoice);$customer=$this->invoiceCustomer($invoice);$items=$this->where('re_erp_invoice_items','invoice_id',$id,'id');
-  return $this->page('invoice_detail',['invoice'=>$invoice,'items'=>$items,'company'=>$company,'invoiceCustomer'=>$customer,'eInvoiceWarnings'=>$this->xrechnung->warnings($invoice,$customer,$items,$company),'previousInstallments'=>$this->previousInstallments($invoice),'payments'=>$this->where('re_erp_invoice_payments','invoice_id',$id,'payment_date'),'clerkName'=>trim((string)($invoice['clerk_name']??''))!==''?(string)$invoice['clerk_name']:$this->currentClerkName(),'sourceOrder'=>!empty($invoice['order_id'])?$this->order((int)$invoice['order_id']):null,'sourceOffer'=>!empty($invoice['order_id'])?$this->offerForOrder((int)$invoice['order_id']):null,'relatedInvoice'=>!empty($invoice['related_invoice_id'])?$this->invoice((int)$invoice['related_invoice_id']):null,'creditNotes'=>$this->creditNotesForInvoice($id),'auditTrail'=>$this->invoiceAudit($id)]);
+  return $this->page('invoice_detail',['invoice'=>$invoice,'items'=>$items,'company'=>$company,'invoiceCustomer'=>$customer,'eInvoiceWarnings'=>$this->xrechnung->warnings($invoice,$customer,$items,$company),'previousInstallments'=>$this->previousInstallments($invoice),'payments'=>$this->where('re_erp_invoice_payments','invoice_id',$id,'payment_date'),'clerkName'=>trim((string)($invoice['clerk_name']??''))!==''?(string)$invoice['clerk_name']:$this->currentClerkName(),'sourceOrder'=>!empty($invoice['order_id'])?$this->order((int)$invoice['order_id']):null,'sourceOffer'=>!empty($invoice['order_id'])?$this->offerForOrder((int)$invoice['order_id']):null,'relatedInvoice'=>!empty($invoice['related_invoice_id'])?$this->invoice((int)$invoice['related_invoice_id']):null,'creditNotes'=>$this->creditNotesForInvoice($id),'auditTrail'=>$this->invoiceAudit($id),'statusError'=>(string)$this->request->getParam('status_error','')]);
  }
  #[NoAdminRequired,NoCSRFRequired] public function invoicePrint(int $id):TemplateResponse|\OCP\AppFramework\Http\NotFoundResponse{
   $this->permissions->assert('invoices');$invoice=$this->invoice($id);if(!$invoice)return new \OCP\AppFramework\Http\NotFoundResponse();if(trim((string)($invoice['clerk_name']??''))==='')$invoice['clerk_name']=$this->currentClerkName();$logo=$this->folders->companyLogo();
@@ -311,10 +311,22 @@ final class BusinessController extends Controller {
   $this->permissions->assert('invoices');$invoice=$this->invoice($id);if(!$invoice)return new \OCP\AppFramework\Http\NotFoundResponse();
   if(!in_array($status,['open','paid','cancelled'],true))throw new \InvalidArgumentException('Ungültiger Rechnungsstatus.');
   if((string)$invoice['status']==='draft')throw new \InvalidArgumentException('Ein Entwurf muss zuerst finalisiert werden.');
+  $oldStatus=(string)($invoice['status']??'');
+  if($status==='cancelled'){
+   if((string)($invoice['invoice_type']??'invoice')==='credit')return $this->go('reinhardterp.business.invoiceDetail',['id'=>$id,'status_error'=>'Eine Gutschrift bzw. ein Gegenbeleg kann nicht erneut storniert werden.']);
+   // Ein Storno bleibt ein eigener, festgeschriebener Gegenbeleg. Die Ursprungsrechnung
+   // wird nur als storniert markiert und im DATEV-Export weiterhin als Originalbuchung geführt.
+   $creditId=$this->createCreditInvoiceFrom($invoice,true);
+   $this->finalizeInvoice($creditId);
+   $now=date('Y-m-d H:i:s');
+   $this->update('re_erp_invoices',$id,['status'=>'cancelled','cancelled_at'=>$now,'updated_at'=>$now]);
+   $credit=$this->invoice($creditId);
+   $this->auditInvoice($id,'cancelled_with_credit',['from'=>$oldStatus,'credit_invoice_id'=>$creditId,'credit_invoice_no'=>(string)($credit['invoice_no']??'')]);
+   return $this->go('reinhardterp.business.invoiceDetail',['id'=>$id]);
+  }
   $data=['status'=>$status,'updated_at'=>date('Y-m-d H:i:s')];
   if($status==='paid')$data['paid_at']=date('Y-m-d H:i:s');
-  if($status==='cancelled')$data['cancelled_at']=date('Y-m-d H:i:s');
-  $oldStatus=(string)($invoice['status']??'');$this->update('re_erp_invoices',$id,$data);$this->auditInvoice($id,'status_changed',['from'=>$oldStatus,'to'=>$status]);return $this->go('reinhardterp.business.invoiceDetail',['id'=>$id]);
+  $this->update('re_erp_invoices',$id,$data);$this->auditInvoice($id,'status_changed',['from'=>$oldStatus,'to'=>$status]);return $this->go('reinhardterp.business.invoiceDetail',['id'=>$id]);
  }
  #[NoAdminRequired] public function deleteInvoice(int $id):RedirectResponse|\OCP\AppFramework\Http\NotFoundResponse{
   $this->permissions->assert('invoices');$invoice=$this->invoice($id);if(!$invoice)return new \OCP\AppFramework\Http\NotFoundResponse();
@@ -598,21 +610,25 @@ final class BusinessController extends Controller {
   $this->permissions->assert('invoices');$source=$this->invoice($id);if(!$source)return new \OCP\AppFramework\Http\NotFoundResponse();
   if((string)$source['status']==='draft')throw new \InvalidArgumentException('Aus einem Entwurf kann keine Gutschrift erstellt werden.');
   if((string)($source['invoice_type']??'invoice')==='credit')throw new \InvalidArgumentException('Aus einer Gutschrift kann keine weitere Gutschrift erstellt werden.');
-  $items=$this->where('re_erp_invoice_items','invoice_id',$id,'id');$now=date('Y-m-d H:i:s');
+  $newId=$this->createCreditInvoiceFrom($source,false);
+  return $this->go('reinhardterp.business.invoiceDetail',['id'=>$newId]);
+ }
+ private function createCreditInvoiceFrom(array $source,bool $cancellation):int{
+  $id=(int)$source['id'];$items=$this->where('re_erp_invoice_items','invoice_id',$id,'id');$now=date('Y-m-d H:i:s');
   $this->db->beginTransaction();
   try{
    $newId=$this->insert('re_erp_invoices',[
     'invoice_no'=>'ENTWURF-'.date('YmdHis').'-'.substr(bin2hex(random_bytes(3)),0,6),'customer_id'=>$source['customer_id'],'project_id'=>$source['project_id']?:null,'order_id'=>$source['order_id']?:null,
     'invoice_date'=>date('Y-m-d'),'service_date'=>$source['service_date']?:null,'due_date'=>null,'status'=>'draft','invoice_type'=>'credit','related_invoice_id'=>$id,
     'net_amount'=>-(float)$source['net_amount'],'vat_rate'=>(float)$source['vat_rate'],'gross_amount'=>-(float)$source['gross_amount'],'advance_net_amount'=>0,'advance_gross_amount'=>0,
-    'folder_path'=>null,'notes'=>'Gutschrift zu Rechnung '.$source['invoice_no'],'created_by'=>$this->uid(),'created_at'=>$now,'updated_at'=>$now
+    'folder_path'=>null,'notes'=>($cancellation?'Stornobeleg zu Rechnung ':'Gutschrift zu Rechnung ').$source['invoice_no'],'created_by'=>$this->uid(),'created_at'=>$now,'updated_at'=>$now
    ]);
    foreach($items as $x)$this->insert('re_erp_invoice_items',['invoice_id'=>$newId,'source_type'=>'credit','source_id'=>$id,'description'=>$x['description'],'quantity'=>-(float)$x['quantity'],'unit'=>$x['unit'],'unit_price'=>(float)$x['unit_price'],'total_price'=>-(float)$x['total_price'],'is_alternative'=>!empty($x['is_alternative'])]);
-   $this->auditInvoice($id,'credit_note_created',['credit_invoice_id'=>$newId]);
-   $this->auditInvoice($newId,'created_from_invoice',['source_invoice_id'=>$id]);
+   $this->auditInvoice($id,$cancellation?'cancellation_credit_created':'credit_note_created',['credit_invoice_id'=>$newId]);
+   $this->auditInvoice($newId,$cancellation?'created_as_cancellation':'created_from_invoice',['source_invoice_id'=>$id]);
    $this->db->commit();
   }catch(\Throwable $e){$this->db->rollBack();throw $e;}
-  return $this->go('reinhardterp.business.invoiceDetail',['id'=>$newId]);
+  return $newId;
  }
  private function auditInvoice(int $invoiceId,string $eventType,array $details=[],?string $snapshotHash=null):void{
   $this->insert('re_erp_invoice_audit',['invoice_id'=>$invoiceId,'event_type'=>$eventType,'user_id'=>$this->uid()?:null,'event_at'=>date('Y-m-d H:i:s'),'details'=>$details!==[]?json_encode($details,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES):null,'snapshot_hash'=>$snapshotHash]);
@@ -643,6 +659,13 @@ final class BusinessController extends Controller {
  }
  private function invoicePayableAmount(array $invoice):float{
   $gross=(float)$invoice['gross_amount'];if(($invoice['invoice_type']??'invoice')==='final')$gross-=(float)($invoice['advance_gross_amount']??0);return max(0,round($gross,2));
+ }
+ private function datevDocumentReference(array $invoice):array{
+  $id=(int)($invoice['id']??0);$invoiceNo=trim((string)($invoice['invoice_no']??''));$invoiceDate=(string)($invoice['invoice_date']??'');$file='';
+  if($id>0){$q=$this->db->getQueryBuilder();$q->select('details')->from('re_erp_invoice_audit')->where($q->expr()->eq('invoice_id',$q->createNamedParameter($id)))->andWhere($q->expr()->eq('event_type',$q->createNamedParameter('finalized')))->orderBy('id','DESC')->setMaxResults(1);$details=$q->executeQuery()->fetchOne();if(is_string($details)&&$details!==''){$decoded=json_decode($details,true);if(is_array($decoded))$file=trim((string)($decoded['archive']??''));}}
+  if($file!==''&&preg_match('/^\d{4}-\d{2}-\d{2}$/',$invoiceDate)){$ts=strtotime($invoiceDate);if($ts!==false)$file='ERP/30_Finanzen/Ausgangsrechnungen/'.date('Y',$ts).'/'.date('m',$ts).'/'.$file;}
+  $seed=$this->appName.'|invoice|'.$id.'|'.$invoiceNo;$hex=hash('sha256',$seed);$guid=substr($hex,0,8).'-'.substr($hex,8,4).'-5'.substr($hex,13,3).'-'.dechex((hexdec($hex[16])&3)|8).substr($hex,17,3).'-'.substr($hex,20,12);
+  return ['file'=>$file,'guid'=>$guid];
  }
  private function datevSettings():array{
   $skr=$this->config->getAppValue($this->appName,'datev_skr','03');if(!in_array($skr,['03','04'],true))$skr='03';

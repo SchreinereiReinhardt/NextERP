@@ -39,6 +39,25 @@ final class ProjectController extends Controller {
   return new RedirectResponse($this->url->linkToRoute('reinhardterp.page.projectDetail',['id'=>$id]).'#permissions');
  }
 
+
+ #[NoAdminRequired] public function saveSupplierCockpit(int $id,?int $rowId=null,int $supplierId=0,?string $trade=null,?string $purchaseNo=null,string $confirmationStatus='open',?string $confirmationNo=null,?int $expectedWeek=null,string $receiptStatus='open',int $mountingRelevant=0,?int $confirmationDocumentId=null,?int $deliveryDocumentId=null,?string $notes=null):RedirectResponse{
+  $this->permissions->assertProjectManager();$project=$this->mapper->find($id);
+  if($supplierId<=0)throw new \InvalidArgumentException('Bitte einen Lieferanten auswählen.');
+  $q=$this->db->getQueryBuilder();$q->select('id','name')->from('re_erp_suppliers')->where($q->expr()->eq('id',$q->createNamedParameter($supplierId)));$supplier=$q->executeQuery()->fetch();if(!$supplier)throw new \InvalidArgumentException('Lieferant nicht gefunden.');
+  if(!in_array($confirmationStatus,['open','received'],true))$confirmationStatus='open';
+  if(!in_array($receiptStatus,['open','partial','complete'],true))$receiptStatus='open';
+  if($expectedWeek!==null&&($expectedWeek<1||$expectedWeek>53))$expectedWeek=null;
+  $docIds=[];foreach([$confirmationDocumentId,$deliveryDocumentId] as $docId){if($docId){$dq=$this->db->getQueryBuilder();$dq->select('id')->from('re_erp_documents')->where($dq->expr()->eq('id',$dq->createNamedParameter($docId)))->andWhere($dq->expr()->eq('project_id',$dq->createNamedParameter($id)));if(!$dq->executeQuery()->fetchOne())throw new \InvalidArgumentException('Das ausgewählte Dokument gehört nicht zu diesem Projekt.');$docIds[]=$docId;}}
+  $data=['project_id'=>$id,'supplier_id'=>$supplierId,'trade'=>$this->n($trade),'purchase_no'=>$this->n($purchaseNo),'confirmation_status'=>$confirmationStatus,'confirmation_no'=>$this->n($confirmationNo),'expected_week'=>$expectedWeek,'receipt_status'=>$receiptStatus,'mounting_relevant'=>$mountingRelevant?1:0,'confirmation_document_id'=>$confirmationDocumentId?:null,'delivery_document_id'=>$deliveryDocumentId?:null,'notes'=>$this->n($notes),'updated_at'=>date('Y-m-d H:i:s')];
+  if($rowId){$check=$this->db->getQueryBuilder();$check->select('id')->from('re_erp_project_suppliers')->where($check->expr()->eq('id',$check->createNamedParameter($rowId)))->andWhere($check->expr()->eq('project_id',$check->createNamedParameter($id)));if(!$check->executeQuery()->fetchOne())throw new \InvalidArgumentException('Lieferantenzeile nicht gefunden.');$u=$this->db->getQueryBuilder();$u->update('re_erp_project_suppliers');foreach($data as $k=>$v)$u->set($k,$u->createNamedParameter($v));$u->where($u->expr()->eq('id',$u->createNamedParameter($rowId)))->executeStatement();$action='updated';}else{$data['created_by']=$this->users->getUser()?->getUID()??'system';$data['created_at']=date('Y-m-d H:i:s');$i=$this->db->getQueryBuilder();$i->insert('re_erp_project_suppliers');foreach($data as $k=>$v)$i->setValue($k,$i->createNamedParameter($v));$i->executeStatement();$action='created';}
+  foreach($docIds as $docId){$u=$this->db->getQueryBuilder();$u->update('re_erp_documents')->set('supplier_id',$u->createNamedParameter($supplierId))->set('updated_at',$u->createNamedParameter(date('Y-m-d H:i:s')))->where($u->expr()->eq('id',$u->createNamedParameter($docId)))->executeStatement();}
+  $this->activities->record('project',$id,'supplier_'.$action,'Lieferantensteuerung geändert',(string)$supplier['name'].' · '.($data['purchase_no']??''),$project->getCustomerId(),$id);
+  return new RedirectResponse($this->url->linkToRoute('reinhardterp.page.projectDetail',['id'=>$id]).'#suppliers');
+ }
+ #[NoAdminRequired] public function deleteSupplierCockpit(int $id,int $rowId):RedirectResponse{
+  $this->permissions->assertProjectManager();$project=$this->mapper->find($id);$q=$this->db->getQueryBuilder();$q->delete('re_erp_project_suppliers')->where($q->expr()->eq('id',$q->createNamedParameter($rowId)))->andWhere($q->expr()->eq('project_id',$q->createNamedParameter($id)))->executeStatement();$this->activities->record('project',$id,'supplier_deleted','Lieferantenzeile entfernt','',$project->getCustomerId(),$id);return new RedirectResponse($this->url->linkToRoute('reinhardterp.page.projectDetail',['id'=>$id]).'#suppliers');
+ }
+
  private function d(?string $v):?\DateTime{if($v===null||trim($v)==='')return null;$d=\DateTime::createFromFormat('!Y-m-d',$v);if($d===false)throw new \InvalidArgumentException('Ungültiges Datum.');return $d;}
  private function n(?string $v):?string{if($v===null)return null;$v=trim($v);return $v===''?null:$v;}
 }

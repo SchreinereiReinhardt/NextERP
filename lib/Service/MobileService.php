@@ -24,6 +24,8 @@ final class MobileService {
   private FolderService $folders,
   private PdfService $pdf,
   private PermissionService $permissions,
+  private CollaborativeTagService $collaborativeTags,
+  private WorkingTimeService $workingTime,
  ){}
  public function status():array{return ['app'=>'betrio','appId'=>'reinhardterp','apiVersion'=>1,'serverVersion'=>$this->version(),'loginAvailable'=>true];}
  public function login(string $username,string $password,?string $deviceName=null):array{
@@ -287,6 +289,11 @@ final class MobileService {
  }
 
  public function createProjectNote(string $uid,int $projectId,array $data):array{
+  $clientId=$this->clientId($data);
+  return $this->idempotent($uid,'note',$clientId,fn()=> $this->createProjectNoteRaw($uid,$projectId,$data));
+ }
+
+ private function createProjectNoteRaw(string $uid,int $projectId,array $data):array{
   $this->assertProjectAccess($uid,$projectId);
   $content=trim((string)($data['content']??''));
   if($content==='')throw new \InvalidArgumentException('Bitte einen Notiztext eingeben.');
@@ -352,6 +359,17 @@ final class MobileService {
     $folder=$this->existingFolder($storageUid,$base);
     $files=[];
     $this->collectProjectFiles($folder,$base,0,5,$files,250);
+    $files=$this->collaborativeTags->enrichFiles($files);
+    $tagsByPath=[];
+    foreach($files as $file){
+     $filePath=trim((string)($file['file_path']??''),'/');
+     if($filePath!=='')$tagsByPath[$filePath]=array_values((array)($file['collaborativeTags']??[]));
+    }
+    foreach($documents as &$document){
+     $documentPath=trim((string)($document['file_path']??''),'/');
+     $document['collaborativeTags']=$tagsByPath[$documentPath]??[];
+    }
+    unset($document);
     foreach($files as $file){
      $path=trim((string)$file['file_path'],'/');
      if(isset($knownPaths[$path]))continue;
@@ -498,6 +516,13 @@ final class MobileService {
   $this->folders->write($folder,$name,$pdf);
  }
 
+ public function workingTimeDay(string $uid,?string $date=null):array{
+  $date=trim((string)$date);
+  if($date==='')$date=date('Y-m-d');
+  $parsed=\DateTimeImmutable::createFromFormat('!Y-m-d',$date);
+  if(!$parsed||$parsed->format('Y-m-d')!==$date)throw new \InvalidArgumentException('Datum muss YYYY-MM-DD sein.');
+  return $this->workingTime->daySummary($uid,$date);
+ }
  public function projectTimes(string $uid,int $projectId):array{
   $this->assertProjectAccess($uid,$projectId);
   $q=$this->db->getQueryBuilder();
@@ -516,6 +541,11 @@ final class MobileService {
   },$rows);
  }
  public function createReport(string $uid,array $data):array{
+  $clientId=$this->clientId($data);
+  return $this->idempotent($uid,'report',$clientId,fn()=> $this->createReportRaw($uid,$data));
+ }
+
+ private function createReportRaw(string $uid,array $data):array{
   $projectId=(int)($data['projectId']??0);$this->assertProjectAccess($uid,$projectId);$project=$this->projectRow($projectId);
   $title=trim((string)($data['title']??'Arbeitsrapport'));if($title==='')throw new \InvalidArgumentException('Titel fehlt.');
   $reportDate=(string)($data['reportDate']??date('Y-m-d'));$now=date('Y-m-d H:i:s');$no=$this->numbers->next('report');$invoiceReady=(bool)($data['invoiceReady']??false);
@@ -591,6 +621,11 @@ final class MobileService {
   return $data;
  }
  public function createTime(string $uid,array $data):array{
+  $clientId=$this->clientId($data);
+  return $this->idempotent($uid,'time',$clientId,fn()=> $this->createTimeRaw($uid,$data));
+ }
+
+ private function createTimeRaw(string $uid,array $data):array{
   $projectId=(int)($data['projectId']??0);
   $this->assertProjectAccess($uid,$projectId);
   $date=(string)($data['workDate']??date('Y-m-d'));
@@ -685,7 +720,11 @@ final class MobileService {
    'materialTotal'=>round($materialTotal,2),
   ];
  }
- public function upload(string $uid,array $file,int $projectId,string $type='document',string $category='Sonstige'):array{
+ public function upload(string $uid,array $file,int $projectId,string $type='document',string $category='Sonstige',string $clientId=''):array{
+  return $this->idempotent($uid,'upload',$this->normalizeClientId($clientId),fn()=> $this->uploadRaw($uid,$file,$projectId,$type,$category));
+ }
+
+ private function uploadRaw(string $uid,array $file,int $projectId,string $type='document',string $category='Sonstige'):array{
   $this->assertProjectAccess($uid,$projectId);
   if(($file['error']??UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_OK)throw new \InvalidArgumentException('Keine gültige Datei empfangen.');
   if((int)($file['size']??0)>100*1024*1024)throw new \InvalidArgumentException('Datei ist größer als 100 MB.');
@@ -735,9 +774,53 @@ final class MobileService {
    'category'=>$type==='photo'?$category:null,
   ];
  }
- public function sync(string $uid,array $changes):array{$results=[];foreach($changes as $change){try{$uuid=(string)($change['uuid']??'');$type=(string)($change['type']??'');$payload=(array)($change['payload']??[]);$data=match($type){'time'=>$this->createTime($uid,$payload),'report'=>$this->createReport($uid,$payload),default=>throw new \InvalidArgumentException('Unbekannter Sync-Typ: '.$type)};$results[]=['uuid'=>$uuid,'success'=>true,'data'=>$data];}catch(\Throwable $e){$results[]=['uuid'=>(string)($change['uuid']??''),'success'=>false,'error'=>$e->getMessage()];}}return ['results'=>$results,'serverTime'=>date(DATE_ATOM)];}
+ public function sync(string $uid,array $changes):array{$results=[];foreach($changes as $change){try{$uuid=$this->normalizeClientId((string)($change['uuid']??''));if($uuid==='')throw new \InvalidArgumentException('Sync-UUID fehlt.');$type=(string)($change['type']??'');$payload=(array)($change['payload']??[]);$payload['clientId']=$uuid;$data=match($type){'time'=>$this->createTime($uid,$payload),'report'=>$this->createReport($uid,$payload),'note'=>$this->createProjectNote($uid,(int)($payload['projectId']??0),$payload),default=>throw new \InvalidArgumentException('Unbekannter Sync-Typ: '.$type)};$results[]=['uuid'=>$uuid,'success'=>true,'data'=>$data];}catch(\Throwable $e){$results[]=['uuid'=>(string)($change['uuid']??''),'success'=>false,'error'=>$e->getMessage()];}}return ['results'=>$results,'serverTime'=>date(DATE_ATOM)];}
  private function issueTokens(IUser $user,?string $deviceName):array{$access=bin2hex(random_bytes(32));$refresh=bin2hex(random_bytes(48));$now=time();$qb=$this->db->getQueryBuilder();$qb->insert('re_erp_mobile_tokens')->values(['user_id'=>$qb->createNamedParameter($user->getUID()),'token_hash'=>$qb->createNamedParameter(hash('sha256',$access)),'refresh_hash'=>$qb->createNamedParameter(hash('sha256',$refresh)),'device_name'=>$qb->createNamedParameter($deviceName),'expires_at'=>$qb->createNamedParameter(date('Y-m-d H:i:s',$now+self::ACCESS_TTL)),'refresh_expires_at'=>$qb->createNamedParameter(date('Y-m-d H:i:s',$now+self::REFRESH_TTL)),'created_at'=>$qb->createNamedParameter(date('Y-m-d H:i:s',$now))])->executeStatement();return ['user'=>$this->userPayload($user),'role'=>$this->role($user->getUID()),'permissions'=>$this->permissions($user->getUID()),'accessToken'=>$access,'refreshToken'=>$refresh,'expiresIn'=>self::ACCESS_TTL,'serverVersion'=>$this->version(),'apiVersion'=>1];}
  private function revokeById(int $id):void{$q=$this->db->getQueryBuilder();$q->update('re_erp_mobile_tokens')->set('revoked_at',$q->createNamedParameter(date('Y-m-d H:i:s')))->where($q->expr()->eq('id',$q->createNamedParameter($id)))->executeStatement();}
+ private function clientId(array $data):string{return $this->normalizeClientId((string)($data['clientId']??$data['client_id']??''));}
+ private function normalizeClientId(string $clientId):string{
+  $clientId=trim($clientId);
+  if($clientId==='')return '';
+  if(strlen($clientId)>96||!preg_match('/^[A-Za-z0-9._:-]+$/',$clientId))throw new \InvalidArgumentException('clientId ist ungültig.');
+  return $clientId;
+ }
+ private function idempotent(string $uid,string $operation,string $clientId,callable $fn):array{
+  if($clientId==='')return $fn();
+  $existing=$this->syncReceipt($uid,$operation,$clientId);
+  if($existing!==null){
+   if((string)$existing['status']==='done'){
+    $decoded=json_decode((string)($existing['result_json']??''),true);
+    if(is_array($decoded)){$decoded['idempotentReplay']=true;return $decoded;}
+   }
+   throw new \RuntimeException('Dieser mobile Vorgang wird bereits verarbeitet. Bitte erneut synchronisieren.');
+  }
+  $now=date('Y-m-d H:i:s');
+  try{
+   $q=$this->db->getQueryBuilder();$q->insert('re_erp_mobile_sync_receipts')->values([
+    'user_id'=>$q->createNamedParameter($uid),'operation'=>$q->createNamedParameter($operation),'client_id'=>$q->createNamedParameter($clientId),
+    'status'=>$q->createNamedParameter('processing'),'result_json'=>$q->createNamedParameter(null),'created_at'=>$q->createNamedParameter($now),'updated_at'=>$q->createNamedParameter($now)
+   ])->executeStatement();
+  }catch(\Throwable $e){
+   $existing=$this->syncReceipt($uid,$operation,$clientId);
+   if($existing!==null&&((string)$existing['status']==='done')){
+    $decoded=json_decode((string)($existing['result_json']??''),true);if(is_array($decoded)){$decoded['idempotentReplay']=true;return $decoded;}
+   }
+   throw $e;
+  }
+  try{
+   $result=$fn();$result['clientId']=$clientId;
+   $q=$this->db->getQueryBuilder();$q->update('re_erp_mobile_sync_receipts')->set('status',$q->createNamedParameter('done'))->set('result_json',$q->createNamedParameter(json_encode($result,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)))->set('updated_at',$q->createNamedParameter(date('Y-m-d H:i:s')))->where($q->expr()->eq('user_id',$q->createNamedParameter($uid)))->andWhere($q->expr()->eq('operation',$q->createNamedParameter($operation)))->andWhere($q->expr()->eq('client_id',$q->createNamedParameter($clientId)))->executeStatement();
+   return $result;
+  }catch(\Throwable $e){
+   $q=$this->db->getQueryBuilder();$q->delete('re_erp_mobile_sync_receipts')->where($q->expr()->eq('user_id',$q->createNamedParameter($uid)))->andWhere($q->expr()->eq('operation',$q->createNamedParameter($operation)))->andWhere($q->expr()->eq('client_id',$q->createNamedParameter($clientId)))->executeStatement();
+   throw $e;
+  }
+ }
+ private function syncReceipt(string $uid,string $operation,string $clientId):?array{
+  $q=$this->db->getQueryBuilder();$q->select('*')->from('re_erp_mobile_sync_receipts')->where($q->expr()->eq('user_id',$q->createNamedParameter($uid)))->andWhere($q->expr()->eq('operation',$q->createNamedParameter($operation)))->andWhere($q->expr()->eq('client_id',$q->createNamedParameter($clientId)));
+  $row=$q->executeQuery()->fetch();return is_array($row)?$row:null;
+ }
+
  private function userPayload(IUser $u):array{return ['id'=>$u->getUID(),'displayName'=>$u->getDisplayName(),'username'=>$u->getUID()];}
  private function requiredUser(string $uid):IUser{$u=$this->users->get($uid);if(!$u instanceof IUser)throw new \RuntimeException('Benutzer nicht gefunden.');return $u;}
  private function role(string $uid):string{if($this->groups->isAdmin($uid))return 'administrator';$q=$this->db->getQueryBuilder();$q->select('role')->from('re_erp_user_roles')->where($q->expr()->eq('user_id',$q->createNamedParameter($uid)));$r=$q->executeQuery()->fetchOne();return is_string($r)&&$r!==''?$r:'employee';}
@@ -785,6 +868,7 @@ final class MobileService {
    'created_at'=>$created,
    'size'=>(int)($row['size']??0),
    'mtime'=>$mtime,
+   'collaborativeTags'=>array_values((array)($row['collaborativeTags']??[])),
   ];
  }
  private function documentTypeFromPath(string $path,string $mime):string{

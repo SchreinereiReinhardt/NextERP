@@ -166,6 +166,13 @@ require __DIR__ . '/_nav.php';
 			</section>
 
 			<section class="erp-card erp-wide">
+				<h2>GoBD / Verfahrensdokumentation</h2>
+				<p class="erp-muted">Betrio erstellt eine aktuelle, GoBD-orientierte Verfahrensdokumentation aus der installierten Version und den hinterlegten Unternehmens- und DATEV-Einstellungen. Bewahre jede Fassung zusammen mit deinen betrieblichen Ergänzungen auf.</p>
+				<div class="erp-actions"><a class="button primary" href="<?php p($url->linkToRoute('reinhardterp.module.gobdDocumentation')); ?>">Verfahrensdokumentation herunterladen</a></div>
+				<p class="erp-muted">Die Dokumentation beschreibt die technischen Betrio-Abläufe. Backup, Aufbewahrung, Zuständigkeiten und organisatorische Kontrollen müssen betrieblich ergänzt werden.</p>
+			</section>
+
+			<section class="erp-card erp-wide">
 				<h2>Dateiablage</h2>
 				<p>Kunden- und Projektordner werden im persönlichen Nextcloud-Dateibereich des jeweiligen Benutzers unter <code>ERP/Kunden</code> erzeugt.</p>
 				<p>Angemeldeter Benutzer: <strong class="erp-inline-strong"><?php p($_['uid']); ?></strong></p>

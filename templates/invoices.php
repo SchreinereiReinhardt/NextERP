@@ -51,9 +51,9 @@ $statusLabels=['draft'=>'Entwurf','open'=>'Offen','paid'=>'Bezahlt','cancelled'=
    <td class="erp-list-actions">
     <?php if(($i['status']??'')==='draft'):?>
      <form method="post" action="<?php p($url->linkToRoute('reinhardterp.business.deleteInvoice',['id'=>$i['id']]));?>" onsubmit="return confirm('Diesen Rechnungsentwurf wirklich endgültig löschen?');"><input type="hidden" name="requesttoken" value="<?php p(\OCP\Util::callRegister());?>"><button type="submit" class="button erp-action-delete">Löschen</button></form>
-    <?php elseif(($i['status']??'')!=='cancelled'):?>
-     <form method="post" action="<?php p($url->linkToRoute('reinhardterp.business.updateInvoiceStatus',['id'=>$i['id']]));?>" onsubmit="return confirm('Rechnung wirklich stornieren?\n\nDie Rechnung wird als storniert gekennzeichnet und der Vorgang im Rechnungsprotokoll dokumentiert. Diese Aktion kann nicht rückgängig gemacht werden.');"><input type="hidden" name="requesttoken" value="<?php p(\OCP\Util::callRegister());?>"><input type="hidden" name="status" value="cancelled"><button type="submit" class="button erp-action-cancel">Storno</button></form>
-    <?php else:?><span class="erp-muted">Storniert</span><?php endif;?>
+    <?php elseif(($i['status']??'')!=='cancelled' && ($i['invoice_type']??'invoice')!=='credit'):?>
+     <form method="post" action="<?php p($url->linkToRoute('reinhardterp.business.updateInvoiceStatus',['id'=>$i['id']]));?>" onsubmit="return confirm('Rechnung wirklich stornieren?\n\nBetrio erstellt automatisch einen eigenen festgeschriebenen Gegenbeleg mit eigener Rechnungsnummer. Die Ursprungsrechnung bleibt erhalten und wird als storniert markiert. Diese Aktion kann nicht rückgängig gemacht werden.');"><input type="hidden" name="requesttoken" value="<?php p(\OCP\Util::callRegister());?>"><input type="hidden" name="status" value="cancelled"><button type="submit" class="button erp-action-cancel">Storno</button></form>
+    <?php elseif(($i['invoice_type']??'invoice')==='credit'):?><span class="erp-muted">Gegenbeleg</span><?php else:?><span class="erp-muted">Storniert</span><?php endif;?>
    </td>
   </tr><?php endforeach;?>
   <?php if($_['invoices']===[]):?><tr><td colspan="9" class="erp-empty">Noch keine Rechnungen vorhanden.</td></tr><?php endif;?>
