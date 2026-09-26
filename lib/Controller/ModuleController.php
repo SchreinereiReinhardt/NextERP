@@ -132,11 +132,16 @@ final class ModuleController extends Controller {
    foreach($assignedUserIds as $uid){if(!$this->permissions->isEnabled($uid))throw new \InvalidArgumentException('Mindestens ein gewählter Mitarbeiter ist für Betrio nicht aktiv.');}
    $assignedUserId=$assignedUserIds[0]??null;
    $calendarDescription=trim((string)$description);
+   $duplicate=$this->findExistingTeamEvent($title,$start->format('Y-m-d H:i:s'),$end->format('Y-m-d H:i:s'),$location,$projectId,$customerId);
+   if($duplicate!==null){
+    $params=['success'=>'Termin ist bereits vorhanden.'];if($customerId)$params['customerId']=$customerId;if($projectId)$params['projectId']=$projectId;if($assignedUserId)$params['userId']=$assignedUserId;
+    return $this->go('reinhardterp.module.teamEvents',$params);
+   }
    $calendar=$this->integration->createCalendarEvent($title,$start->format('Y-m-d H:i:s'),$end->format('Y-m-d H:i:s'),$location,$calendarDescription!==''?$calendarDescription:null);
    $eventId=$this->insert('re_erp_team_events',[
     'title'=>$title,'start_at'=>$start->format('Y-m-d H:i:s'),'end_at'=>$end->format('Y-m-d H:i:s'),
     'location'=>$location,'description'=>$description,'customer_id'=>$customerId,'project_id'=>$projectId,'assigned_user_id'=>$assignedUserId,
-    'calendar_uri'=>$calendar['calendarKey']??null,'calendar_object_uri'=>$calendar['objectUri']??null,'calendar_uid'=>null,'sync_source'=>'erp','sync_hash'=>null,
+    'calendar_uri'=>$calendar['calendarKey']??null,'calendar_object_uri'=>$calendar['objectUri']??null,'calendar_uid'=>$calendar['uid']??null,'sync_source'=>'erp','sync_hash'=>null,
     'is_deleted'=>0,'last_synced_at'=>$calendar!==null?date('Y-m-d H:i:s'):null,'updated_at'=>date('Y-m-d H:i:s'),
     'created_by'=>$this->uid(),'created_at'=>date('Y-m-d H:i:s')
    ]);
@@ -292,6 +297,18 @@ final class ModuleController extends Controller {
   unset($row);return $rows;
  }
  private function page(string $template,string $title,array $rows,array $extra=[]):TemplateResponse{return new TemplateResponse($this->appName,$template,array_merge(['title'=>$title,'rows'=>$rows],$extra));}
+ private function findExistingTeamEvent(string $title,string $startAt,string $endAt,?string $location,?int $projectId,?int $customerId):?array{
+  $qb=$this->db->getQueryBuilder();
+  $qb->select('*')->from('re_erp_team_events')
+   ->where($qb->expr()->eq('title',$qb->createNamedParameter($title)))
+   ->andWhere($qb->expr()->eq('start_at',$qb->createNamedParameter($startAt)))
+   ->andWhere($qb->expr()->eq('end_at',$qb->createNamedParameter($endAt)))
+   ->andWhere($qb->expr()->eq('is_deleted',$qb->createNamedParameter(0)));
+  if($location===null||trim($location)==='')$qb->andWhere($qb->expr()->isNull('location'));else $qb->andWhere($qb->expr()->eq('location',$qb->createNamedParameter($location)));
+  if($projectId===null)$qb->andWhere($qb->expr()->isNull('project_id'));else $qb->andWhere($qb->expr()->eq('project_id',$qb->createNamedParameter($projectId)));
+  if($customerId===null)$qb->andWhere($qb->expr()->isNull('customer_id'));else $qb->andWhere($qb->expr()->eq('customer_id',$qb->createNamedParameter($customerId)));
+  $qb->setMaxResults(1);$row=$qb->executeQuery()->fetch();return $row?:null;
+ }
  private function teamEventRows():array{$selected=$this->integration->selectedCalendarKey();$qb=$this->db->getQueryBuilder();$qb->select('*')->from('re_erp_team_events')->where($qb->expr()->eq('is_deleted',$qb->createNamedParameter(0)));if($selected!==''){$qb->andWhere($qb->expr()->eq('calendar_uri',$qb->createNamedParameter($selected)));}$qb->andWhere($qb->expr()->gte('start_at',$qb->createNamedParameter(date('Y-m-d 00:00:00'))));$qb->orderBy('start_at','ASC')->setMaxResults(500);$rows=$qb->executeQuery()->fetchAll();foreach($rows as &$row){$uq=$this->db->getQueryBuilder();$uq->select('user_id')->from('re_erp_team_event_users')->where($uq->expr()->eq('event_id',$uq->createNamedParameter((int)$row['id'])))->orderBy('id','ASC');$ids=array_map('strval',$uq->executeQuery()->fetchAll(\PDO::FETCH_COLUMN));if($ids===[]&&!empty($row['assigned_user_id']))$ids=[(string)$row['assigned_user_id']];$row['assigned_user_ids']=$ids;}unset($row);return $rows;}
  private function accessibleProjects():array{return array_values(array_filter($this->rows('re_erp_projects','project_no'),fn(array $p):bool=>$this->permissions->canAccessProject((int)$p['id'])));}
  private function rows(string $table,string $order):array{$qb=$this->db->getQueryBuilder();$qb->select('*')->from($table)->orderBy($order,'DESC')->setMaxResults(250);return $qb->executeQuery()->fetchAll();}

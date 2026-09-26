@@ -299,7 +299,7 @@ final class NextcloudIntegrationService {
             try{$event=$this->nativeEventFromIcs((string)$row['uri'],(string)$row['calendardata'],$selectedKey);}catch(\Throwable){$event=null;}
             if($event===null)continue;
             $found[$event['calendar_object_uri']]=true;
-            $existing=$this->findTeamEvent($selectedKey,$event['calendar_object_uri']);
+            $existing=$this->findTeamEvent($selectedKey,$event['calendar_object_uri'],$event['calendar_uid']);
             $data=[
                 'title'=>$event['title'],'start_at'=>$event['start_at'],'end_at'=>$event['end_at'],
                 'location'=>$event['location'],'description'=>$event['description'],'calendar_uri'=>$selectedKey,
@@ -409,7 +409,7 @@ final class NextcloudIntegrationService {
         $start=new DateTimeImmutable($startAt);$end=$endAt!==null&&trim($endAt)!==''?new DateTimeImmutable($endAt):$start->modify('+1 hour');if($end<=$start)throw new \InvalidArgumentException('Das Terminende muss nach dem Beginn liegen.');
         $uid=bin2hex(random_bytes(16)).'@nexterp';$uri=$uid.'.ics';$ics=$this->buildIcs($uid,trim($title),$start,$end,$location,$description);
         $backend=$this->calDavBackend();$backend->createCalendarObject((int)$calendar['id'],$uri,$ics);
-        return ['calendarKey'=>$selectedKey,'calendarName'=>$this->selectedCalendarName(),'objectUri'=>$uri];
+        return ['calendarKey'=>$selectedKey,'calendarName'=>$this->selectedCalendarName(),'objectUri'=>$uri,'uid'=>$uid];
     }
 
     private function selectedCalendar(): ?object {
@@ -548,11 +548,24 @@ final class NextcloudIntegrationService {
         }
     }
 
-    private function findTeamEvent(string $calendarKey, string $objectUri): ?array {
+    private function findTeamEvent(string $calendarKey, string $objectUri, ?string $calendarUid = null): ?array {
         $qb = $this->db->getQueryBuilder();
         $qb->select('*')->from('re_erp_team_events')
             ->where($qb->expr()->eq('calendar_uri', $qb->createNamedParameter($calendarKey)))
             ->andWhere($qb->expr()->eq('calendar_object_uri', $qb->createNamedParameter($objectUri)))
+            ->setMaxResults(1);
+        $row = $qb->executeQuery()->fetch();
+        if ($row) {
+            return $row;
+        }
+        $uid = trim((string)$calendarUid);
+        if ($uid === '') {
+            return null;
+        }
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('*')->from('re_erp_team_events')
+            ->where($qb->expr()->eq('calendar_uri', $qb->createNamedParameter($calendarKey)))
+            ->andWhere($qb->expr()->eq('calendar_uid', $qb->createNamedParameter($uid)))
             ->setMaxResults(1);
         $row = $qb->executeQuery()->fetch();
         return $row ?: null;
