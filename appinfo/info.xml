@@ -96,7 +96,7 @@ XRechnung is integrated and continues to be developed and validated.
 
 Betrio does not replace tax or legal advice. Accounting and export functions should be checked against the requirements of your business and, where appropriate, coordinated with your tax adviser before productive use.
   ]]></description>
-<version>2.4.39</version>
+<version>2.4.40</version>
   <licence>AGPL-3.0-or-later</licence>
 
   <author homepage="https://www.schreinerei-reinhardt.de">André Reinhardt</author>
@@ -127,10 +127,10 @@ Betrio does not replace tax or legal advice. Accounting and export functions sho
     </navigation>
   </navigations>
 
-  <screenshot small-thumbnail="https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/v2.4.39/img/betrio01_small.png">https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/v2.4.39/img/betrio01.png</screenshot>
-  <screenshot>https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/v2.4.39/img/01-betrio-dashboard.png</screenshot>
-  <screenshot>https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/v2.4.39/img/02-betrio-projekte.png</screenshot>
-  <screenshot>https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/v2.4.39/img/03-betrio-projektdetails.png</screenshot>
-  <screenshot>https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/v2.4.39/img/04-betrio-rapporte.png</screenshot>
-  <screenshot>https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/v2.4.39/img/05-betrio-mobil.png</screenshot>
+  <screenshot small-thumbnail="https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/img/betrio01_small.png">https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/img/betrio01.png</screenshot>
+  <screenshot>https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/img/01-betrio-dashboard.png</screenshot>
+  <screenshot>https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/img/02-betrio-projekte.png</screenshot>
+  <screenshot>https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/img/03-betrio-projektdetails.png</screenshot>
+  <screenshot>https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/img/04-betrio-rapporte.png</screenshot>
+  <screenshot>https://raw.githubusercontent.com/SchreinereiReinhardt/NextERP/main/img/05-betrio-mobil.png</screenshot>
 </info>
