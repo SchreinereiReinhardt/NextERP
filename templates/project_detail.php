@@ -55,8 +55,8 @@ $abLabels=['open'=>'Offen','received'=>'Erhalten'];
     <label>AB-Nr.<input name="confirmationNo" value="<?=p($sp['confirmation_no']??'')?>"></label>
     <label>Avisierte KW<input type="number" min="1" max="53" name="expectedWeek" value="<?=p($sp['expected_week']??'')?>"></label>
     <label>Wareneingang<select name="receiptStatus"><option value="open" <?=$sp['receipt_status']==='open'?'selected':''?>>Offen</option><option value="partial" <?=$sp['receipt_status']==='partial'?'selected':''?>>Teilweise eingelagert</option><option value="complete" <?=$sp['receipt_status']==='complete'?'selected':''?>>Vollständig eingelagert</option></select></label>
-    <label>AB aus Dokumenten<select name="confirmationDocumentId"><option value="">–</option><?php foreach($supplierDocuments as $d):?><option value="<?=p($d['id'])?>" <?=(int)($sp['confirmation_document_id']??0)===(int)$d['id']?'selected':''?>><?=p(($d['document_no']?:$d['file_name']).' · '.$d['document_type'])?></option><?php endforeach;?></select></label>
-    <label>Lieferschein aus Dokumenten<select name="deliveryDocumentId"><option value="">–</option><?php foreach($supplierDocuments as $d):?><option value="<?=p($d['id'])?>" <?=(int)($sp['delivery_document_id']??0)===(int)$d['id']?'selected':''?>><?=p(($d['document_no']?:$d['file_name']).' · '.$d['document_type'])?></option><?php endforeach;?></select></label>
+    <label>AB aus Dokumenten<select name="confirmationDocumentId"><option value="">–</option><?php foreach($supplierDocuments as $d):?><option value="<?=p($d['id'])?>" <?=(int)($sp['confirmation_document_id']??0)===(int)$d['id']?'selected':''?>><?=p(($d['document_no']?:$d['file_name']).' · '.$d['document_type'])?></option><?php endforeach;?></select><small class="erp-muted">Zeigt Dokumente, die bereits diesem Projekt zugeordnet sind. <a href="<?=p($url->linkToRoute('reinhardterp.document.index',['projectId'=>$project['id']]))?>">Projekt-Dokumente öffnen</a></small></label>
+    <label>Lieferschein aus Dokumenten<select name="deliveryDocumentId"><option value="">–</option><?php foreach($supplierDocuments as $d):?><option value="<?=p($d['id'])?>" <?=(int)($sp['delivery_document_id']??0)===(int)$d['id']?'selected':''?>><?=p(($d['document_no']?:$d['file_name']).' · '.$d['document_type'])?></option><?php endforeach;?></select><small class="erp-muted">Lieferschein zuerst im Dokumentenbereich dem Projekt zuordnen. <a href="<?=p($url->linkToRoute('reinhardterp.document.index',['projectId'=>$project['id']]))?>">Dokument zuordnen</a></small></label>
     <label><input type="checkbox" name="mountingRelevant" value="1" <?=(int)($sp['mounting_relevant']??1)?'checked':''?>> Für Montagefreigabe relevant</label>
     <label>Notiz<input name="notes" value="<?=p($sp['notes']??'')?>"></label><div><button class="button primary">Speichern</button></div>
    </form>
@@ -69,8 +69,8 @@ $abLabels=['open'=>'Offen','received'=>'Erhalten'];
   <label>Gewerk<input name="trade" placeholder="z. B. Möbelhersteller"></label><label>Bestell-Nr.<input name="purchaseNo"></label>
   <label>AB-Status<select name="confirmationStatus"><option value="open">Offen</option><option value="received">Erhalten</option></select></label><label>AB-Nr.<input name="confirmationNo"></label><label>Avisierte KW<input type="number" min="1" max="53" name="expectedWeek"></label>
   <label>Wareneingang<select name="receiptStatus"><option value="open">Offen</option><option value="partial">Teilweise eingelagert</option><option value="complete">Vollständig eingelagert</option></select></label>
-  <label>AB aus Dokumenten<select name="confirmationDocumentId"><option value="">–</option><?php foreach($supplierDocuments as $d):?><option value="<?=p($d['id'])?>"><?=p(($d['document_no']?:$d['file_name']).' · '.$d['document_type'])?></option><?php endforeach;?></select></label>
-  <label>Lieferschein aus Dokumenten<select name="deliveryDocumentId"><option value="">–</option><?php foreach($supplierDocuments as $d):?><option value="<?=p($d['id'])?>"><?=p(($d['document_no']?:$d['file_name']).' · '.$d['document_type'])?></option><?php endforeach;?></select></label>
+  <label>AB aus Dokumenten<select name="confirmationDocumentId"><option value="">–</option><?php foreach($supplierDocuments as $d):?><option value="<?=p($d['id'])?>"><?=p(($d['document_no']?:$d['file_name']).' · '.$d['document_type'])?></option><?php endforeach;?></select><small class="erp-muted">Zeigt Dokumente, die bereits diesem Projekt zugeordnet sind. <a href="<?=p($url->linkToRoute('reinhardterp.document.index',['projectId'=>$project['id']]))?>">Projekt-Dokumente öffnen</a></small></label>
+  <label>Lieferschein aus Dokumenten<select name="deliveryDocumentId"><option value="">–</option><?php foreach($supplierDocuments as $d):?><option value="<?=p($d['id'])?>"><?=p(($d['document_no']?:$d['file_name']).' · '.$d['document_type'])?></option><?php endforeach;?></select><small class="erp-muted">Noch nicht vorhanden? Im Dokumentenbereich hochladen/scannen und diesem Projekt zuordnen. <a href="<?=p($url->linkToRoute('reinhardterp.document.index',['projectId'=>$project['id']]))?>">Dokument zuordnen</a></small></label>
   <label><input type="checkbox" name="mountingRelevant" value="1" checked> Für Montagefreigabe relevant</label><label>Notiz<input name="notes"></label><div><button class="button primary">Hinzufügen</button></div>
  </form></details>
 </section>
@@ -85,106 +85,12 @@ $abLabels=['open'=>'Offen','received'=>'Erhalten'];
 <?php endif;?>
 <section class="erp-card" id="appointments"><div class="erp-section-head"><div><h2>Termine</h2><p class="erp-muted">Projektbezogene Termine aus dem Teamkalender.</p></div><a class="button primary" href="<?=p($url->linkToRoute('reinhardterp.module.teamEvents',['customerId'=>(int)($project['customer_id']??0),'projectId'=>(int)$project['id']]))?>">+ Termin anlegen</a></div><?php if(!$projectEvents):?><p class="erp-muted">Noch keine Termine diesem Projekt zugeordnet.</p><?php else:?><div class="erp-event-list"><?php foreach($projectEvents as $event):?><article><time><?=p(date('d.m.Y H:i',strtotime((string)$event['start_at'])))?></time><span><strong><?=p($event['title'])?></strong><small><?=p($event['location']??'')?></small></span></article><?php endforeach;?></div><?php endif;?></section>
 </div>
-<?php if(!empty($isProjectSupervisor)):?>
-<?php
-$mountRows=array_values(array_filter($projectSuppliers,static fn($r)=>(int)($r['mounting_relevant']??1)===1));
-$mountComplete=!empty($mountRows)&&count(array_filter($mountRows,static fn($r)=>(string)($r['receipt_status']??'')==='complete'))===count($mountRows);
-$mountCompleteCount=count(array_filter($mountRows,static fn($r)=>(string)($r['receipt_status']??'')==='complete'));
-$receiptLabels=['open'=>'Offen','partial'=>'Teilweise eingelagert','complete'=>'Vollständig eingelagert'];
-$abLabels=['open'=>'Offen','received'=>'Erhalten'];
-?>
-<section class="erp-card" id="suppliers">
- <div class="erp-section-head"><div><h2>Lieferanten & Wareneingang</h2><p class="erp-muted">Bestellungen, Auftragsbestätigungen und Wareneingänge direkt mit diesem Projekt verknüpfen.</p></div>
- <span class="erp-status-pill <?=$mountComplete?'is-success':'is-warning'?>"><?php p($mountComplete?'Montagefreigabe: Material vollständig':(empty($mountRows)?'Montagefreigabe: noch keine Lieferungen':'Montagefreigabe: '.$mountCompleteCount.'/'.count($mountRows).' vollständig')); ?></span></div>
- <?php if($projectSuppliers):?><div class="erp-table-wrap"><table class="erp-table"><thead><tr><th>Gewerk / Lieferant</th><th>Bestell-Nr.</th><th>Auftragsbestätigung</th><th>Avisierte KW</th><th>Wareneingang</th><th>Belege</th><th></th></tr></thead><tbody>
- <?php foreach($projectSuppliers as $sp):?><tr>
-  <td><strong><?=p(trim((string)($sp['trade']??''))!==''?$sp['trade']:$sp['supplier_name'])?></strong><?php if(trim((string)($sp['trade']??''))!==''):?><small><?=p($sp['supplier_name'])?></small><?php endif;?><?php if(!(int)($sp['mounting_relevant']??1)):?><small>Nicht montagekritisch</small><?php endif;?></td>
-  <td><?=p($sp['purchase_no']?:'–')?></td>
-  <td><?=p($abLabels[$sp['confirmation_status']]??$sp['confirmation_status'])?><?php if(!empty($sp['confirmation_no'])):?> <small><?=p($sp['confirmation_no'])?></small><?php endif;?></td>
-  <td><?=p(!empty($sp['expected_week'])?'KW '.(int)$sp['expected_week']:'–')?></td>
-  <td><span class="erp-status-pill"><?=p($receiptLabels[$sp['receipt_status']]??$sp['receipt_status'])?></span></td>
-  <td><?php if(!empty($sp['confirmation_document_id'])):?><a href="<?=p($url->linkToRoute('reinhardterp.document.detail',['id'=>$sp['confirmation_document_id']]))?>">AB</a><?php endif;?><?php if(!empty($sp['delivery_document_id'])):?> <?=!empty($sp['confirmation_document_id'])?' · ':''?><a href="<?=p($url->linkToRoute('reinhardterp.document.detail',['id'=>$sp['delivery_document_id']]))?>">Lieferschein</a><?php endif;?><?php if(empty($sp['confirmation_document_id'])&&empty($sp['delivery_document_id'])):?>–<?php endif;?></td>
-  <td><details><summary class="button">Bearbeiten</summary>
-   <form method="post" action="<?=p($url->linkToRoute('reinhardterp.project.saveSupplierCockpit',['id'=>$project['id']]))?>" class="erp-form-grid erp-supplier-cockpit-form"><input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']);?>"><input type="hidden" name="rowId" value="<?=p($sp['id'])?>">
-    <label>Lieferant<select name="supplierId" required><?php foreach($suppliers as $su):?><option value="<?=p($su['id'])?>" <?=(int)$su['id']===(int)$sp['supplier_id']?'selected':''?>><?=p($su['name'])?></option><?php endforeach;?></select></label>
-    <label>Gewerk<input name="trade" value="<?=p($sp['trade']??'')?>" placeholder="z. B. Arbeitsplatte"></label>
-    <label>Bestell-Nr.<input name="purchaseNo" value="<?=p($sp['purchase_no']??'')?>"></label>
-    <label>AB-Status<select name="confirmationStatus"><option value="open" <?=$sp['confirmation_status']==='open'?'selected':''?>>Offen</option><option value="received" <?=$sp['confirmation_status']==='received'?'selected':''?>>Erhalten</option></select></label>
-    <label>AB-Nr.<input name="confirmationNo" value="<?=p($sp['confirmation_no']??'')?>"></label>
-    <label>Avisierte KW<input type="number" min="1" max="53" name="expectedWeek" value="<?=p($sp['expected_week']??'')?>"></label>
-    <label>Wareneingang<select name="receiptStatus"><option value="open" <?=$sp['receipt_status']==='open'?'selected':''?>>Offen</option><option value="partial" <?=$sp['receipt_status']==='partial'?'selected':''?>>Teilweise eingelagert</option><option value="complete" <?=$sp['receipt_status']==='complete'?'selected':''?>>Vollständig eingelagert</option></select></label>
-    <label>AB aus Dokumenten<select name="confirmationDocumentId"><option value="">–</option><?php foreach($supplierDocuments as $d):?><option value="<?=p($d['id'])?>" <?=(int)($sp['confirmation_document_id']??0)===(int)$d['id']?'selected':''?>><?=p(($d['document_no']?:$d['file_name']).' · '.$d['document_type'])?></option><?php endforeach;?></select></label>
-    <label>Lieferschein aus Dokumenten<select name="deliveryDocumentId"><option value="">–</option><?php foreach($supplierDocuments as $d):?><option value="<?=p($d['id'])?>" <?=(int)($sp['delivery_document_id']??0)===(int)$d['id']?'selected':''?>><?=p(($d['document_no']?:$d['file_name']).' · '.$d['document_type'])?></option><?php endforeach;?></select></label>
-    <label><input type="checkbox" name="mountingRelevant" value="1" <?=(int)($sp['mounting_relevant']??1)?'checked':''?>> Für Montagefreigabe relevant</label>
-    <label>Notiz<input name="notes" value="<?=p($sp['notes']??'')?>"></label><div><button class="button primary">Speichern</button></div>
-   </form>
-   <form method="post" action="<?=p($url->linkToRoute('reinhardterp.project.deleteSupplierCockpit',['id'=>$project['id'],'rowId'=>$sp['id']]))?>" onsubmit="return confirm('Lieferantenzeile wirklich aus dem Projekt entfernen?');"><input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']);?>"><button class="button">Zeile entfernen</button></form>
-  </details></td>
- </tr><?php endforeach;?></tbody></table></div><?php else:?><p class="erp-muted">Noch keine projektbezogenen Lieferungen erfasst.</p><?php endif;?>
- <details class="erp-add-supplier"><summary class="button primary">+ Lieferant / Bestellung</summary>
- <form method="post" action="<?=p($url->linkToRoute('reinhardterp.project.saveSupplierCockpit',['id'=>$project['id']]))?>" class="erp-form-grid erp-supplier-cockpit-form"><input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']);?>">
-  <label>Lieferant<select name="supplierId" required><option value="">Lieferant wählen</option><?php foreach($suppliers as $su):?><option value="<?=p($su['id'])?>"><?=p($su['name'])?></option><?php endforeach;?></select></label>
-  <label>Gewerk<input name="trade" placeholder="z. B. Möbelhersteller"></label><label>Bestell-Nr.<input name="purchaseNo"></label>
-  <label>AB-Status<select name="confirmationStatus"><option value="open">Offen</option><option value="received">Erhalten</option></select></label><label>AB-Nr.<input name="confirmationNo"></label><label>Avisierte KW<input type="number" min="1" max="53" name="expectedWeek"></label>
-  <label>Wareneingang<select name="receiptStatus"><option value="open">Offen</option><option value="partial">Teilweise eingelagert</option><option value="complete">Vollständig eingelagert</option></select></label>
-  <label>AB aus Dokumenten<select name="confirmationDocumentId"><option value="">–</option><?php foreach($supplierDocuments as $d):?><option value="<?=p($d['id'])?>"><?=p(($d['document_no']?:$d['file_name']).' · '.$d['document_type'])?></option><?php endforeach;?></select></label>
-  <label>Lieferschein aus Dokumenten<select name="deliveryDocumentId"><option value="">–</option><?php foreach($supplierDocuments as $d):?><option value="<?=p($d['id'])?>"><?=p(($d['document_no']?:$d['file_name']).' · '.$d['document_type'])?></option><?php endforeach;?></select></label>
-  <label><input type="checkbox" name="mountingRelevant" value="1" checked> Für Montagefreigabe relevant</label><label>Notiz<input name="notes"></label><div><button class="button primary">Hinzufügen</button></div>
- </form></details>
-</section>
-<?php endif;?>
+
 <div class="erp-project-center-grid">
 <section class="erp-card" id="reports"><div class="erp-section-head"><div><h2>Rapporte</h2><p class="erp-muted">Leistungsnachweise, Unterschriften und PDF.</p></div><a class="button primary" href="<?=p($url->linkToRoute('reinhardterp.module.reports',['projectId'=>$project['id']]))?>">+ Neuer Rapport</a></div><?php if(!$reports):?><p class="erp-muted">Noch keine Rapporte.</p><?php else:?><div class="erp-compact-list"><?php foreach(array_slice($reports,0,8) as $x):?><a href="<?=p($url->linkToRoute('reinhardterp.module.reportDetail',['id'=>$x['id']]))?>"><span><strong><?=p($x['report_no'])?></strong><small><?=p($x['title'])?> · <?=p($x['report_date'])?></small></span><em><?=p($x['status'])?></em></a><?php endforeach;?></div><?php endif;?></section>
 <section class="erp-card" id="time"><div class="erp-section-head"><div><h2>Zeiterfassung</h2><p class="erp-muted">Letzte Arbeiten im Projekt.</p></div><a class="button" href="<?=p($url->linkToRoute('reinhardterp.module.workdays'))?>">Zeit buchen</a></div><?php if(!$times):?><p class="erp-muted">Noch keine Zeiten.</p><?php else:?><div class="erp-compact-table"><div class="erp-compact-table-head"><span>Datum</span><span>Mitarbeiter</span><span>Std.</span><span>Tätigkeit</span></div><?php foreach(array_slice($times,0,10) as $x):?><div><span><?=p($x['work_date'])?></span><span><?=p($x['user_id'])?></span><strong><?=p(number_format((float)$x['hours'],2,',','.'))?></strong><span><?=p($x['activity'])?></span></div><?php endforeach;?></div><?php endif;?></section>
 </div>
-<?php if(!empty($isProjectSupervisor)):?>
-<?php
-$mountRows=array_values(array_filter($projectSuppliers,static fn($r)=>(int)($r['mounting_relevant']??1)===1));
-$mountComplete=!empty($mountRows)&&count(array_filter($mountRows,static fn($r)=>(string)($r['receipt_status']??'')==='complete'))===count($mountRows);
-$mountCompleteCount=count(array_filter($mountRows,static fn($r)=>(string)($r['receipt_status']??'')==='complete'));
-$receiptLabels=['open'=>'Offen','partial'=>'Teilweise eingelagert','complete'=>'Vollständig eingelagert'];
-$abLabels=['open'=>'Offen','received'=>'Erhalten'];
-?>
-<section class="erp-card" id="suppliers">
- <div class="erp-section-head"><div><h2>Lieferanten & Wareneingang</h2><p class="erp-muted">Bestellungen, Auftragsbestätigungen und Wareneingänge direkt mit diesem Projekt verknüpfen.</p></div>
- <span class="erp-status-pill <?=$mountComplete?'is-success':'is-warning'?>"><?php p($mountComplete?'Montagefreigabe: Material vollständig':(empty($mountRows)?'Montagefreigabe: noch keine Lieferungen':'Montagefreigabe: '.$mountCompleteCount.'/'.count($mountRows).' vollständig')); ?></span></div>
- <?php if($projectSuppliers):?><div class="erp-table-wrap"><table class="erp-table"><thead><tr><th>Gewerk / Lieferant</th><th>Bestell-Nr.</th><th>Auftragsbestätigung</th><th>Avisierte KW</th><th>Wareneingang</th><th>Belege</th><th></th></tr></thead><tbody>
- <?php foreach($projectSuppliers as $sp):?><tr>
-  <td><strong><?=p(trim((string)($sp['trade']??''))!==''?$sp['trade']:$sp['supplier_name'])?></strong><?php if(trim((string)($sp['trade']??''))!==''):?><small><?=p($sp['supplier_name'])?></small><?php endif;?><?php if(!(int)($sp['mounting_relevant']??1)):?><small>Nicht montagekritisch</small><?php endif;?></td>
-  <td><?=p($sp['purchase_no']?:'–')?></td>
-  <td><?=p($abLabels[$sp['confirmation_status']]??$sp['confirmation_status'])?><?php if(!empty($sp['confirmation_no'])):?> <small><?=p($sp['confirmation_no'])?></small><?php endif;?></td>
-  <td><?=p(!empty($sp['expected_week'])?'KW '.(int)$sp['expected_week']:'–')?></td>
-  <td><span class="erp-status-pill"><?=p($receiptLabels[$sp['receipt_status']]??$sp['receipt_status'])?></span></td>
-  <td><?php if(!empty($sp['confirmation_document_id'])):?><a href="<?=p($url->linkToRoute('reinhardterp.document.detail',['id'=>$sp['confirmation_document_id']]))?>">AB</a><?php endif;?><?php if(!empty($sp['delivery_document_id'])):?> <?=!empty($sp['confirmation_document_id'])?' · ':''?><a href="<?=p($url->linkToRoute('reinhardterp.document.detail',['id'=>$sp['delivery_document_id']]))?>">Lieferschein</a><?php endif;?><?php if(empty($sp['confirmation_document_id'])&&empty($sp['delivery_document_id'])):?>–<?php endif;?></td>
-  <td><details><summary class="button">Bearbeiten</summary>
-   <form method="post" action="<?=p($url->linkToRoute('reinhardterp.project.saveSupplierCockpit',['id'=>$project['id']]))?>" class="erp-form-grid erp-supplier-cockpit-form"><input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']);?>"><input type="hidden" name="rowId" value="<?=p($sp['id'])?>">
-    <label>Lieferant<select name="supplierId" required><?php foreach($suppliers as $su):?><option value="<?=p($su['id'])?>" <?=(int)$su['id']===(int)$sp['supplier_id']?'selected':''?>><?=p($su['name'])?></option><?php endforeach;?></select></label>
-    <label>Gewerk<input name="trade" value="<?=p($sp['trade']??'')?>" placeholder="z. B. Arbeitsplatte"></label>
-    <label>Bestell-Nr.<input name="purchaseNo" value="<?=p($sp['purchase_no']??'')?>"></label>
-    <label>AB-Status<select name="confirmationStatus"><option value="open" <?=$sp['confirmation_status']==='open'?'selected':''?>>Offen</option><option value="received" <?=$sp['confirmation_status']==='received'?'selected':''?>>Erhalten</option></select></label>
-    <label>AB-Nr.<input name="confirmationNo" value="<?=p($sp['confirmation_no']??'')?>"></label>
-    <label>Avisierte KW<input type="number" min="1" max="53" name="expectedWeek" value="<?=p($sp['expected_week']??'')?>"></label>
-    <label>Wareneingang<select name="receiptStatus"><option value="open" <?=$sp['receipt_status']==='open'?'selected':''?>>Offen</option><option value="partial" <?=$sp['receipt_status']==='partial'?'selected':''?>>Teilweise eingelagert</option><option value="complete" <?=$sp['receipt_status']==='complete'?'selected':''?>>Vollständig eingelagert</option></select></label>
-    <label>AB aus Dokumenten<select name="confirmationDocumentId"><option value="">–</option><?php foreach($supplierDocuments as $d):?><option value="<?=p($d['id'])?>" <?=(int)($sp['confirmation_document_id']??0)===(int)$d['id']?'selected':''?>><?=p(($d['document_no']?:$d['file_name']).' · '.$d['document_type'])?></option><?php endforeach;?></select></label>
-    <label>Lieferschein aus Dokumenten<select name="deliveryDocumentId"><option value="">–</option><?php foreach($supplierDocuments as $d):?><option value="<?=p($d['id'])?>" <?=(int)($sp['delivery_document_id']??0)===(int)$d['id']?'selected':''?>><?=p(($d['document_no']?:$d['file_name']).' · '.$d['document_type'])?></option><?php endforeach;?></select></label>
-    <label><input type="checkbox" name="mountingRelevant" value="1" <?=(int)($sp['mounting_relevant']??1)?'checked':''?>> Für Montagefreigabe relevant</label>
-    <label>Notiz<input name="notes" value="<?=p($sp['notes']??'')?>"></label><div><button class="button primary">Speichern</button></div>
-   </form>
-   <form method="post" action="<?=p($url->linkToRoute('reinhardterp.project.deleteSupplierCockpit',['id'=>$project['id'],'rowId'=>$sp['id']]))?>" onsubmit="return confirm('Lieferantenzeile wirklich aus dem Projekt entfernen?');"><input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']);?>"><button class="button">Zeile entfernen</button></form>
-  </details></td>
- </tr><?php endforeach;?></tbody></table></div><?php else:?><p class="erp-muted">Noch keine projektbezogenen Lieferungen erfasst.</p><?php endif;?>
- <details class="erp-add-supplier"><summary class="button primary">+ Lieferant / Bestellung</summary>
- <form method="post" action="<?=p($url->linkToRoute('reinhardterp.project.saveSupplierCockpit',['id'=>$project['id']]))?>" class="erp-form-grid erp-supplier-cockpit-form"><input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']);?>">
-  <label>Lieferant<select name="supplierId" required><option value="">Lieferant wählen</option><?php foreach($suppliers as $su):?><option value="<?=p($su['id'])?>"><?=p($su['name'])?></option><?php endforeach;?></select></label>
-  <label>Gewerk<input name="trade" placeholder="z. B. Möbelhersteller"></label><label>Bestell-Nr.<input name="purchaseNo"></label>
-  <label>AB-Status<select name="confirmationStatus"><option value="open">Offen</option><option value="received">Erhalten</option></select></label><label>AB-Nr.<input name="confirmationNo"></label><label>Avisierte KW<input type="number" min="1" max="53" name="expectedWeek"></label>
-  <label>Wareneingang<select name="receiptStatus"><option value="open">Offen</option><option value="partial">Teilweise eingelagert</option><option value="complete">Vollständig eingelagert</option></select></label>
-  <label>AB aus Dokumenten<select name="confirmationDocumentId"><option value="">–</option><?php foreach($supplierDocuments as $d):?><option value="<?=p($d['id'])?>"><?=p(($d['document_no']?:$d['file_name']).' · '.$d['document_type'])?></option><?php endforeach;?></select></label>
-  <label>Lieferschein aus Dokumenten<select name="deliveryDocumentId"><option value="">–</option><?php foreach($supplierDocuments as $d):?><option value="<?=p($d['id'])?>"><?=p(($d['document_no']?:$d['file_name']).' · '.$d['document_type'])?></option><?php endforeach;?></select></label>
-  <label><input type="checkbox" name="mountingRelevant" value="1" checked> Für Montagefreigabe relevant</label><label>Notiz<input name="notes"></label><div><button class="button primary">Hinzufügen</button></div>
- </form></details>
-</section>
-<?php endif;?>
+
 <div class="erp-project-center-grid">
 <section class="erp-card" id="material"><div class="erp-section-head"><div><h2>Material</h2><p class="erp-muted">In Rapporten erfasster Projektverbrauch.</p></div><a class="button" href="<?=p($url->linkToRoute('reinhardterp.module.materials'))?>">Materialstamm</a></div><?php if(!$projectMaterials):?><p class="erp-muted">Noch kein Material erfasst.</p><?php else:?><div class="erp-material-stream"><?php foreach($projectMaterials as $item):?><article><span><strong><?=p($item['description'])?></strong><small><?=p($item['report_no'])?> · <?=p(date('d.m.Y',strtotime((string)$item['report_date'])))?></small></span><em><?=p(number_format((float)$item['quantity'],3,',','.'))?> <?=p($item['unit']??'')?></em></article><?php endforeach;?></div><?php endif;?></section>
 <section class="erp-card" id="notes">
