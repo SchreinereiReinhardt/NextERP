@@ -15,6 +15,7 @@ final class NumberService {
   'invoice'=>['label'=>'Rechnungen','prefix'=>'RE','yearly'=>true,'separator'=>'-','start'=>0,'width'=>4],
   'offer'=>['label'=>'Angebote','prefix'=>'AN','yearly'=>true,'separator'=>'-','start'=>0,'width'=>4],
   'order'=>['label'=>'Aufträge','prefix'=>'AU','yearly'=>true,'separator'=>'-','start'=>0,'width'=>4],
+  'delivery'=>['label'=>'Lieferscheine','prefix'=>'LS','yearly'=>true,'separator'=>'-','start'=>0,'width'=>4],
  ];
  public function __construct(private IDBConnection $db,private IConfig $config) {}
  public function next(string $type): string {

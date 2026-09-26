@@ -1,6 +1,19 @@
 # Betrio
 
-Native Handwerker-ERP-App für Nextcloud.
+**Official Betrio project** – ERP and project management for trades and craft businesses, integrated directly into Nextcloud.
+
+Copyright © 2026 André Reinhardt. Source code is licensed under **AGPL-3.0-or-later**.
+For information about the official project identity and branding, see [NOTICE](NOTICE) and [TRADEMARKS.md](TRADEMARKS.md).
+
+Official repository: https://github.com/SchreinereiReinhardt/NextERP
+
+## Current scope
+
+Betrio combines customers, projects, quotations, orders, invoices, work reports, time tracking, materials, documents, checklists, suppliers and goods receipt, finance functions and DATEV export inside Nextcloud. A separate Android app, **Betrio Mobile**, complements the server app for mobile and offline workflows.
+
+---
+
+## Development history
 
 ## Stable Core 0.23.0
 

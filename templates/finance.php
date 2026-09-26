@@ -22,7 +22,7 @@ $folders=[
  'accounting_other'=>'/ERP/30_Finanzen/Sonstige_Belege',
 ];
 ?>
-<div id="app-content"><div class="erp-page erp-finance-page">
+<div id="app-content"><div class="erp-page erp-finance-page erp-finance-premium">
 <div class="erp-head"><div><h1>Finanzen</h1><p class="erp-sub">Belege zentral ablegen, automatisch erkennen und der Buchhaltung zuordnen.</p></div><div class="erp-actions"><a class="button" href="<?php p($url->linkToRoute('reinhardterp.document.index')); ?>">Dokumenteneingang</a></div></div>
 <?php if(!empty($_['message'])):?><div class="erp-notice"><?php p($_['message']);?></div><?php endif;?>
 <?php if(!empty($_['error'])):?><div class="erp-notice erp-notice-warning"><?php p($_['error']);?></div><?php endif;?>

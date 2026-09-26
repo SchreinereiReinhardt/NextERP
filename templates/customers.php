@@ -12,7 +12,7 @@ try {
 }
 script('reinhardterp', 'customers');
 ?>
-<div id="app-content"><div class="erp-page erp-list-page">
+<div id="app-content"><div class="erp-page erp-list-page erp-customers-premium">
 <div class="erp-head">
     <div><h1>Kunden</h1><p class="erp-sub">Kundenakten und Nextcloud Kontakte gemeinsam verwalten.</p></div>
     <div class="erp-actions">

@@ -6,7 +6,7 @@ $availableEntries=$_['availableEntries']??[];
 $availableMaterials=$_['availableMaterials']??[];
 $isArchive=!empty($_['archiveMode']);
 ?>
-<div id="app-content"><div class="erp-page erp-reports-page">
+<div id="app-content"><div class="erp-page erp-reports-page erp-reports-premium">
 <div class="erp-head erp-report-list-head"><div><span class="erp-eyebrow">BETRIO · RAPPORTWESEN</span><h1><?php p($isArchive?'Rapportarchiv':'Rapporte'); ?></h1><p class="erp-sub"><?php p($isArchive?'Archivierte Rapporte bleiben vollständig erhalten und können wiederhergestellt werden.':'Projekt wählen, offene Zeiten markieren und direkt in den neuen Rapport übernehmen.'); ?></p></div></div>
 <nav class="erp-project-tabs" aria-label="Rapportansicht"><a class="<?php p(!$isArchive?'is-active':''); ?>" href="<?php p($url->linkToRoute('reinhardterp.module.reports')); ?>">Aktive Rapporte <strong><?php p((string)($_['activeCount']??0)); ?></strong></a><a class="<?php p($isArchive?'is-active':''); ?>" href="<?php p($url->linkToRoute('reinhardterp.module.reports').'?archive=1'); ?>">Archiv <strong><?php p((string)($_['archiveCount']??0)); ?></strong></a></nav>
 <div class="erp-report-list-kpis">

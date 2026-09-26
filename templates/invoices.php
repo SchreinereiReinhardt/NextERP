@@ -6,7 +6,7 @@ $url=\OCP\Server::get(IURLGenerator::class);
 Util::addScript('reinhardterp','invoices');
 $statusLabels=['draft'=>'Entwurf','open'=>'Offen','paid'=>'Bezahlt','cancelled'=>'Storniert'];$typeLabels=['invoice'=>'Rechnung','advance'=>'Abschlag','final'=>'Schlussrechnung','credit'=>'Gutschrift'];
 ?>
-<div id="app-content"><div class="erp-page erp-offers-v2">
+<div id="app-content"><div class="erp-page erp-offers-v2 erp-invoices-premium">
  <?php if(!empty($_['datevError'])):?><div class="erp-card" style="margin-bottom:16px;padding:16px 18px;border-left:4px solid var(--color-warning);"><strong>DATEV-Export nicht möglich</strong><p style="margin:6px 0 0"><?php p($_['datevError']);?></p></div><?php endif;?>
  <div class="erp-head"><div><span class="erp-eyebrow">FINANZEN</span><h1>Rechnungen</h1><p class="erp-sub">Rechnungen und Entwürfe suchen, filtern und öffnen.</p></div><div class="erp-actions"><a class="button primary" href="<?php p($url->linkToRoute('reinhardterp.business.invoiceForm'));?>">+ Neue Rechnung</a></div></div>
 

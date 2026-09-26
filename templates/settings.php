@@ -3,7 +3,7 @@ require __DIR__ . '/_nav.php';
 ?>
 <div id="app-content">
 	<div id="app-content-wrapper">
-		<div class="erp-page erp-settings-page">
+		<div class="erp-page erp-settings-page erp-settings-premium">
 			<div class="erp-head">
 				<div>
 					<h1>Einstellungen</h1><p><a class="button" href="<?php p($url->linkToRoute('reinhardterp.page.setupWizard')); ?>">Ersteinrichtungsassistent öffnen</a></p>

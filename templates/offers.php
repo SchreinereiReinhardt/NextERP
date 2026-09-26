@@ -5,7 +5,7 @@ use OCP\Util;
 $url=\OCP\Server::get(IURLGenerator::class);
 Util::addScript('reinhardterp','offers');
 ?>
-<div id="app-content"><div class="erp-page erp-offers-v2">
+<div id="app-content"><div class="erp-page erp-offers-v2 erp-sales-premium">
  <div class="erp-head"><div><span class="erp-eyebrow">VERKAUF</span><h1>Angebote</h1><p class="erp-sub">Angebote suchen, filtern und öffnen.</p></div><div class="erp-actions"><a class="button primary" href="<?php p($url->linkToRoute('reinhardterp.business.offerForm'));?>">+ Neues Angebot</a></div></div>
  <div class="erp-card erp-offer-list-card erp-document-list-card" id="offerOverview"><div class="erp-section-head"><div><h2>Angebotsübersicht</h2><p class="erp-muted"><span id="offerVisibleCount"><?php p(count($_['offers']));?></span> von <?php p(count($_['offers']));?> Angeboten</p></div></div>
   <div class="erp-document-filterbar">

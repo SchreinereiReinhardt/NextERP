@@ -1,5 +1,5 @@
 <?php require __DIR__.'/_nav.php'; use OCP\IURLGenerator; $url=\OC::$server->get(IURLGenerator::class); script('reinhardterp','material_catalog'); ?>
-<div id="app-content"><div class="erp-page erp-material-page erp-material-v2">
+<div id="app-content"><div class="erp-page erp-material-page erp-material-v2 erp-material-premium">
 
 <div class="erp-page-head erp-material-head">
  <div><p class="erp-eyebrow">LAGER &amp; MATERIAL</p><h1>Materialstamm</h1><p class="erp-sub">Materialien, Preise, Lagerorte, Gruppen und Lieferanten zentral verwalten.</p></div>

@@ -11,6 +11,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\DataDownloadResponse;
+use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IDBConnection;
@@ -85,7 +86,7 @@ final class BusinessController extends Controller {
   }catch(\Throwable $e){$this->db->rollBack();throw $e;}
   return $this->go('reinhardterp.business.offerDetail',['id'=>$id]);
  }
- #[NoAdminRequired,NoCSRFRequired] public function offerDetail(int $id):TemplateResponse|\OCP\AppFramework\Http\NotFoundResponse{$this->permissions->assert('offers');$offer=$this->offer($id);if(!$offer)return new \OCP\AppFramework\Http\NotFoundResponse();return $this->page('offer_detail',['offer'=>$offer,'items'=>$this->where('re_erp_offer_items','offer_id',$id,'position_no'),'customer'=>$this->one('re_erp_customers',(int)$offer['customer_id']),'company'=>$this->companyData(),'linkedOrder'=>$this->oneBy('re_erp_orders','offer_id',$id),'hasOrder'=>(bool)$this->oneBy('re_erp_orders','offer_id',$id)]);}
+ #[NoAdminRequired,NoCSRFRequired] public function offerDetail(int $id):TemplateResponse|\OCP\AppFramework\Http\NotFoundResponse{$this->permissions->assert('offers');$offer=$this->offer($id);if(!$offer)return new \OCP\AppFramework\Http\NotFoundResponse();return $this->page('offer_detail',['offer'=>$offer,'items'=>$this->where('re_erp_offer_items','offer_id',$id,'position_no'),'customer'=>$this->one('re_erp_customers',(int)$offer['customer_id']),'company'=>$this->companyData(),'linkedOrder'=>$this->oneBy('re_erp_orders','offer_id',$id),'hasOrder'=>(bool)$this->oneBy('re_erp_orders','offer_id',$id),'deliveryNotes'=>$this->where('re_erp_delivery_notes','offer_id',$id,'id')]);}
  #[NoAdminRequired,NoCSRFRequired] public function offerPrint(int $id):TemplateResponse|\OCP\AppFramework\Http\NotFoundResponse{$this->permissions->assert('offers');$offer=$this->offer($id);if(!$offer)return new \OCP\AppFramework\Http\NotFoundResponse();$logo=$this->folders->companyLogo();return new TemplateResponse($this->appName,'offer_print',['offer'=>$offer,'customer'=>$this->one('re_erp_customers',(int)$offer['customer_id']),'project'=>$offer['project_id']?$this->one('re_erp_projects',(int)$offer['project_id']):null,'items'=>$this->where('re_erp_offer_items','offer_id',$id,'position_no'),'company'=>$this->companyData(),'logoDataUri'=>$logo?'data:'.$logo['mime'].';base64,'.base64_encode($logo['content']):null],'blank');}
  #[NoAdminRequired,NoCSRFRequired] public function offerPdf(int $id):DataDownloadResponse|\OCP\AppFramework\Http\NotFoundResponse{
   $this->permissions->assert('offers');$offer=$this->offer($id);if(!$offer)return new \OCP\AppFramework\Http\NotFoundResponse();
@@ -121,6 +122,33 @@ final class BusinessController extends Controller {
  }
  #[NoAdminRequired] public function createOrderFromOffer(int $id):RedirectResponse|\OCP\AppFramework\Http\NotFoundResponse{$this->permissions->assert('orders');$offer=$this->offer($id);if(!$offer)return new \OCP\AppFramework\Http\NotFoundResponse();$existing=$this->oneBy('re_erp_orders','offer_id',$id);if($existing)return $this->go('reinhardterp.business.orderDetail',['id'=>$existing['id']]);$now=date('Y-m-d H:i:s');$orderId=$this->insert('re_erp_orders',['order_no'=>$this->numbers->next('order'),'offer_id'=>$id,'customer_id'=>$offer['customer_id'],'project_id'=>$offer['project_id'],'title'=>$offer['title'],'order_date'=>date('Y-m-d'),'status'=>'open','net_amount'=>$offer['net_amount'],'gross_amount'=>$offer['gross_amount'],'created_by'=>$this->uid(),'created_at'=>$now,'updated_at'=>$now]);foreach($this->where('re_erp_offer_items','offer_id',$id,'position_no') as $i){$this->insert('re_erp_order_items',['order_id'=>$orderId,'position_no'=>$i['position_no'],'description'=>$i['description'],'quantity'=>$i['quantity'],'unit'=>$i['unit'],'unit_price'=>$i['unit_price'],'total_price'=>$i['total_price']]);}$this->update('re_erp_offers',$id,['status'=>'accepted','updated_at'=>$now]);return $this->go('reinhardterp.business.orderDetail',['id'=>$orderId]);}
 
+ #[NoAdminRequired] public function createInvoiceFromOffer(int $id,string $invoiceType='invoice',?float $installmentPercent=null):RedirectResponse|\OCP\AppFramework\Http\NotFoundResponse{
+  $this->permissions->assert('invoices');$offer=$this->offer($id);if(!$offer)return new \OCP\AppFramework\Http\NotFoundResponse();
+  if(!in_array($invoiceType,['invoice','advance','final'],true))$invoiceType='invoice';
+  $order=$this->oneBy('re_erp_orders','offer_id',$id);$orderId=$order?(int)$order['id']:$this->ensureOrderFromOffer($offer);
+  return $this->go('reinhardterp.business.invoiceForm',['orderId'=>$orderId,'invoiceType'=>$invoiceType,'projectId'=>(int)($offer['project_id']??0)]+($invoiceType==='advance'?['installmentMode'=>'percent','installmentPercent'=>max(0.01,min(100,(float)($installmentPercent??30)))]:[]));
+ }
+ #[NoAdminRequired] public function createDeliveryFromOffer(int $id):RedirectResponse|\OCP\AppFramework\Http\NotFoundResponse{
+  $this->permissions->assert('orders');$offer=$this->offer($id);if(!$offer)return new \OCP\AppFramework\Http\NotFoundResponse();
+  $order=$this->oneBy('re_erp_orders','offer_id',$id);$orderId=$order?(int)$order['id']:$this->ensureOrderFromOffer($offer);
+  return $this->createDeliveryForOrder($orderId);
+ }
+ #[NoAdminRequired] public function createDeliveryFromOrder(int $id):RedirectResponse|\OCP\AppFramework\Http\NotFoundResponse{$this->permissions->assert('orders');if(!$this->order($id))return new \OCP\AppFramework\Http\NotFoundResponse();return $this->createDeliveryForOrder($id);}
+ #[NoAdminRequired,NoCSRFRequired] public function deliveryDetail(int $id):TemplateResponse|\OCP\AppFramework\Http\NotFoundResponse{
+  $this->permissions->assert('orders');$d=$this->one('re_erp_delivery_notes',$id);if(!$d)return new \OCP\AppFramework\Http\NotFoundResponse();
+  return $this->page('delivery_detail',['delivery'=>$d,'items'=>$this->where('re_erp_delivery_items','delivery_id',$id,'position_no'),'customer'=>$this->one('re_erp_customers',(int)$d['customer_id']),'project'=>!empty($d['project_id'])?$this->one('re_erp_projects',(int)$d['project_id']):null,'order'=>$this->order((int)$d['order_id']),'sourceOffer'=>!empty($d['offer_id'])?$this->offer((int)$d['offer_id']):null]);
+ }
+ #[NoAdminRequired,NoCSRFRequired] public function deliveryPdf(int $id):DataDownloadResponse|\OCP\AppFramework\Http\NotFoundResponse{
+  $this->permissions->assert('orders');$d=$this->one('re_erp_delivery_notes',$id);if(!$d)return new \OCP\AppFramework\Http\NotFoundResponse();$customer=$this->one('re_erp_customers',(int)$d['customer_id']);$project=!empty($d['project_id'])?$this->one('re_erp_projects',(int)$d['project_id']):null;$logo=$this->folders->companyLogo();
+  $doc=$d+['subject'=>'Lieferschein','clerk_name'=>$this->currentClerkName()];$pdf=$this->pdf->createCommercialDocument('delivery',$doc,$customer,$project,$this->where('re_erp_delivery_items','delivery_id',$id,'position_no'),$logo,$this->companyData());$name=preg_replace('/[^A-Za-z0-9._-]+/','_',trim((string)$d['delivery_no'])).'_Lieferschein.pdf';return new DataDownloadResponse($pdf,$name,'application/pdf');
+ }
+ private function ensureOrderFromOffer(array $offer):int{
+  $existing=$this->oneBy('re_erp_orders','offer_id',(int)$offer['id']);if($existing)return (int)$existing['id'];$now=date('Y-m-d H:i:s');$orderId=$this->insert('re_erp_orders',['order_no'=>$this->numbers->next('order'),'offer_id'=>$offer['id'],'customer_id'=>$offer['customer_id'],'project_id'=>$offer['project_id'],'title'=>$offer['title'],'order_date'=>date('Y-m-d'),'status'=>'open','net_amount'=>$offer['net_amount'],'gross_amount'=>$offer['gross_amount'],'created_by'=>$this->uid(),'created_at'=>$now,'updated_at'=>$now]);foreach($this->where('re_erp_offer_items','offer_id',(int)$offer['id'],'position_no') as $i)$this->insert('re_erp_order_items',['order_id'=>$orderId,'position_no'=>$i['position_no'],'description'=>$i['description'],'quantity'=>$i['quantity'],'unit'=>$i['unit'],'unit_price'=>$i['unit_price'],'total_price'=>$i['total_price']]);$this->update('re_erp_offers',(int)$offer['id'],['status'=>'accepted','updated_at'=>$now]);return $orderId;
+ }
+ private function createDeliveryForOrder(int $orderId):RedirectResponse{
+  $order=$this->order($orderId);if(!$order)throw new \InvalidArgumentException('Auftrag nicht gefunden.');$now=date('Y-m-d H:i:s');$id=$this->insert('re_erp_delivery_notes',['delivery_no'=>$this->numbers->next('delivery'),'order_id'=>$orderId,'offer_id'=>$order['offer_id']?:null,'customer_id'=>$order['customer_id'],'project_id'=>$order['project_id']?:null,'delivery_date'=>date('Y-m-d'),'status'=>'open','notes'=>null,'created_by'=>$this->uid(),'created_at'=>$now]);foreach($this->where('re_erp_order_items','order_id',$orderId,'position_no') as $i)$this->insert('re_erp_delivery_items',['delivery_id'=>$id,'position_no'=>$i['position_no'],'description'=>$i['description'],'quantity'=>$i['quantity'],'unit'=>$i['unit']]);return $this->go('reinhardterp.business.deliveryDetail',['id'=>$id]);
+ }
+
  #[NoAdminRequired,NoCSRFRequired] public function invoices():TemplateResponse{
   $this->permissions->assert('invoices');
   return $this->page('invoices',['invoices'=>$this->invoiceRows(),'datevSettings'=>$this->datevSettings(),'datevError'=>(string)$this->request->getParam('datev_error','')]);
@@ -144,6 +172,11 @@ final class BusinessController extends Controller {
   $encoded=@iconv('UTF-8','Windows-1252//TRANSLIT',$csv);if($encoded!==false)$csv=$encoded;
   foreach($rows as $r){if(!empty($r['id']))$this->auditInvoice((int)$r['id'],'datev_exported',['from'=>$from,'to'=>$to,'format'=>'EXTF','version'=>'700/12']);}
   return new DataDownloadResponse($csv,'EXTF_Buchungsstapel_Betrio_'.$from.'_'.$to.'.csv','text/csv; charset=Windows-1252');
+ }
+ #[NoAdminRequired,NoCSRFRequired] public function billingCandidatesApi(int $projectId):JSONResponse{
+  $this->permissions->assert('invoices');
+  if($projectId<=0||!$this->one('re_erp_projects',$projectId))return new JSONResponse(['candidates'=>[]]);
+  return new JSONResponse(['candidates'=>$this->billingCandidates($projectId)]);
  }
  #[NoAdminRequired,NoCSRFRequired] public function invoiceForm(?int $orderId=null,?string $invoiceType=null,?string $installmentMode=null,?float $installmentPercent=null,?float $installmentAmount=null,?int $projectId=null,?int $includeTimes=0,?int $includeMaterials=0,?int $includeReports=0):TemplateResponse{
   $this->permissions->assert('invoices');
@@ -186,9 +219,10 @@ final class BusinessController extends Controller {
    'orders'=>$this->rows('re_erp_orders','id','DESC'),
    'paymentTerms'=>$this->paymentTerms(),
    'defaultPaymentTerm'=>$this->config->getAppValue($this->appName,'payment_terms_default','net14'),
+   'billingCandidates'=>$projectId&&$projectId>0?$this->billingCandidates($projectId):[],
   ]);
  }
- #[NoAdminRequired] public function saveInvoice(int $customerId,array $descriptions=[],array $quantities=[],array $units=[],array $unitPrices=[],array $alternatives=[],?int $projectId=null,?int $orderId=null,?string $invoiceDate=null,?string $serviceDate=null,?string $dueDate=null,float $vatRate=19,?string $taxMode='standard19',?string $paymentTermKey=null,?string $notes=null,string $invoiceType='invoice',?string $clerkName=null,?string $subject=null,?string $introText=null,?string $outroText=null,?float $installmentPercent=null,?float $installmentBaseNet=null):RedirectResponse{
+ #[NoAdminRequired] public function saveInvoice(int $customerId,array $descriptions=[],array $quantities=[],array $units=[],array $unitPrices=[],array $alternatives=[],?int $projectId=null,?int $orderId=null,?string $invoiceDate=null,?string $serviceDate=null,?string $dueDate=null,float $vatRate=19,?string $taxMode='standard19',?string $paymentTermKey=null,?string $notes=null,string $invoiceType='invoice',?string $clerkName=null,?string $subject=null,?string $introText=null,?string $outroText=null,?float $installmentPercent=null,?float $installmentBaseNet=null,array $billingSources=[]):RedirectResponse{
   $this->permissions->assert('invoices');
   $customer=$this->one('re_erp_customers',$customerId);if(!$customer)throw new \InvalidArgumentException('Kunde nicht gefunden.');
   $items=[];$count=max(count($descriptions),count($quantities),count($units),count($unitPrices));$positionImages=$this->positionImages($count);
@@ -225,6 +259,7 @@ final class BusinessController extends Controller {
     'created_by'=>$this->uid(),'created_at'=>$now,'updated_at'=>$now
    ]);
    foreach($items as $item)$this->insert('re_erp_invoice_items',['invoice_id'=>$id,'source_type'=>$orderId?'order':'manual','source_id'=>$orderId?:null,'description'=>$item['description'],'quantity'=>$item['quantity'],'unit'=>$item['unit'],'unit_price'=>$item['unit_price'],'total_price'=>$item['total_price'],'is_alternative'=>!empty($item['is_alternative']),'image_name'=>$item['image_name']??null,'image_mime'=>$item['image_mime']??null,'image_data'=>$item['image_data']??null]);
+   foreach($billingSources as $source){if(!is_string($source)||!preg_match('/^(time|material|report|supplier):(\d+)$/',$source,$m))continue;$this->setBillingCheck((int)($projectId??0),$m[1],(int)$m[2],'included',$id);}
    $this->db->commit();
   }catch(\Throwable $e){$this->db->rollBack();throw $e;}
   return $this->go('reinhardterp.business.invoiceDetail',['id'=>$id]);
@@ -338,7 +373,7 @@ final class BusinessController extends Controller {
   return $this->go('reinhardterp.business.invoices');
  }
  #[NoAdminRequired,NoCSRFRequired] public function orders():TemplateResponse{$this->permissions->assert('orders');return $this->page('orders',['orders'=>$this->ordersRows()]);}
- #[NoAdminRequired,NoCSRFRequired] public function orderDetail(int $id):TemplateResponse|\OCP\AppFramework\Http\NotFoundResponse{$this->permissions->assert('orders');$order=$this->order($id);if(!$order)return new \OCP\AppFramework\Http\NotFoundResponse();return $this->page('order_detail',['order'=>$order,'items'=>$this->where('re_erp_order_items','order_id',$id,'position_no'),'notes'=>$this->orderNotes($id),'invoices'=>$this->where('re_erp_invoices','order_id',$id,'id'),'sourceOffer'=>!empty($order['offer_id'])?$this->offer((int)$order['offer_id']):null,'orderPayments'=>$this->paymentsForOrder($id)]);}
+ #[NoAdminRequired,NoCSRFRequired] public function orderDetail(int $id):TemplateResponse|\OCP\AppFramework\Http\NotFoundResponse{$this->permissions->assert('orders');$order=$this->order($id);if(!$order)return new \OCP\AppFramework\Http\NotFoundResponse();return $this->page('order_detail',['order'=>$order,'items'=>$this->where('re_erp_order_items','order_id',$id,'position_no'),'notes'=>$this->orderNotes($id),'invoices'=>$this->where('re_erp_invoices','order_id',$id,'id'),'sourceOffer'=>!empty($order['offer_id'])?$this->offer((int)$order['offer_id']):null,'orderPayments'=>$this->paymentsForOrder($id),'deliveryNotes'=>$this->where('re_erp_delivery_notes','order_id',$id,'id')]);}
  #[NoAdminRequired] public function updateOrderStatus(int $id,string $status):RedirectResponse{$this->permissions->assert('orders');if(!in_array($status,['open','confirmed','production','installation','completed','cancelled'],true))throw new \InvalidArgumentException('Ungültiger Status.');$this->update('re_erp_orders',$id,['status'=>$status,'updated_at'=>date('Y-m-d H:i:s')]);return $this->go('reinhardterp.business.orderDetail',['id'=>$id]);}
  #[NoAdminRequired] public function saveOrderNote(int $id,string $noteType,string $content):RedirectResponse|\OCP\AppFramework\Http\NotFoundResponse{
 	$this->permissions->assert('orders');
@@ -630,6 +665,12 @@ final class BusinessController extends Controller {
   }catch(\Throwable $e){$this->db->rollBack();throw $e;}
   return $newId;
  }
+ #[NoAdminRequired] public function billingCheck(int $projectId,string $sourceType,int $sourceId,string $status):RedirectResponse{
+  $this->permissions->assert('invoices');
+  if(!in_array($sourceType,['time','material','report','supplier'],true)||$sourceId<=0||!in_array($status,['included','contained','ignored'],true))throw new \InvalidArgumentException('Ungültige Abrechnungsentscheidung.');
+  $this->setBillingCheck($projectId,$sourceType,$sourceId,$status,null);
+  return $this->go('reinhardterp.business.invoiceForm',['projectId'=>$projectId]);
+ }
  private function auditInvoice(int $invoiceId,string $eventType,array $details=[],?string $snapshotHash=null):void{
   $this->insert('re_erp_invoice_audit',['invoice_id'=>$invoiceId,'event_type'=>$eventType,'user_id'=>$this->uid()?:null,'event_at'=>date('Y-m-d H:i:s'),'details'=>$details!==[]?json_encode($details,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES):null,'snapshot_hash'=>$snapshotHash]);
  }
@@ -647,6 +688,17 @@ final class BusinessController extends Controller {
  private function offerForOrder(int $orderId):?array{$order=$this->order($orderId);if(!$order||empty($order['offer_id']))return null;return $this->offer((int)$order['offer_id']);}
  private function creditNotesForInvoice(int $invoiceId):array{$q=$this->db->getQueryBuilder();$q->select('*')->from('re_erp_invoices')->where($q->expr()->eq('related_invoice_id',$q->createNamedParameter($invoiceId)))->andWhere($q->expr()->eq('invoice_type',$q->createNamedParameter('credit')))->orderBy('id','DESC');return $q->executeQuery()->fetchAll();}
  private function paymentsForOrder(int $orderId):array{$q=$this->db->getQueryBuilder();$q->select('p.*','i.invoice_no','i.invoice_type')->from('re_erp_invoice_payments','p')->innerJoin('p','re_erp_invoices','i',$q->expr()->eq('i.id','p.invoice_id'))->where($q->expr()->eq('i.order_id',$q->createNamedParameter($orderId)))->orderBy('p.payment_date','DESC');return $q->executeQuery()->fetchAll();}
+ private function setBillingCheck(int $projectId,string $type,int $sourceId,string $status,?int $invoiceId):void{
+  if($projectId<=0)return;$q=$this->db->getQueryBuilder();$q->select('id')->from('re_erp_billing_checks')->where($q->expr()->eq('source_type',$q->createNamedParameter($type)))->andWhere($q->expr()->eq('source_id',$q->createNamedParameter($sourceId)));$existing=$q->executeQuery()->fetchOne();$data=['project_id'=>$projectId,'status'=>$status,'invoice_id'=>$invoiceId,'updated_by'=>$this->uid()?:null,'updated_at'=>date('Y-m-d H:i:s')];if($existing){$u=$this->db->getQueryBuilder();$u->update('re_erp_billing_checks');foreach($data as $k=>$v)$u->set($k,$u->createNamedParameter($v));$u->where($u->expr()->eq('id',$u->createNamedParameter((int)$existing)))->executeStatement();}else{$data['source_type']=$type;$data['source_id']=$sourceId;$this->insert('re_erp_billing_checks',$data);}
+ }
+ private function billingCandidates(int $projectId):array{
+  $out=[];$done=[];$q=$this->db->getQueryBuilder();$q->select('source_type','source_id')->from('re_erp_billing_checks')->where($q->expr()->eq('project_id',$q->createNamedParameter($projectId)));foreach($q->executeQuery()->fetchAll() as $r)$done[(string)$r['source_type'].':'.(int)$r['source_id']]=true;
+  $q=$this->db->getQueryBuilder();$q->select('e.id','e.activity','e.hours','e.billing_status','w.user_id','w.work_date','ur.individual_hourly_rate','hr.sales_rate')->from('re_erp_workday_entries','e')->innerJoin('e','re_erp_workdays','w',$q->expr()->eq('w.id','e.workday_id'))->leftJoin('w','re_erp_user_roles','ur',$q->expr()->eq('ur.user_id','w.user_id'))->leftJoin('ur','re_erp_hourly_rates','hr',$q->expr()->eq('hr.id','ur.hourly_rate_id'))->where($q->expr()->eq('e.project_id',$q->createNamedParameter($projectId)))->orderBy('w.work_date','ASC');foreach($q->executeQuery()->fetchAll() as $r){$id=(int)$r['id'];if(isset($done['time:'.$id])||($r['billing_status']??'')==='billed')continue;$rate=(float)($r['individual_hourly_rate']??0);if($rate<=0)$rate=(float)($r['sales_rate']??0);$hours=(float)($r['hours']??0);if($hours<=0)continue;$out[]=['type'=>'time','id'=>$id,'kind'=>'Arbeitszeit','title'=>date('d.m.Y',strtotime((string)$r['work_date'])).' · '.trim((string)($r['activity']??'Arbeitsleistung')),'detail'=>$hours.' Std. · '.(string)($r['user_id']??''),'description'=>'Arbeitszeit '.(string)$r['work_date'].' · '.trim((string)($r['activity']??'Arbeitsleistung')),'quantity'=>$hours,'unit'=>'Std.','unit_price'=>$rate];}
+  $q=$this->db->getQueryBuilder();$q->select('ri.id','ri.description','ri.quantity','ri.unit','m.sale_price','m.price','r.report_no','r.report_date')->from('re_erp_report_items','ri')->innerJoin('ri','re_erp_reports','r',$q->expr()->eq('r.id','ri.report_id'))->leftJoin('ri','re_erp_materials','m',$q->expr()->eq('m.id','ri.material_id'))->where($q->expr()->eq('r.project_id',$q->createNamedParameter($projectId)))->orderBy('r.report_date','ASC');foreach($q->executeQuery()->fetchAll() as $r){$id=(int)$r['id'];if(isset($done['material:'.$id]))continue;$qty=(float)($r['quantity']??0);if($qty<=0)continue;$price=(float)($r['sale_price']??0);if($price<=0)$price=(float)($r['price']??0);$desc=trim((string)$r['description']);$out[]=['type'=>'material','id'=>$id,'kind'=>'Material','title'=>$desc?:'Materialposition','detail'=>'Rapport '.(string)($r['report_no']??'').' · '.$qty.' '.(string)($r['unit']??'Stk.'),'description'=>$desc.(!empty($r['report_no'])?' · Rapport '.$r['report_no']:''),'quantity'=>$qty,'unit'=>trim((string)($r['unit']??''))?:'Stk.','unit_price'=>$price];}
+  $q=$this->db->getQueryBuilder();$q->select('id','report_no','report_date','title','signed_at')->from('re_erp_reports')->where($q->expr()->eq('project_id',$q->createNamedParameter($projectId)))->andWhere($q->expr()->eq('archived',$q->createNamedParameter(0)))->orderBy('report_date','ASC');foreach($q->executeQuery()->fetchAll() as $r){$id=(int)$r['id'];if(isset($done['report:'.$id]))continue;$out[]=['type'=>'report','id'=>$id,'kind'=>'Rapport','title'=>'Rapport '.(string)$r['report_no'].' · '.(string)$r['title'],'detail'=>(string)$r['report_date'].(!empty($r['signed_at'])?' · unterschrieben':''),'description'=>'Rapport '.(string)$r['report_no'].' vom '.(string)$r['report_date'].' · '.(string)$r['title'],'quantity'=>1,'unit'=>'Info','unit_price'=>0.0];}
+  $q=$this->db->getQueryBuilder();$q->select('ps.id','ps.trade','ps.purchase_no','ps.confirmation_no','ps.receipt_status','s.name AS supplier_name')->from('re_erp_project_suppliers','ps')->leftJoin('ps','re_erp_suppliers','s',$q->expr()->eq('s.id','ps.supplier_id'))->where($q->expr()->eq('ps.project_id',$q->createNamedParameter($projectId)))->orderBy('ps.id','ASC');foreach($q->executeQuery()->fetchAll() as $r){$id=(int)$r['id'];if(isset($done['supplier:'.$id]))continue;$parts=array_filter([(string)($r['purchase_no']??'')!==''?'Bestellung '.$r['purchase_no']:'',(string)($r['confirmation_no']??'')!==''?'AB '.$r['confirmation_no']:'',(string)($r['receipt_status']??'')]);$out[]=['type'=>'supplier','id'=>$id,'kind'=>'Lieferant','title'=>trim((string)($r['supplier_name']??'Lieferant')).((string)($r['trade']??'')!==''?' · '.$r['trade']:''),'detail'=>implode(' · ',$parts),'description'=>'Lieferantenleistung '.trim((string)($r['supplier_name']??'')),'quantity'=>1,'unit'=>'Info','unit_price'=>0.0];}
+  return $out;
+ }
  private function projectInvoiceItems(int $projectId,bool $times,bool $materials,bool $reports):array{
   $items=[];
   if($times){$q=$this->db->getQueryBuilder();$q->select('e.activity','e.hours','w.user_id','w.work_date','ur.individual_hourly_rate','hr.sales_rate')->from('re_erp_workday_entries','e')->innerJoin('e','re_erp_workdays','w',$q->expr()->eq('w.id','e.workday_id'))->leftJoin('w','re_erp_user_roles','ur',$q->expr()->eq('ur.user_id','w.user_id'))->leftJoin('ur','re_erp_hourly_rates','hr',$q->expr()->eq('hr.id','ur.hourly_rate_id'))->where($q->expr()->eq('e.project_id',$q->createNamedParameter($projectId)))->orderBy('w.work_date','ASC');foreach($q->executeQuery()->fetchAll() as $r){$rate=(float)($r['individual_hourly_rate']??0);if($rate<=0)$rate=(float)($r['sales_rate']??0);$hours=(float)($r['hours']??0);if($hours<=0)continue;$items[]=['description'=>'Arbeitszeit '.(string)($r['work_date']??'').' · '.trim((string)($r['activity']??'Arbeitsleistung')).' · '.(string)($r['user_id']??''),'quantity'=>$hours,'unit'=>'Std.','unit_price'=>$rate,'total_price'=>round($hours*$rate,2)];}}

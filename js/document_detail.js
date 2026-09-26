@@ -109,3 +109,40 @@ document.addEventListener('DOMContentLoaded', () => {
     })
     validate()
 })
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    const project = document.getElementById('documentProject')
+    const supplier = document.querySelector('#documentAssignForm [name="supplierId"]')
+    const cockpit = document.getElementById('documentProjectSupplier')
+    const role = document.getElementById('supplierDocumentRole')
+    const type = document.querySelector('#documentAssignForm [name="documentType"]')
+    if (!project || !cockpit) return
+    const options = Array.from(cockpit.options)
+    const filterCockpit = () => {
+        const projectId = project.value
+        const supplierId = supplier?.value || ''
+        options.forEach((option, index) => {
+            if (index === 0) return
+            const matchesProject = projectId && option.dataset.projectId === projectId
+            const matchesSupplier = !supplierId || option.dataset.supplierId === supplierId
+            option.hidden = !(matchesProject && matchesSupplier)
+            option.disabled = !(matchesProject && matchesSupplier)
+        })
+        if (cockpit.selectedOptions[0]?.disabled) cockpit.value = ''
+    }
+    const suggestRole = () => {
+        if (!role || !type || role.value) return
+        if (type.value === 'order') role.value = 'confirmation'
+        if (type.value === 'delivery_note') role.value = 'delivery'
+    }
+    cockpit.addEventListener('change', () => {
+        const selected = cockpit.selectedOptions[0]
+        if (selected?.dataset.supplierId && supplier && !supplier.value) { supplier.value = selected.dataset.supplierId; filterCockpit() }
+        suggestRole()
+    })
+    project.addEventListener('change', filterCockpit)
+    supplier?.addEventListener('change', filterCockpit)
+    type?.addEventListener('change', suggestRole)
+    filterCockpit(); suggestRole()
+})

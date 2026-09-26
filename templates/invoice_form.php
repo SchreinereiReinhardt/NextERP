@@ -40,6 +40,13 @@ $statusLabels=['draft'=>'Entwurf','open'=>'Offen','paid'=>'Bezahlt','cancelled'=
     <label>Schlusstext</label>
     <textarea name="outroText" rows="4" placeholder="Individueller Text unterhalb der Summen"></textarea>
    </div>
+   <?php $billingCandidates=$_['billingCandidates']??[]; ?>
+   <section class="erp-billing-assistant" id="billingAssistant" data-api-base="<?php p($url->linkToRoute('reinhardterp.business.billingCandidatesApi',['projectId'=>0]));?>" data-check-base="<?php p($url->linkToRoute('reinhardterp.business.billingCheck',['projectId'=>0]));?>">
+    <div class="erp-billing-head"><div><span class="erp-eyebrow">ABRECHNUNGSASSISTENT</span><h2>Nichts vergessen</h2><p class="erp-muted" id="billingAssistantText">Projekt auswählen – Betrio prüft Arbeitszeiten, Material, Rapporte und Lieferantenvorgänge.</p></div><div class="erp-billing-count" id="billingAssistantCount">–</div></div>
+    <div class="erp-billing-list" id="billingAssistantList"></div>
+    <div class="erp-billing-complete" id="billingAssistantComplete" hidden>✓ Abrechnung vollständig geprüft</div>
+   </section>
+
    <div class="erp-offer-items-head"><div><h2>Positionen</h2><p class="erp-muted">Leistungen und Produkte netto erfassen.</p></div><button type="button" class="button" id="invoiceAddItem">+ Position</button></div>
    <div class="erp-offer-items" id="invoiceItems">
    <?php $rows=$prefillItems?:[['description'=>'','quantity'=>1,'unit'=>'Stk.','unit_price'=>0,'total_price'=>0]]; foreach($rows as $idx=>$row):?>

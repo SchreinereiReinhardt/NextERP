@@ -8,7 +8,7 @@ $materialCount=array_sum(array_map(fn($x)=>(int)($x['material_count']??0),$rows)
 $documentCount=array_sum(array_map(fn($x)=>(int)($x['document_count']??0),$rows));
 $link=function(string $v,array $extra=[])use($url,$s){return $url->linkToRoute('reinhardterp.module.suppliers',array_merge($s?['id'=>(int)$s['id']]:[],['view'=>$v],$extra));};
 ?>
-<div id="app-content"><div class="erp-page erp-suppliers-v2">
+<div id="app-content"><div class="erp-page erp-suppliers-v2 erp-suppliers-premium">
 <?php if(!empty($_['message'])):?><div class="erp-notice"><?php p($_['message']);?></div><?php endif;?>
 <?php if(!$s):?>
 <div class="erp-head erp-supplier-head"><div><p class="erp-eyebrow">LAGER & MATERIAL</p><h1>Lieferanten</h1><p class="erp-sub">Lieferanten, Konditionen, Materialien und Belege zentral verwalten.</p></div><div class="erp-actions"><a class="button" href="<?php p($url->linkToRoute('reinhardterp.module.materials'));?>">Materialstamm</a><a class="button primary" href="<?php p($url->linkToRoute('reinhardterp.module.suppliers',['view'=>'new']));?>">+ Neuer Lieferant</a></div></div>

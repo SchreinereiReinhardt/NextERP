@@ -99,6 +99,7 @@ final class DocumentInboxService {
             $this->tableRows('re_erp_projects', 'project_no'),
             $this->tableRows('re_erp_suppliers', 'name'),
             $content,
+            $this->projectSupplierRows(),
         );
         $suggestion = array_replace($suggestion, $this->rules->apply((string)$document['original_name']));
         $suggestion['analyzed_at'] = date('Y-m-d H:i:s');
@@ -457,11 +458,15 @@ final class DocumentInboxService {
     private function insertNewDocument(array $fileData): int {
         $checksum = (string)($fileData['checksum'] ?? '');
         $duplicateOf = $checksum !== '' ? $this->findDuplicateId($checksum) : null;
+        // Analyse text immediately so the first inbox suggestion is already based on PDF/OCR content.
+        $content = $this->extractDocumentText($fileData);
         $suggestion = $this->classifier->classify(
             (string)$fileData['original_name'],
             $this->tableRows('re_erp_customers', 'name'),
             $this->tableRows('re_erp_projects', 'project_no'),
             $this->tableRows('re_erp_suppliers', 'name'),
+            $content,
+            $this->projectSupplierRows(),
         );
         $now = date('Y-m-d H:i:s');
         return $this->insert(array_merge($fileData, $suggestion, [
@@ -477,6 +482,18 @@ final class DocumentInboxService {
             'created_at' => $now,
             'updated_at' => $now,
         ]));
+    }
+
+    private function projectSupplierRows(): array {
+        try {
+            $qb=$this->db->getQueryBuilder();
+            $qb->select('ps.project_id','ps.supplier_id','ps.purchase_no','ps.confirmation_no','s.name AS supplier_name')
+                ->from('re_erp_project_suppliers','ps')
+                ->leftJoin('ps','re_erp_suppliers','s',$qb->expr()->eq('s.id','ps.supplier_id'));
+            return $qb->executeQuery()->fetchAll();
+        } catch (\Throwable) {
+            return [];
+        }
     }
 
     private function findDuplicateId(string $checksum): ?int {

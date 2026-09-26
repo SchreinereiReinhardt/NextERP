@@ -4,7 +4,7 @@ use OCP\IURLGenerator;
 $url=\OC::$server->get(IURLGenerator::class);
 $s=$_['stats']??[];
 ?>
-<div id="app-content"><div class="erp-page">
+<div id="app-content"><div class="erp-page erp-sales-overview-premium">
  <div class="erp-head"><div><span class="erp-eyebrow">VERKAUF</span><h1>Übersicht</h1><p class="erp-sub">Angebote, Aufträge und Rechnungen auf einen Blick.</p></div><div class="erp-actions"><a class="button primary" href="<?php p($url->linkToRoute('reinhardterp.business.offerForm'));?>">+ Neues Angebot</a></div></div>
  <div class="erp-kpi-grid">
   <a class="erp-kpi-card" href="<?php p($url->linkToRoute('reinhardterp.business.offers'));?>"><span>Offene Angebote</span><strong><?php p((int)($s['offerOpen']??0));?></strong><small><?php p(number_format((float)($s['offerGross']??0),2,',','.').' € brutto');?></small></a>

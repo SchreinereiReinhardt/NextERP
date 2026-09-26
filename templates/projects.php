@@ -6,7 +6,7 @@ $view=$_['view']??'active';
 $isArchive=$view==='archive';
 $search=(string)($_['search']??'');
 ?>
-<div id="app-content"><div class="erp-page erp-list-page erp-projects-page">
+<div id="app-content"><div class="erp-page erp-list-page erp-projects-page erp-projects-premium">
 <div class="erp-head"><div><span class="erp-record-kicker">Projektverwaltung</span><h1><?php p($isArchive?'Projektarchiv':'Projekte'); ?></h1><p class="erp-sub"><?php p($isArchive?'Archivierte Projektakten bleiben vollständig erhalten und können jederzeit wiederhergestellt werden.':'Kompakter Überblick über alle laufenden Projektakten.'); ?></p></div><?php if(!$isArchive): ?><a class="button primary" href="<?php p($url->linkToRoute('reinhardterp.page.projectForm')); ?>">+ Neues Projekt</a><?php endif; ?></div>
 
 <nav class="erp-project-tabs" aria-label="Projektansicht">

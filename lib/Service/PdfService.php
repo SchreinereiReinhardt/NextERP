@@ -132,9 +132,9 @@ final class PdfService {
  public function createCommercialDocument(string $type,array $doc,?array $customer,?array $project,array $items,?array $logo=null,array $company=[]):string{
   require_once __DIR__.'/../tfpdf/tfpdf.php';
   $pdf=new \tFPDF('P','mm','A4');$pdf->SetMargins(15,12,15);$pdf->SetAutoPageBreak(true,22);$pdf->AddPage();
-  $label=match($type){'offer'=>$this->tr('Angebot','Quote'),'advance'=>$this->tr('Abschlagsrechnung','Advance invoice'),'final'=>$this->tr('Schlussrechnung','Final invoice'),'credit'=>$this->tr('Gutschrift','Credit note'),default=>$this->tr('Rechnung','Invoice')};
-  $number=$type==='offer'?(string)($doc['offer_no']??''):(string)(($doc['status']??'')==='draft'?$this->tr('ENTWURF','DRAFT'):($doc['invoice_no']??''));
-  $date=(string)($type==='offer'?($doc['offer_date']??date('Y-m-d')):($doc['invoice_date']??date('Y-m-d')));
+  $label=match($type){'offer'=>$this->tr('Angebot','Quote'),'delivery'=>$this->tr('Lieferschein','Delivery note'),'advance'=>$this->tr('Abschlagsrechnung','Advance invoice'),'final'=>$this->tr('Schlussrechnung','Final invoice'),'credit'=>$this->tr('Gutschrift','Credit note'),default=>$this->tr('Rechnung','Invoice')};
+  $number=$type==='offer'?(string)($doc['offer_no']??''):($type==='delivery'?(string)($doc['delivery_no']??''):(string)(($doc['status']??'')==='draft'?$this->tr('ENTWURF','DRAFT'):($doc['invoice_no']??'')));
+  $date=(string)($type==='offer'?($doc['offer_date']??date('Y-m-d')):($type==='delivery'?($doc['delivery_date']??date('Y-m-d')):($doc['invoice_date']??date('Y-m-d'))));
   $this->commercialHeader($pdf,$company,$logo);
 
   $sender=trim(implode(' - ',array_filter([(string)($company['name']??''),(string)($company['street']??''),trim((string)($company['zip']??'').' '.(string)($company['city']??''))])));
@@ -169,26 +169,29 @@ final class PdfService {
    $intro=trim((string)($doc['intro_text']??''));
    if($intro!==''){$pdf->SetFont('Helvetica','',9);$pdf->MultiCell(0,5,$this->text($this->plain($intro)));$pdf->Ln(3);}
   }
-  $this->commercialTableHeader($pdf);
+  if($type==='delivery'){
+   $pdf->SetFillColor(245,245,245);$pdf->SetFont('Helvetica','B',7.6);$pdf->SetTextColor(25,25,25);
+   foreach([[$this->tr('Pos.','Item'),14,'L'],[$this->tr('Menge','Quantity'),28,'R'],[$this->tr('Einheit','Unit'),28,'L'],[$this->tr('Bezeichnung','Description'),110,'L']] as [$h,$w,$a])$pdf->Cell($w,6,$this->text($h),0,0,$a,true);$pdf->Ln();
+  }else{$this->commercialTableHeader($pdf);}
   $net=0.0;
   foreach($items as $idx=>$item){
    $alt=!empty($item['is_alternative']);$line=(float)($item['total_price']??0);if(!$alt)$net+=$line;
    $desc=$this->plain((string)($item['description']??''));
    if($alt)$desc="Alternativposition\n".$desc;
    $lines=max(1,substr_count(wordwrap($desc,52,"\n",true),"\n")+1);$h=max(7,min(28,$lines*4.2));
-   if($pdf->GetY()+$h>270){$pdf->AddPage();$this->commercialHeader($pdf,$company,$logo,true);$pdf->SetY(48);$this->commercialTableHeader($pdf);}
+   if($pdf->GetY()+$h>270){$pdf->AddPage();$this->commercialHeader($pdf,$company,$logo,true);$pdf->SetY(48);if($type==='delivery'){$pdf->SetFillColor(245,245,245);$pdf->SetFont('Helvetica','B',7.6);foreach([[$this->tr('Pos.','Item'),14,'L'],[$this->tr('Menge','Quantity'),28,'R'],[$this->tr('Einheit','Unit'),28,'L'],[$this->tr('Bezeichnung','Description'),110,'L']] as [$hh,$ww,$aa])$pdf->Cell($ww,6,$this->text($hh),0,0,$aa,true);$pdf->Ln();}else{$this->commercialTableHeader($pdf);}}
    $y=$pdf->GetY();$pdf->SetFont('Helvetica','',8);
-   $pdf->Cell(9,$h,$this->text((string)($idx+1)),0,0,'L');
-   $pdf->Cell(17,$h,$this->text(number_format((float)($item['quantity']??0),2,',','.')),0,0,'R');
-   $pdf->Cell(16,$h,$this->text((string)($item['unit']??'')),0,0,'L');
-   $pdf->SetXY(57,$y);$pdf->MultiCell(74,4.2,$this->text($desc),0,'L');
-   $pdf->SetXY(131,$y);$pdf->Cell(28,$h,$this->text(number_format((float)($item['unit_price']??0),2,',','.').' EUR'),0,0,'R');
-   $pdf->Cell(36,$h,$this->text(number_format($line,2,',','.').' EUR'),0,1,'R');
+   if($type==='delivery'){
+    $pdf->Cell(14,$h,$this->text((string)($idx+1)),0,0,'L');$pdf->Cell(28,$h,$this->text(number_format((float)($item['quantity']??0),2,',','.')),0,0,'R');$pdf->Cell(28,$h,$this->text((string)($item['unit']??'')),0,0,'L');$pdf->SetXY(85,$y);$pdf->MultiCell(110,4.2,$this->text($desc),0,'L');
+   }else{
+    $pdf->Cell(9,$h,$this->text((string)($idx+1)),0,0,'L');$pdf->Cell(17,$h,$this->text(number_format((float)($item['quantity']??0),2,',','.')),0,0,'R');$pdf->Cell(16,$h,$this->text((string)($item['unit']??'')),0,0,'L');$pdf->SetXY(57,$y);$pdf->MultiCell(74,4.2,$this->text($desc),0,'L');$pdf->SetXY(131,$y);$pdf->Cell(28,$h,$this->text(number_format((float)($item['unit_price']??0),2,',','.').' EUR'),0,0,'R');$pdf->Cell(36,$h,$this->text(number_format($line,2,',','.').' EUR'),0,1,'R');
+   }
    if($pdf->GetY()<$y+$h)$pdf->SetY($y+$h);
    $pdf->SetDrawColor(225,225,225);$pdf->Line(15,$pdf->GetY(),195,$pdf->GetY());
    $this->commercialItemImage($pdf,$item,$company,$logo);
   }
 
+  if($type!=='delivery'){
   $storedNet=(float)($doc['net_amount']??$net);$gross=(float)($doc['gross_amount']??$storedNet);$vat=(float)($doc['vat_rate']??19);$tax=$gross-$storedNet;
   if($pdf->GetY()>235)$pdf->AddPage();
   $pdf->Ln(4);$x=122;$w1=42;$w2=31;
@@ -227,6 +230,7 @@ final class PdfService {
   if($type!=='offer'){
    $outro=trim((string)($doc['outro_text']??''));
    if($outro!==''){$pdf->Ln(7);$pdf->SetFont('Helvetica','',8.7);$pdf->MultiCell(0,4.7,$this->text($this->plain($outro)));}
+  }
   }
   $this->commercialFooter($pdf,$company);
   return $pdf->Output('S');
