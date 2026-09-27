@@ -196,6 +196,8 @@ final class DocumentInboxService {
             'gross_amount' => $this->nullableFloat($data['gross_amount'] ?? null),
             'currency' => strtoupper(substr(trim((string)($data['currency'] ?? 'EUR')) ?: 'EUR', 0, 3)),
             'notes' => $this->nullableString($data['notes'] ?? null),
+            'cost_category' => $this->nullableString($data['cost_category'] ?? null),
+            'project_supplier_id' => $this->nullableInt((int)($data['project_supplier_id'] ?? 0)),
             'assigned_by' => $this->uid(),
             'assigned_at' => $now,
             'updated_at' => $now,

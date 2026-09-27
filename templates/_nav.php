@@ -8,6 +8,7 @@ $permissions = \OC::$server->get(PermissionService::class);
 Util::addStyle('reinhardterp', 'style');
 Util::addScript('reinhardterp', 'navigation');
 Util::addScript('reinhardterp', 'command_palette');
+Util::addScript('reinhardterp', 'context_help');
 $currentPath = (string)($_SERVER['REQUEST_URI'] ?? '');
 
 $groups = [

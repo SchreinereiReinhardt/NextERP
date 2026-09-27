@@ -15,6 +15,11 @@ final class Project extends Entity {
     protected ?string $description = null;
     protected ?string $folderPath = null;
     protected ?float $specialHourlyRate = null;
+    protected ?float $calcValueNet = null;
+    protected ?float $calcHours = null;
+    protected ?float $calcMaterial = null;
+    protected ?float $calcExternal = null;
+    protected ?\DateTime $calcLockedAt = null;
     protected bool $isArchived = false;
     protected string $createdBy = '';
     protected ?\DateTime $createdAt = null;
@@ -27,6 +32,11 @@ final class Project extends Entity {
         $this->addType('dueDate', 'date');
         $this->addType('isArchived', 'bool');
         $this->addType('specialHourlyRate', 'float');
+        $this->addType('calcValueNet', 'float');
+        $this->addType('calcHours', 'float');
+        $this->addType('calcMaterial', 'float');
+        $this->addType('calcExternal', 'float');
+        $this->addType('calcLockedAt', 'datetime');
         $this->addType('createdAt', 'datetime');
         $this->addType('updatedAt', 'datetime');
     }

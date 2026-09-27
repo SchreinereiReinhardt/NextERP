@@ -6,7 +6,7 @@ $fileUrl=static function(string $path)use($filesBase):string{$path=trim($path,'/
 $formatSize=static function(int $b):string{if($b<1024)return $b.' B';if($b<1048576)return number_format($b/1024,1,',','.').' KB';return number_format($b/1048576,1,',','.').' MB';};
 $totalHours=array_sum(array_map(static fn($x)=>(float)$x['hours'],$times)); $statuses=['Anfrage','Angebot','Auftrag','Fertigung','Montage','Abnahme','Abrechnung','Abgeschlossen'];
 $currentStatus=(string)($project['status']??'Anfrage');$idx=array_search(strtolower($currentStatus),array_map('strtolower',$statuses),true);$progress=$idx===false?0:(int)round(($idx/(count($statuses)-1))*100);
-$cockpit=$cockpit??[];$projectCosts=$projectCosts??[];$offers=$offers??[];$orders=$orders??[];$invoices=$invoices??[];$projectEvents=$projectEvents??[];$documentRecords=$documentRecords??[];$projectNotes=$projectNotes??[];$projectChecklist=$projectChecklist??[];$documentTags=$documentTags??[];$selectedDocumentTag=$selectedDocumentTag??'';$projectSuppliers=$projectSuppliers??[];$suppliers=$suppliers??[];$supplierDocuments=$supplierDocuments??[];
+$cockpit=$cockpit??[];$projectCosts=$projectCosts??[];$projectPerformance=$projectPerformance??[];$offers=$offers??[];$orders=$orders??[];$invoices=$invoices??[];$projectEvents=$projectEvents??[];$documentRecords=$documentRecords??[];$projectNotes=$projectNotes??[];$projectChecklist=$projectChecklist??[];$documentTags=$documentTags??[];$selectedDocumentTag=$selectedDocumentTag??'';$projectSuppliers=$projectSuppliers??[];$suppliers=$suppliers??[];$supplierDocuments=$supplierDocuments??[];
 $money=static fn($v):string=>number_format((float)$v,2,',','.').' €';
 $memberMap=[];foreach(($projectMembers??[]) as $m)$memberMap[(string)$m['user_id']]=$m;
 $openProjectFile=static fn(string $path):string=>$url->linkToRoute('reinhardterp.page.projectFile',['id'=>$project['id'],'path'=>$path]);
@@ -16,6 +16,41 @@ $folderLabels=['00_Eingang'=>'Eingang','01_Aufmass'=>'Aufmaß','02_Planung'=>'Pl
 <header class="erp-project-hero"><div class="erp-project-identity"><span class="erp-record-kicker">Digitale Projektakte · <?=p($project['project_no'])?></span><h1><?=p($project['title'])?></h1><p><a href="<?=p($url->linkToRoute('reinhardterp.page.customerDetail',['id'=>$project['customer_id']]))?>"><?=p($project['customer_no'].' '.$project['customer_name'])?></a> · <strong><?=p($currentStatus)?></strong></p><div class="erp-project-progress"><i style="width:<?=p($progress)?>%"></i></div></div><div class="erp-project-hero-actions"><?php if($projectPath!==''):?><a class="button primary" href="<?=p($url->linkToRoute('reinhardterp.page.projectExplorer',['id'=>$project['id']]))?>"><span class="erp-ui-icon erp-icon-folder"></span>Projektordner</a><?php endif;?><a class="button" href="<?=p($url->linkToRoute('reinhardterp.module.reports',['projectId'=>$project['id']]))?>">+ Rapport</a><a class="button" href="<?=p($url->linkToRoute('reinhardterp.module.workdays'))?>">+ Zeit</a><?php if(!empty($isProjectSupervisor)):?><details class="erp-project-more"><summary class="button">Mehr</summary><div class="erp-project-more-menu"><a href="<?=p($url->linkToRoute('reinhardterp.page.projectForm',['id'=>$project['id']]))?>">Projekt bearbeiten</a><?php if($projectPath!==''):?><a target="_blank" rel="noopener" href="<?=p($folderUrl($projectPath))?>">In Nextcloud öffnen</a><?php endif;?></div></details><?php endif;?></div></header>
 <nav class="erp-project-center-nav" aria-label="Projektcenter"><a href="#overview">Übersicht</a><a href="#appointments">Termine</a><?php if(!empty($isProjectSupervisor)):?><a href="#offers">Angebote</a><a href="#orders">Aufträge</a><a href="#invoices">Rechnungen</a><?php endif;?><a href="#reports">Rapporte</a><a href="#time">Zeiten</a><a href="#material">Material</a><?php if(!empty($isProjectSupervisor)):?><a href="#suppliers">Lieferanten</a><?php endif;?><a href="#notes">Notizen</a><a href="#checklist">Checkliste</a><a href="#documents">Dokumente</a><details class="erp-project-nav-more"><summary>Mehr</summary><div><a href="#photos">Fotos</a><a href="#permissions">Freigaben</a><?php if(!empty($isProjectSupervisor)):?><a href="#costs">Kosten</a><?php endif;?><a href="#timeline">Timeline</a></div></details></nav>
 <section id="overview" class="erp-project-center-metrics"><article><span>Fortschritt</span><strong><?=p($progress)?> %</strong><small><?=p($currentStatus)?></small></article><article><span>Arbeitszeit</span><strong><?=p(number_format($totalHours,2,',','.'))?> h</strong><small><?=count($times)?> Buchungen</small></article><article><span>Rapporte</span><strong><?=count($reports)?></strong><small><?=count(array_filter($reports,static fn($r)=>empty($r['locked'])))?> offen</small></article><article><span>Projektwert</span><strong><?=p($money($projectCosts['projectValue']??0))?></strong><small><?=($projectCosts['orderValue']??0)>0?'Aufträge':'Angebote'?></small></article><article><span>Dokumente</span><strong><?=count($documents)?></strong><small><?=count($documentRecords)?> klassifiziert</small></article></section>
+<?php if(!empty($isProjectSupervisor)):?>
+<section class="erp-card erp-performance-center erp-overview-only" id="performance">
+ <div class="erp-section-head"><div><span class="erp-eyebrow">PROJEKTCONTROLLING</span><h2 class="erp-help-target" data-betrio-help="project-controlling">Nachkalkulation</h2><p class="erp-muted">Soll, Ist und Abrechnung auf einen Blick. <?php if(!empty($projectPerformance['snapshotLocked'])):?><strong>Kalkulationsstand fixiert.</strong><?php else:?>Sollwerte folgen dem aktuellen Angebot bis zur Auftragsphase.<?php endif;?></p></div><span class="erp-performance-progress"><?=p((int)($projectPerformance['billingProgress']??0))?> % abgerechnet</span></div>
+ <div class="erp-performance-kpis">
+  <article><span>Auftragswert netto</span><strong><?=p($money($projectPerformance['projectValue']??0))?></strong></article>
+  <article><a class="erp-kpi-link" href="#costs"><span>Ist-Kosten</span><strong><?=p($money($projectPerformance['actualTotalCost']??0))?></strong><small>Details anzeigen</small></a></article>
+  <article class="<?=empty($projectPerformance['costsComplete'])?'is-warning':''?>"><span><?=empty($projectPerformance['costsComplete'])?'Vorläufiges Ergebnis':'Ergebnis'?></span><strong><?=p($money($projectPerformance['projectResultNet']??0))?></strong><small><?php if(empty($projectPerformance['costsComplete'])):?>Kostensätze fehlen<?php elseif($projectPerformance['marginPercent']!==null):?>Marge <?=p(number_format((float)$projectPerformance['marginPercent'],1,',','.'))?> %<?php endif;?></small></article>
+  <article><a class="erp-kpi-link" href="#invoices"><span>Noch abzurechnen</span><strong><?=p($money($projectPerformance['remaining']??0))?></strong><small>Zu Rechnungen</small></a></article>
+  <article><a class="erp-kpi-link" href="#invoices"><span>Abgerechnet</span><strong><?=p((int)($projectPerformance['billingProgress']??0))?> %</strong><small>Zu Rechnungen</small></a></article>
+ </div>
+ <?php if(!empty($projectPerformance['uxWarnings'])):?><div class="erp-cockpit-warnings" role="status"><?php foreach($projectPerformance['uxWarnings'] as $warning):?><a class="erp-cockpit-warning" href="<?=p($warning['href'])?>"><strong>Prüfen</strong><span><?=p($warning['text'])?></span><b>›</b></a><?php endforeach;?></div><?php endif;?>
+ <div class="erp-performance-columns">
+  <div class="erp-performance-panel"><h3>Kalkulation</h3>
+   <a class="erp-performance-row erp-performance-link" href="#time"><span>Arbeitszeit</span><strong><?=p(number_format((float)($projectPerformance['plannedHours']??0),2,',','.'))?> h Soll · <?=p(number_format((float)($projectPerformance['hours']??0),2,',','.'))?> h Ist</strong></a>
+   <div class="erp-performance-row"><span>Material</span><strong><?=p($money($projectPerformance['plannedMaterial']??0))?> Soll · <?=p($money($projectPerformance['actualMaterialCost']??0))?> Ist</strong></div>
+   <div class="erp-performance-row"><span>Verkaufswert Arbeitszeit</span><strong><?=p($money($projectPerformance['laborValue']??0))?></strong></div>
+   <a class="erp-performance-row erp-performance-link" href="<?=p($url->linkToRoute('reinhardterp.module.users'))?>"><span class="erp-help-target" data-betrio-help="internal-costs">Interne Personalkosten</span><strong><?=p($money($projectPerformance['internalLaborCost']??0))?><?=!empty($projectPerformance['missingCostRateEntries'])?' · unvollständig':''?></strong></a>
+   <div class="erp-performance-row"><span>Fremdkosten netto</span><strong><?=p($money($projectPerformance['externalCostNet']??0))?></strong></div>
+  </div>
+  <div class="erp-performance-panel"><h3>Abrechnung</h3>
+   <div class="erp-performance-row"><span>Berechnet</span><strong><?=p($money($projectPerformance['billedGross']??0))?></strong></div>
+   <div class="erp-performance-row"><span>Zahlungseingang</span><strong><?=p($money($projectPerformance['paid']??0))?></strong></div>
+   <div class="erp-performance-row"><span>Offene Forderung</span><strong><?=p($money($projectPerformance['openReceivable']??0))?></strong></div>
+   <a class="erp-performance-row erp-performance-link" href="<?=p($url->linkToRoute('reinhardterp.business.invoiceForm').'?projectId='.(int)$project['id'])?>"><span>Offene Abrechnungspositionen</span><strong><?=p((int)($projectPerformance['openBilling']??0))?></strong></a>
+   <a class="erp-performance-row erp-performance-link" href="<?=p($url->linkToRoute('reinhardterp.document.index',['projectId'=>$project['id'],'type'=>'incoming_invoice']))?>"><span>Eingangsbelege</span><strong><?=p((int)($projectPerformance['incomingCount']??0))?> · <?=p($money($projectPerformance['incomingGross']??0))?></strong></a>
+  </div>
+ </div>
+ <div class="erp-performance-bar"><span style="width:<?=p((int)($projectPerformance['billingProgress']??0))?>%"></span></div>
+ <?php if(!empty($projectPerformance['attention'])):?><div class="erp-performance-attention"><strong>Was noch offen ist</strong><div><?php foreach($projectPerformance['attention'] as $a):?><span><?=p($a)?></span><?php endforeach;?></div></div><?php endif;?>
+ <div class="erp-performance-actions"><span class="erp-help-target" data-betrio-help="billing-preparation"><a class="button primary" href="<?=p($url->linkToRoute('reinhardterp.business.invoiceForm').'?projectId='.(int)$project['id'].'&includeTimes=1&includeMaterials=1&includeReports=1')?>">Abrechnung vorbereiten</a></span><a class="button" href="#suppliers">Lieferanten</a><a class="button" href="#reports">Rapporte</a></div>
+</section>
+<?php endif;?>
+<?php if(!empty($isProjectSupervisor) && !empty($projectPerformance['incomingCount'])):$cb=$projectPerformance['incomingByCategory']??[];$cl=['material'=>'Material','external_service'=>'Fremdleistung','machine'=>'Maschine / Gerät','travel'=>'Fahrt / Transport','other'=>'Sonstiges'];?>
+<section class="erp-card erp-cost-breakdown erp-overview-only"><div class="erp-section-head"><div><h2>Einkauf & Fremdkosten</h2><p class="erp-muted">Netto-Kosten aus den diesem Projekt zugeordneten Eingangsrechnungen.</p></div><a class="button" href="<?=p($url->linkToRoute('reinhardterp.document.index',['projectId'=>$project['id'],'type'=>'incoming_invoice']))?>">Eingangsrechnungen</a></div><div class="erp-cost-grid"><?php foreach($cl as $ck=>$cv):?><article><span><?=p($cv)?></span><strong><?=p($money($cb[$ck]??0))?></strong></article><?php endforeach;?></div></section>
+<?php endif;?>
 <section class="erp-card erp-permissions-compact" id="permissions"><div class="erp-permission-summary"><div><h2>Mitarbeiter & Freigaben</h2><?php if(!empty($canManageAssignments)):?><?php $assignedSummaries=[];foreach(($assignmentUsers??[]) as $u){$uid=(string)$u['uid'];if(isset($memberMap[$uid])){$folders=$memberMap[$uid]['folders']??[];$assignedSummaries[]=(string)$u['displayName'].' · '.count($folders).' Ordner';}}?><p class="erp-muted"><?php p(!empty($assignedSummaries)?implode(' · ',$assignedSummaries):'Noch keinem Monteur zugewiesen.'); ?></p><?php else:?><p class="erp-muted">Deine Projektfreigaben</p><?php endif;?></div><?php if(!empty($canManageAssignments)):?><button type="button" class="button erp-permission-toggle" aria-expanded="false" aria-controls="erp-permission-editor">Bearbeiten</button><?php endif;?></div>
 <?php if(!empty($canManageAssignments)):?>
 <div id="erp-permission-editor" class="erp-permission-editor" hidden><p class="erp-muted">Monteure sehen nur zugewiesene Projekte und die hier freigegebenen Projektordner.</p><form method="post" action="<?=p($url->linkToRoute('reinhardterp.project.saveAssignments',['id'=>$project['id']]))?>"><input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']);?>"><div class="erp-permission-list">
@@ -26,7 +61,7 @@ $folderLabels=['00_Eingang'=>'Eingang','01_Aufmass'=>'Aufmaß','02_Planung'=>'Pl
 </article>
 <?php endforeach;?><?php endif;?></div><button class="button primary">Freigaben speichern</button></form></div>
 <?php else:?><div class="erp-folder-summary"><strong>Für dich freigegebene Ordner:</strong> <?php foreach(($allowedProjectFolders??[]) as $folder):?><span class="erp-status-pill"><?=p($folderLabels[$folder]??$folder)?></span><?php endforeach;?></div><?php endif;?></section>
-<?php if(!empty($isProjectSupervisor)):?><section class="erp-card erp-workflow-card"><div class="erp-section-head"><div><h2>Projektablauf</h2><p class="erp-muted">Der aktuelle Status steuert den Projektfortschritt.</p></div></div><div class="erp-workflow"><?php foreach($statuses as $status):?><form method="post" action="<?=p($url->linkToRoute('reinhardterp.project.updateStatus',['id'=>$project['id']]))?>"><input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']);?>"><input type="hidden" name="status" value="<?=p($status)?>"><button class="erp-workflow-step <?=strcasecmp($currentStatus,$status)===0?'is-active':''?>"><span></span><?=p($status)?></button></form><?php endforeach;?></div></section><?php endif;?>
+<?php if(!empty($isProjectSupervisor)):?><section class="erp-card erp-workflow-card"><div class="erp-section-head"><div><h2>Projektablauf</h2><p class="erp-muted">Der aktuelle Status steuert den Projektfortschritt.</p></div></div><div class="erp-workflow"><?php foreach($statuses as $status):?><form method="post" action="<?=p($url->linkToRoute('reinhardterp.project.updateStatus',['id'=>$project['id']]))?>" <?php if(strcasecmp($status,'Abgeschlossen')===0):?>data-project-close="1" data-close-items="<?=p(json_encode(array_values($projectPerformance['attention']??[]),JSON_UNESCAPED_UNICODE))?>"<?php endif;?>><input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']);?>"><input type="hidden" name="status" value="<?=p($status)?>"><button class="erp-workflow-step <?=strcasecmp($currentStatus,$status)===0?'is-active':''?>"><span></span><?=p($status)?></button></form><?php endforeach;?></div></section><?php endif;?>
 <?php if(!empty($isProjectSupervisor)):?>
 <?php
 $mountRows=array_values(array_filter($projectSuppliers,static fn($r)=>(int)($r['mounting_relevant']??1)===1));
@@ -36,7 +71,7 @@ $receiptLabels=['open'=>'Offen','partial'=>'Teilweise eingelagert','complete'=>'
 $abLabels=['open'=>'Offen','received'=>'Erhalten'];
 ?>
 <section class="erp-card" id="suppliers">
- <div class="erp-section-head"><div><h2>Lieferanten & Wareneingang</h2><p class="erp-muted">Bestellungen, Auftragsbestätigungen und Wareneingänge direkt mit diesem Projekt verknüpfen.</p></div>
+ <div class="erp-section-head"><div><h2 class="erp-help-target" data-betrio-help="supplier-cockpit">Lieferanten & Wareneingang</h2><p class="erp-muted">Bestellungen, Auftragsbestätigungen und Wareneingänge direkt mit diesem Projekt verknüpfen.</p></div>
  <span class="erp-status-pill <?=$mountComplete?'is-success':'is-warning'?>"><?php p($mountComplete?'Montagefreigabe: Material vollständig':(empty($mountRows)?'Montagefreigabe: noch keine Lieferungen':'Montagefreigabe: '.$mountCompleteCount.'/'.count($mountRows).' vollständig')); ?></span></div>
  <?php if($projectSuppliers):?><div class="erp-table-wrap"><table class="erp-table"><thead><tr><th>Gewerk / Lieferant</th><th>Bestell-Nr.</th><th>Auftragsbestätigung</th><th>Avisierte KW</th><th>Wareneingang</th><th>Belege</th><th></th></tr></thead><tbody>
  <?php foreach($projectSuppliers as $sp):?><tr>
@@ -45,7 +80,7 @@ $abLabels=['open'=>'Offen','received'=>'Erhalten'];
   <td><?=p($abLabels[$sp['confirmation_status']]??$sp['confirmation_status'])?><?php if(!empty($sp['confirmation_no'])):?> <small><?=p($sp['confirmation_no'])?></small><?php endif;?></td>
   <td><?=p(!empty($sp['expected_week'])?'KW '.(int)$sp['expected_week']:'–')?></td>
   <td><span class="erp-status-pill"><?=p($receiptLabels[$sp['receipt_status']]??$sp['receipt_status'])?></span></td>
-  <td><?php if(!empty($sp['confirmation_document_id'])):?><a href="<?=p($url->linkToRoute('reinhardterp.document.detail',['id'=>$sp['confirmation_document_id']]))?>">AB</a><?php endif;?><?php if(!empty($sp['delivery_document_id'])):?> <?=!empty($sp['confirmation_document_id'])?' · ':''?><a href="<?=p($url->linkToRoute('reinhardterp.document.detail',['id'=>$sp['delivery_document_id']]))?>">Lieferschein</a><?php endif;?><?php if(empty($sp['confirmation_document_id'])&&empty($sp['delivery_document_id'])):?>–<?php endif;?></td>
+  <td><?php if(!empty($sp['confirmation_document_id'])):?><a href="<?=p($url->linkToRoute('reinhardterp.document.detail',['id'=>$sp['confirmation_document_id']]))?>">AB</a><?php endif;?><?php if(!empty($sp['delivery_document_id'])):?> <?=!empty($sp['confirmation_document_id'])?' · ':''?><a href="<?=p($url->linkToRoute('reinhardterp.document.detail',['id'=>$sp['delivery_document_id']]))?>">Lieferschein</a><?php endif;?><?php if(empty($sp['confirmation_document_id'])&&empty($sp['delivery_document_id'])&&empty($sp['invoice_count'])):?>–<?php endif;?><?php if(!empty($sp['invoice_count'])):?><?=(!empty($sp['confirmation_document_id'])||!empty($sp['delivery_document_id']))?' · ':''?><a href="<?=p($url->linkToRoute('reinhardterp.document.index',['projectId'=>$project['id'],'type'=>'incoming_invoice']))?>"><?=p((int)$sp['invoice_count'])?> Rechnung<?=((int)$sp['invoice_count']===1?'':'en')?> · <?=p($money($sp['invoice_net']??0))?> netto</a><?php endif;?></td>
   <td><details><summary class="button">Bearbeiten</summary>
    <form method="post" action="<?=p($url->linkToRoute('reinhardterp.project.saveSupplierCockpit',['id'=>$project['id']]))?>" class="erp-form-grid erp-supplier-cockpit-form"><input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']);?>"><input type="hidden" name="rowId" value="<?=p($sp['id'])?>">
     <label>Lieferant<select name="supplierId" required><?php foreach($suppliers as $su):?><option value="<?=p($su['id'])?>" <?=(int)$su['id']===(int)$sp['supplier_id']?'selected':''?>><?=p($su['name'])?></option><?php endforeach;?></select></label>
@@ -93,53 +128,66 @@ $abLabels=['open'=>'Offen','received'=>'Erhalten'];
 
 <div class="erp-project-center-grid">
 <section class="erp-card" id="material"><div class="erp-section-head"><div><h2>Material</h2><p class="erp-muted">In Rapporten erfasster Projektverbrauch.</p></div><a class="button" href="<?=p($url->linkToRoute('reinhardterp.module.materials'))?>">Materialstamm</a></div><?php if(!$projectMaterials):?><p class="erp-muted">Noch kein Material erfasst.</p><?php else:?><div class="erp-material-stream"><?php foreach($projectMaterials as $item):?><article><span><strong><?=p($item['description'])?></strong><small><?=p($item['report_no'])?> · <?=p(date('d.m.Y',strtotime((string)$item['report_date'])))?></small></span><em><?=p(number_format((float)$item['quantity'],3,',','.'))?> <?=p($item['unit']??'')?></em></article><?php endforeach;?></div><?php endif;?></section>
-<section class="erp-card" id="notes">
- <div class="erp-section-head">
-  <div><h2>Projektnotizen</h2><p class="erp-muted">Notizen aus Betrio Mobile und der Projektakte.</p></div>
+<section class="erp-card erp-notes-v2" id="notes">
+ <div class="erp-section-head erp-notes-head">
+  <div><h2>Projektnotizen</h2><p class="erp-muted">Aufmaße, Besprechungen und wichtige Hinweise zum Projekt an einem Ort.</p></div>
+  <span class="erp-notes-count"><?=count($projectNotes)?> <?=count($projectNotes)===1?'Eintrag':'Einträge'?></span>
  </div>
- <form method="post" action="<?=p($url->linkToRoute('reinhardterp.page.saveProjectNote',['id'=>$project['id']]))?>" class="erp-form-grid">
-  <input type="hidden" name="requesttoken" value="<?=p(\OCP\Util::callRegister())?>">
-  <label>Notizart
-   <select name="noteType">
-    <option value="note">Notiz</option>
-    <option value="measurement">Aufmaß</option>
-    <option value="meeting">Besprechung</option>
-    <option value="phone">Telefonnotiz</option>
-   </select>
-  </label>
-  <label>Titel<input type="text" name="title" maxlength="255" placeholder="Optionaler Titel"></label>
-  <label class="erp-form-wide">Notiz<textarea name="content" rows="4" required placeholder="Notiz eingeben"></textarea></label>
-  <div class="erp-form-wide"><button class="button primary" type="submit">Notiz speichern</button></div>
- </form>
+ <div class="erp-note-compose">
+  <div class="erp-note-compose-title"><strong>Neue Notiz</strong><span class="erp-muted">Direkt in der Projektakte erfassen</span></div>
+  <form method="post" action="<?=p($url->linkToRoute('reinhardterp.page.saveProjectNote',['id'=>$project['id']]))?>" class="erp-note-compose-form">
+   <input type="hidden" name="requesttoken" value="<?=p(\OCP\Util::callRegister())?>">
+   <div class="erp-note-compose-meta">
+    <label>Notizart<select name="noteType"><option value="note">Notiz</option><option value="measurement">Aufmaß</option><option value="meeting">Besprechung</option><option value="phone">Telefonnotiz</option></select></label>
+    <label>Titel<input type="text" name="title" maxlength="255" placeholder="z. B. Passleisten Küche"></label>
+   </div>
+   <label class="erp-note-compose-text">Notiz<textarea name="content" rows="5" required placeholder="Notiz eingeben …"></textarea></label>
+   <div class="erp-note-compose-actions"><button class="button primary" type="submit">Notiz speichern</button></div>
+  </form>
+ </div>
  <?php if(empty($projectNotes)):?>
-  <p class="erp-muted">Noch keine Projektnotizen vorhanden.</p>
+  <div class="erp-notes-empty"><strong>Noch keine Projektnotizen</strong><span class="erp-muted">Die erste Notiz kann direkt oben erfasst werden.</span></div>
  <?php else:?>
-  <div class="erp-stack">
+  <div class="erp-notes-toolbar">
+   <label class="erp-notes-search"><span>Notizen durchsuchen</span><input type="search" id="projectNoteSearch" placeholder="Titel oder Inhalt suchen …" autocomplete="off"></label>
+   <div class="erp-note-filters" role="group" aria-label="Notizarten filtern">
+    <button type="button" class="erp-note-filter is-active" data-note-filter="all">Alle</button>
+    <button type="button" class="erp-note-filter" data-note-filter="measurement">Aufmaß</button>
+    <button type="button" class="erp-note-filter" data-note-filter="meeting">Besprechung</button>
+    <button type="button" class="erp-note-filter" data-note-filter="phone">Telefon</button>
+    <button type="button" class="erp-note-filter" data-note-filter="note">Notizen</button>
+   </div>
+  </div>
+  <div class="erp-note-timeline" id="projectNoteTimeline">
    <?php foreach($projectNotes as $note):
     $raw=(string)($note['content']??'');$parts=preg_split("/\R\R/",$raw,2);$noteTitle=count($parts)>1?trim((string)$parts[0]):'';$noteBody=count($parts)>1?(string)$parts[1]:$raw;
     $type=(string)($note['note_type']??'note');$typeLabel=['measurement'=>'Aufmaß','meeting'=>'Besprechung','phone'=>'Telefonnotiz','note'=>'Notiz'][$type]??'Notiz';
+    $createdRaw=(string)($note['created_at']??'');$createdTs=$createdRaw!==''?strtotime($createdRaw):false;$createdLabel=$createdTs?date('d.m.Y · H:i',$createdTs):$createdRaw;
+    $searchText=mb_strtolower(trim(($noteTitle!==''?$noteTitle.' ':'').$noteBody.' '.$typeLabel.' '.(string)($note['created_by']??'')));
    ?>
-   <article class="erp-card erp-note-card">
-    <div class="erp-section-head"><div><strong><?=p($noteTitle!==''?$noteTitle:$typeLabel)?></strong><small class="erp-muted"><?=p($typeLabel)?> · <?=p((string)($note['created_at']??''))?><?php if(!empty($note['created_by'])):?> · <?=p((string)$note['created_by'])?><?php endif;?></small></div></div>
-    <form method="post" action="<?=p($url->linkToRoute('reinhardterp.page.saveProjectNote',['id'=>$project['id']]))?>" class="erp-form-grid">
-     <input type="hidden" name="requesttoken" value="<?=p(\OCP\Util::callRegister())?>">
-     <input type="hidden" name="noteId" value="<?=p((int)$note['id'])?>">
-     <label>Notizart<select name="noteType">
-      <?php foreach(['note'=>'Notiz','measurement'=>'Aufmaß','meeting'=>'Besprechung','phone'=>'Telefonnotiz'] as $value=>$label):?>
-       <option value="<?=p($value)?>"<?=$type===$value?' selected':''?>><?=p($label)?></option>
-      <?php endforeach;?>
-     </select></label>
-     <label>Titel<input type="text" name="title" maxlength="255" value="<?=p($noteTitle)?>"></label>
-     <label class="erp-form-wide">Notiz<textarea name="content" rows="4" required><?=p($noteBody)?></textarea></label>
-     <div class="erp-form-wide"><button class="button" type="submit">Änderungen speichern</button></div>
-    </form>
-    <form method="post" action="<?=p($url->linkToRoute('reinhardterp.page.deleteProjectNote',['id'=>$project['id'],'noteId'=>(int)$note['id']]))?>" onsubmit="return confirm('Diese Projektnotiz wirklich löschen?');">
-     <input type="hidden" name="requesttoken" value="<?=p(\OCP\Util::callRegister())?>">
-     <button class="button" type="submit">Löschen</button>
-    </form>
+   <article class="erp-note-entry" data-note-type="<?=p($type)?>" data-note-search="<?=p($searchText)?>">
+    <div class="erp-note-marker" aria-hidden="true"></div>
+    <div class="erp-note-entry-card">
+     <header class="erp-note-entry-head">
+      <div class="erp-note-entry-meta"><span class="erp-note-badge erp-note-badge-<?=p($type)?>"><?=p($typeLabel)?></span><span><?=p($createdLabel)?></span><?php if(!empty($note['created_by'])):?><span>· <?=p((string)$note['created_by'])?></span><?php endif;?></div>
+      <button type="button" class="button erp-note-edit-toggle" aria-expanded="false">Bearbeiten</button>
+     </header>
+     <?php if($noteTitle!==''):?><h3><?=p($noteTitle)?></h3><?php endif;?>
+     <div class="erp-note-body"><?=nl2br(p($noteBody))?></div>
+     <div class="erp-note-edit" hidden>
+      <form method="post" action="<?=p($url->linkToRoute('reinhardterp.page.saveProjectNote',['id'=>$project['id']]))?>" class="erp-note-edit-form">
+       <input type="hidden" name="requesttoken" value="<?=p(\OCP\Util::callRegister())?>"><input type="hidden" name="noteId" value="<?=p((int)$note['id'])?>">
+       <div class="erp-note-compose-meta"><label>Notizart<select name="noteType"><?php foreach(['note'=>'Notiz','measurement'=>'Aufmaß','meeting'=>'Besprechung','phone'=>'Telefonnotiz'] as $value=>$label):?><option value="<?=p($value)?>"<?=$type===$value?' selected':''?>><?=p($label)?></option><?php endforeach;?></select></label><label>Titel<input type="text" name="title" maxlength="255" value="<?=p($noteTitle)?>"></label></div>
+       <label>Notiz<textarea name="content" rows="5" required><?=p($noteBody)?></textarea></label>
+       <div class="erp-note-edit-actions"><button class="button primary" type="submit">Speichern</button></div>
+      </form>
+      <form method="post" action="<?=p($url->linkToRoute('reinhardterp.page.deleteProjectNote',['id'=>$project['id'],'noteId'=>(int)$note['id']]))?>" onsubmit="return confirm('Diese Projektnotiz wirklich löschen?');" class="erp-note-delete-form"><input type="hidden" name="requesttoken" value="<?=p(\OCP\Util::callRegister())?>"><button class="button" type="submit">Löschen</button></form>
+     </div>
+    </div>
    </article>
    <?php endforeach;?>
   </div>
+  <div class="erp-notes-no-results" id="projectNotesNoResults" hidden>Keine passenden Notizen gefunden.</div>
  <?php endif;?>
 </section>
 <section class="erp-card erp-checklist-card" id="checklist">

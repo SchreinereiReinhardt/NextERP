@@ -21,6 +21,8 @@ $statusLabels=['draft'=>'Entwurf','open'=>'Offen','paid'=>'Bezahlt','cancelled'=
 
  <div class="erp-kpis"><div><span>Netto</span><strong><?php p(number_format((float)$i['net_amount'],2,',','.'));?> €</strong></div><div><span>USt.</span><strong><?php p(number_format((float)$i['vat_rate'],2,',','.'));?> %</strong></div><div><span>Brutto</span><strong><?php p(number_format((float)$i['gross_amount'],2,',','.'));?> €</strong></div><div><span>Fällig</span><strong><?php p(!empty($i['due_date'])?date('d.m.Y',strtotime((string)$i['due_date'])):'—');?></strong></div></div>
 
+ <?php if(!empty($i['labor_cost_gross'])):?><div class="erp-notice"><strong>Arbeitskostenanteil nach § 35a EStG:</strong> <?php p(number_format(abs((float)$i['labor_cost_gross']),2,',','.'));?> € inkl. MwSt.</div><?php endif;?>
+
  <div class="erp-grid-2">
   <div class="erp-card"><h2>Positionen</h2><div class="erp-table"><table><thead><tr><th>Leistung</th><th>Menge</th><th>Einheit</th><th>EP</th><th>Gesamt</th></tr></thead><tbody><?php foreach($_['items'] as $x):?><tr><td><?php if(!empty($x['is_alternative'])):?><strong>Alternativposition</strong><br><?php endif;?><?php echo (string)$x['description'];?></td><td><?php p(number_format((float)$x['quantity'],2,',','.'));?></td><td><?php p($x['unit']);?></td><td><?php p(number_format((float)$x['unit_price'],2,',','.'));?> €</td><td><strong><?php p(number_format((float)$x['total_price'],2,',','.'));?> €</strong></td></tr><?php endforeach;?></tbody></table></div><?php if(!empty($i['notes'])):?><div class="erp-notice"><?php echo (string)$i['notes'];?></div><?php endif;?></div>
 

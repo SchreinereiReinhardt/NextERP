@@ -56,6 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const overviewOnly = [
         center.querySelector('.erp-project-center-metrics'),
+        ...Array.from(center.querySelectorAll('.erp-overview-only')),
         center.querySelector('.erp-permissions-compact'),
         center.querySelector('.erp-workflow-card'),
         ...overviewOnlyIds.map(id => document.getElementById(id))
@@ -114,4 +115,59 @@ document.addEventListener('DOMContentLoaded', () => {
     })
 
     showTab(normalizeTab(window.location.hash))
+})
+
+// Betrio 2.4.68: Projektnotizen 2.0 — Suche, Filter und kompakte Bearbeitung.
+document.addEventListener('DOMContentLoaded', () => {
+    const timeline = document.getElementById('projectNoteTimeline')
+    if (!timeline) return
+
+    const search = document.getElementById('projectNoteSearch')
+    const filters = Array.from(document.querySelectorAll('.erp-note-filter'))
+    const entries = Array.from(timeline.querySelectorAll('.erp-note-entry'))
+    const empty = document.getElementById('projectNotesNoResults')
+    let activeType = 'all'
+
+    const applyFilter = () => {
+        const term = (search?.value || '').trim().toLocaleLowerCase('de')
+        let visible = 0
+        entries.forEach(entry => {
+            const typeMatches = activeType === 'all' || entry.dataset.noteType === activeType
+            const textMatches = !term || (entry.dataset.noteSearch || '').includes(term)
+            entry.hidden = !(typeMatches && textMatches)
+            if (!entry.hidden) visible++
+        })
+        if (empty) empty.hidden = visible !== 0
+    }
+
+    search?.addEventListener('input', applyFilter)
+    filters.forEach(button => button.addEventListener('click', () => {
+        activeType = button.dataset.noteFilter || 'all'
+        filters.forEach(item => item.classList.toggle('is-active', item === button))
+        applyFilter()
+    }))
+
+    timeline.querySelectorAll('.erp-note-edit-toggle').forEach(button => {
+        button.addEventListener('click', () => {
+            const edit = button.closest('.erp-note-entry-card')?.querySelector('.erp-note-edit')
+            if (!edit) return
+            const opening = edit.hidden
+            edit.hidden = !opening
+            button.setAttribute('aria-expanded', opening ? 'true' : 'false')
+            button.textContent = opening ? 'Schließen' : 'Bearbeiten'
+        })
+    })
+})
+
+// Betrio 2.4.76: Projektabschluss-Assistent mit konkreten offenen Punkten.
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('form[data-project-close="1"]').forEach(form => {
+        form.addEventListener('submit', event => {
+            let items = []
+            try { items = JSON.parse(form.dataset.closeItems || '[]') } catch (e) {}
+            if (!items.length) return
+            const text = 'Projekt abschließen?\n\nVor dem Abschluss bitte prüfen:\n• ' + items.join('\n• ') + '\n\nDer Abschluss ist trotzdem möglich.'
+            if (!window.confirm(text)) event.preventDefault()
+        })
+    })
 })

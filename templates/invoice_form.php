@@ -62,6 +62,11 @@ $statusLabels=['draft'=>'Entwurf','open'=>'Offen','paid'=>'Bezahlt','cancelled'=
    <?php endforeach;?>
    </div>
 
+   <div class="erp-card erp-labor-cost-box">
+    <h2>Arbeitskosten für Privatkunden</h2>
+    <div class="erp-form-grid"><div><label class="erp-help-target" data-betrio-help="invoice-35a">Arbeitskostenanteil netto</label><div class="erp-input-suffix"><input type="number" id="invoiceLaborCostNet" name="laborCostNet" min="0" step="0.01" value="" placeholder="0,00"><span>€</span></div><small class="erp-muted">Optional. Netto-Arbeitskosten eingeben. Bei einem Projekt schlägt Betrio offene Arbeitszeiten automatisch vor. Der Wert bleibt vor dem Speichern frei änderbar. Betrio berechnet die MwSt. automatisch; der Rechnungsbetrag wird dadurch nicht verändert.</small></div></div>
+   </div>
+
    <div class="erp-offer-bottom">
     <div><label>Zahlungsbedingungen</label><select name="paymentTermKey" id="invoicePaymentTerm"><?php foreach(($_['paymentTerms']??[]) as $key=>$term):?><option value="<?php p($key);?>" data-days="<?php p($term['days']);?>" data-text="<?php p($term['text']);?>" <?php if($key===($_['defaultPaymentTerm']??'net14')):?>selected<?php endif;?>><?php p($term['label']);?></option><?php endforeach;?></select><small class="erp-muted">Vorlagen kannst du unter Einstellungen anpassen.</small><label>Hinweise / Zahlungstext</label><textarea name="notes" id="invoiceNotes" rows="4"></textarea></div>
     <div class="erp-offer-totals" aria-live="polite">

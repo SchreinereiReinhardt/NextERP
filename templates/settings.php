@@ -12,7 +12,20 @@ require __DIR__ . '/_nav.php';
                 <div class="erp-actions"><a class="button" href="<?php p($url->linkToRoute('reinhardterp.systemCheck.index')); ?>">Systemprüfung</a></div>
 			</div>
 
-			<section class="erp-card erp-wide">
+            <nav class="erp-settings-shortcuts" aria-label="Einstellungen Schnellzugriff">
+                <a class="erp-settings-shortcut" href="#settings-company"><strong>Firmendaten</strong><span>Briefkopf, Logo & Bankdaten</span></a>
+                <a class="erp-settings-shortcut" href="#settings-numbers"><strong>Rechnungen & Nummernkreise</strong><span>Nummern & Zahlungsbedingungen</span></a>
+                <a class="erp-settings-shortcut" href="#settings-rates"><strong>Stundensätze</strong><span>Verrechnung & interne Kosten</span></a>
+                <a class="erp-settings-shortcut" href="#settings-datev"><strong>DATEV</strong><span>Kontierung & Exportbasis</span></a>
+                <a class="erp-settings-shortcut" href="#settings-calendar"><strong>Kalender</strong><span>Nextcloud-Synchronisation</span></a>
+                <a class="erp-settings-shortcut" href="#settings-reports"><strong>Rapporte & PDF</strong><span>Ausgabe & Firmenlogo</span></a>
+                <a class="erp-settings-shortcut" href="<?php p($url->linkToRoute('reinhardterp.module.users')); ?>"><strong>Benutzer & Rechte</strong><span>Mitarbeiter & Berechtigungen</span></a>
+                <a class="erp-settings-shortcut" href="<?php p($url->linkToRoute('reinhardterp.integration.index')); ?>"><strong>Integrationen</strong><span>Nextcloud-Anbindungen</span></a>
+                <a class="erp-settings-shortcut" href="<?php p($url->linkToRoute('reinhardterp.business.mobileAdmin')); ?>"><strong>Mobile</strong><span>Mobile App & Zugriff</span></a>
+                <a class="erp-settings-shortcut" href="<?php p($url->linkToRoute('reinhardterp.business.documentation')); ?>"><strong>Dokumentation</strong><span>Hilfe zu allen Funktionen</span></a>
+            </nav>
+
+			<section class="erp-card erp-wide erp-settings-target" id="settings-company">
     <h2>Firmendaten & Briefkopf</h2>
     <p>Diese Angaben werden zentral in Betrio gespeichert und automatisch auf Rapporten und Rapport-PDFs verwendet.</p>
     <form class="erp-settings-form" method="post" action="<?php p($url->linkToRoute('reinhardterp.module.saveSettings')); ?>" enctype="multipart/form-data">
@@ -41,7 +54,7 @@ require __DIR__ . '/_nav.php';
             </div>
             <?php if (!empty($_['logoDataUri'])): ?><img class="erp-settings-logo-preview" src="<?php p($_['logoDataUri']); ?>" alt="Firmenlogo"><?php endif; ?>
         </div>
-        <fieldset class="erp-card erp-document-settings erp-number-settings">
+        <fieldset class="erp-card erp-document-settings erp-number-settings erp-settings-target" id="settings-numbers">
  <legend><strong>Nummernkreise</strong></legend>
  <p class="erp-muted erp-number-settings-intro">Bestehende Nummern bleiben unverändert. Hier legst du nur fest, wie neue Nummern weiterlaufen.</p>
  <div class="erp-number-grid erp-number-grid-head"><span>Bereich</span><span>Präfix</span><span>Jahr</span><span>Trenner</span><span>Stellen</span><span>Nächste Nummer</span><span>Vorschau</span></div>
@@ -99,7 +112,7 @@ require __DIR__ . '/_nav.php';
 </section>
 
 
-			<section class="erp-card erp-wide">
+			<section class="erp-card erp-wide erp-settings-target" id="settings-calendar">
 				<h2>Nextcloud-Kalender</h2>
 				<p>Wähle den führenden Kalender für Betrio. Neue ERP-Termine werden dort gespeichert; Termine und Änderungen vom Handy werden zurück in den Teamkalender eingelesen.</p>
 				<form class="erp-settings-form" method="post" action="<?php p($url->linkToRoute('reinhardterp.integration.saveCalendarSettings')); ?>">
@@ -117,7 +130,7 @@ require __DIR__ . '/_nav.php';
 				</form>
 			</section>
 
-			<section class="erp-card erp-wide">
+			<section class="erp-card erp-wide erp-settings-target" id="settings-rates">
 				<h2>Stundensätze</h2>
 				<p>Diese Sätze werden automatisch in der Zeitauswertung verwendet. Bereits vorgemerkte oder abgerechnete Zeiten behalten ihren festgeschriebenen Satz.</p>
 				<form class="erp-settings-form" method="post" action="<?php p($url->linkToRoute('reinhardterp.module.saveHourlyRate')); ?>">
@@ -138,7 +151,7 @@ require __DIR__ . '/_nav.php';
 				</tbody></table></div>
 			</section>
 
-			<section class="erp-card erp-wide">
+			<section class="erp-card erp-wide erp-settings-target" id="settings-datev">
 				<h2>DATEV</h2>
 				<p class="erp-muted">Kontierung für den Export von Ausgangsrechnungen. Bitte die Konten einmal mit dem Steuerbüro abstimmen.</p>
 				<?php if (!empty($_['datevSaved'])): ?><div class="erp-notice"><strong>✓ DATEV-Einstellungen gespeichert.</strong></div><?php endif; ?>
@@ -165,20 +178,20 @@ require __DIR__ . '/_nav.php';
 				</form>
 			</section>
 
-			<section class="erp-card erp-wide">
+			<section class="erp-card erp-wide erp-settings-target" id="settings-gobd">
 				<h2>GoBD / Verfahrensdokumentation</h2>
 				<p class="erp-muted">Betrio erstellt eine aktuelle, GoBD-orientierte Verfahrensdokumentation aus der installierten Version und den hinterlegten Unternehmens- und DATEV-Einstellungen. Bewahre jede Fassung zusammen mit deinen betrieblichen Ergänzungen auf.</p>
 				<div class="erp-actions"><a class="button primary" href="<?php p($url->linkToRoute('reinhardterp.module.gobdDocumentation')); ?>">Verfahrensdokumentation herunterladen</a></div>
 				<p class="erp-muted">Die Dokumentation beschreibt die technischen Betrio-Abläufe. Backup, Aufbewahrung, Zuständigkeiten und organisatorische Kontrollen müssen betrieblich ergänzt werden.</p>
 			</section>
 
-			<section class="erp-card erp-wide">
+			<section class="erp-card erp-wide erp-settings-target" id="settings-files">
 				<h2>Dateiablage</h2>
 				<p>Kunden- und Projektordner werden im persönlichen Nextcloud-Dateibereich des jeweiligen Benutzers unter <code>ERP/Kunden</code> erzeugt.</p>
 				<p>Angemeldeter Benutzer: <strong class="erp-inline-strong"><?php p($_['uid']); ?></strong></p>
 			</section>
 
-			<section class="erp-card erp-wide">
+			<section class="erp-card erp-wide erp-settings-target" id="settings-reports">
 				<h2>Rapportgestaltung</h2>
 				<p>Rapporte werden neutral in Schwarz, Weiß und Grautönen ausgegeben. Das hinterlegte Firmenlogo wird automatisch in neue und bestehende Rapportdateien übernommen.</p>
 			</section>
@@ -187,11 +200,12 @@ require __DIR__ . '/_nav.php';
 				<h2>Über Betrio</h2>
 				<p><strong>Entwickler: André Reinhardt</strong></p>
 				<p>Betrio wird als praxisnahes ERP für das Handwerk entwickelt.</p>
-				<div class="erp-actions">
-					<a class="button" href="https://www.schreinerei-reinhardt.de" target="_blank" rel="noopener">Website</a>
-					<button class="button" type="button" onclick="navigator.clipboard.writeText('andrereinhardt@kassel-net.de');this.textContent='PayPal-Adresse kopiert ✓'">☕ Buy me a Coffee · PayPal-Adresse kopieren</button>
-				</div>
-				<p class="erp-muted">PayPal: <code>andrereinhardt@kassel-net.de</code></p>
+                <div class="erp-actions"><a class="button" href="https://www.schreinerei-reinhardt.de" target="_blank" rel="noopener">Website</a></div>
+                <form id="betrio-support-form" method="post" action="<?php p($url->linkToRoute('reinhardterp.module.saveSettings')); ?>" class="erp-settings-form">
+                    <input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
+                    <div class="erp-doc-box" style="margin-top:16px"><b>Betrio unterstützen</b><p>Wer die Weiterentwicklung freiwillig unterstützen möchte, kann dies über PayPal tun.</p><a class="button primary" href="https://paypal.me/betrio" target="_blank" rel="noopener noreferrer">Entwicklung unterstützen</a><p class="erp-muted">Freiwillige Unterstützung ohne Gegenleistung. Keine steuerlich absetzbare Spende.</p></div>
+                </form>
+                <p class="erp-muted">Optional. Wird unter „Über Betrio & Release“ als freiwillige Unterstützung ohne Gegenleistung angezeigt. Keine steuerlich absetzbare Spende.</p>
 			</section>
 		</div>
 	</div>
