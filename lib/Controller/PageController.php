@@ -373,7 +373,30 @@ final class PageController extends Controller {
    ->where($qb->expr()->gte('start_at',$qb->createNamedParameter($today)))
    ->andWhere($qb->expr()->eq('is_deleted',$qb->createNamedParameter(0)))
    ->orderBy('start_at','ASC')->setMaxResults($limit);
-  return $qb->executeQuery()->fetchAll();
+  $rows=$qb->executeQuery()->fetchAll();
+  // Calendar sync can temporarily leave the ERP row and one or more CalDAV mirror rows
+  // side by side (especially after older timezone handling). Prefer the ERP row and
+  // collapse exact Nextcloud duplicates so the dashboard never shows the same job twice.
+  $out=[];$groups=[];
+  foreach($rows as $row){
+   $title=mb_strtolower(trim((string)($row['title']??'')));$location=mb_strtolower(trim((string)($row['location']??'')));$date=substr((string)($row['start_at']??''),0,10);$group=$date.'|'.$title.'|'.$location;
+   $groups[$group][]=$row;
+  }
+  foreach($groups as $groupRows){
+   $erp=array_values(array_filter($groupRows,static fn(array $r):bool=>(string)($r['sync_source']??'')!=='nextcloud'));
+   if($erp!==[]){
+    foreach($erp as $r)$out[]=$r;
+    foreach($groupRows as $r){
+     if((string)($r['sync_source']??'')!=='nextcloud')continue;$ts=strtotime((string)$r['start_at']);$mirror=false;
+     foreach($erp as $e){if(abs($ts-strtotime((string)$e['start_at']))<=10800){$mirror=true;break;}}
+     if(!$mirror)$out[]=$r;
+    }
+   }else{
+    $seen=[];foreach($groupRows as $r){$k=(string)$r['start_at'].'|'.(string)($r['end_at']??'');if(isset($seen[$k]))continue;$seen[$k]=true;$out[]=$r;}
+   }
+  }
+  usort($out,static fn(array $a,array $b):int=>strcmp((string)$a['start_at'],(string)$b['start_at']));
+  return array_slice($out,0,$limit);
  }
  private function count(string $table):int{$qb=$this->db->getQueryBuilder();$qb->select($qb->func()->count('*','c'))->from($table);return (int)$qb->executeQuery()->fetchOne();}
  private function dashboardOfferStats():array{

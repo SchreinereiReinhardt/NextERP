@@ -32,6 +32,16 @@ foreach ($users as $user) $userNames[(string)$user['uid']] = (string)$user['disp
 <div class="erp-notice erp-wide"><strong>Noch kein Nextcloud-Kalender ausgewählt.</strong> Termine bleiben im ERP, bis unter Einstellungen ein Kalender gewählt wurde.</div>
 <?php endif; ?>
 
+
+<?php if (!empty($_['absences'])): ?>
+<div class="erp-card"><div class="erp-section-head"><div><h2>Abwesenheiten</h2><p class="erp-muted">Genehmigter Urlaub, Krankheit, Schulung und sonstige Abwesenheiten aus der Personalplanung.</p></div></div>
+<div class="erp-table"><table><thead><tr><th>Mitarbeiter</th><th>Art</th><th>Von</th><th>Bis</th><th>Hinweis</th></tr></thead><tbody>
+<?php $absenceLabels=['vacation'=>'Urlaub','sick'=>'Krank','training'=>'Schulung / Berufsschule','other'=>'Sonstige']; foreach ($_['absences'] as $a): ?>
+<tr><td><strong><?php p($userNames[(string)$a['user_id']] ?? (string)$a['user_id']); ?></strong></td><td><span class="erp-badge"><?php p($absenceLabels[(string)$a['type']] ?? (string)$a['type']); ?></span></td><td><?php p(date('d.m.Y',strtotime((string)$a['date_from']))); ?></td><td><?php p(date('d.m.Y',strtotime((string)$a['date_to']))); ?></td><td><?php p((string)($a['note']??'') ?: '—'); ?></td></tr>
+<?php endforeach; ?>
+</tbody></table></div></div>
+<?php endif; ?>
+
 <form id="teamEventForm" class="erp-card erp-outlook-event" method="post" action="<?php p($url->linkToRoute('reinhardterp.module.saveTeamEvent')); ?>">
 <input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
 <div class="erp-outlook-title"><input name="title" placeholder="Titel hinzufügen" aria-label="Termintitel" required autofocus></div>
@@ -41,7 +51,7 @@ foreach ($users as $user) $userNames[(string)$user['uid']] = (string)$user['disp
   <label class="erp-outlook-all-day"><input id="teamEventAllDay" type="checkbox"><span>Ganztägig</span></label>
 </div>
 <div class="erp-outlook-body">
-  <div class="erp-outlook-row"><span class="erp-outlook-icon">👤</span><label>Kunde<select id="teamEventCustomer" name="customerId"><option value="">— Kein Kunde —</option><?php foreach ($customers as $customer): ?><option value="<?php p((int)$customer['id']); ?>"<?php if ($selectedCustomerId === (int)$customer['id']) echo ' selected'; ?>><?php p($customer['name']); ?></option><?php endforeach; ?></select></label></div>
+  <div class="erp-outlook-row"><span class="erp-outlook-icon">👤</span><label>Kunde<select id="teamEventCustomer" name="customerId" class="erp-customer-select"><option value="">— Kein Kunde —</option><?php foreach ($customers as $customer): ?><option value="<?php p((int)$customer['id']); ?>"<?php if ($selectedCustomerId === (int)$customer['id']) echo ' selected'; ?>><?php p($customer['name']); ?></option><?php endforeach; ?></select></label></div>
   <div class="erp-outlook-row"><span class="erp-outlook-icon">📁</span><label>Projekt<select id="teamEventProject" name="projectId"><option value="">— Kein Projekt —</option><?php foreach ($projects as $project): ?><option value="<?php p((int)$project['id']); ?>" data-customer-id="<?php p((int)($project['customer_id'] ?? 0)); ?>"<?php if ($selectedProjectId === (int)$project['id']) echo ' selected'; ?>><?php p(trim((string)($project['project_no'] ?? '') . ' · ' . (string)($project['title'] ?? ''))); ?></option><?php endforeach; ?></select></label></div>
   <div class="erp-outlook-row erp-outlook-people"><span class="erp-outlook-icon">👥</span><fieldset><legend>Mitarbeiter</legend><div class="erp-person-picker"><?php foreach ($users as $user): ?><label class="erp-person-chip"><input type="checkbox" name="assignedUserIds[]" value="<?php p($user['uid']); ?>"<?php if ($selectedUserId === (string)$user['uid']) echo ' checked'; ?>><span><?php p($user['displayName']); ?></span></label><?php endforeach; ?><?php if (empty($users)): ?><span class="erp-muted">Keine aktiven Mitarbeiter vorhanden.</span><?php endif; ?></div></fieldset></div>
   <div class="erp-outlook-row"><span class="erp-outlook-icon">📍</span><label>Ort<input name="location" placeholder="Ort hinzufügen"></label></div>

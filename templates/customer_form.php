@@ -27,7 +27,7 @@ $isLinked = $customer && $customer->getNcContactId();
 <div><label>Land</label><input name="country" autocomplete="country-name" value="<?php p($customer?->getCountry() ?? 'Deutschland'); ?>" placeholder="Deutschland"></div>
 </div>
 </fieldset>
-<section class="erp-card" style="margin-top:18px">
+<section class="erp-card erp-space-top">
 <h2>E-Rechnung & Abrechnung</h2>
 <p class="erp-muted">Optionale Rechnungsdaten des Kunden. Leitweg-ID und Käuferreferenzen werden später automatisch für XRechnungen verwendet.</p>
 <div class="erp-form-grid">

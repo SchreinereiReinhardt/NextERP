@@ -30,9 +30,17 @@ final class DocumentClassifierService {
 
         $customer = $this->bestEntityMatch($searchPlain,$compact,$customers,['customer_no'=>42,'name'=>28,'street'=>14,'city'=>8]);
         $project = $this->bestEntityMatch($searchPlain,$compact,$projects,['project_no'=>58,'title'=>26]);
-        $supplier = $this->bestEntityMatch($searchPlain,$compact,$suppliers,['supplier_no'=>42,'name'=>32,'street'=>12,'city'=>8]);
+        $supplier = $this->bestEntityMatch($searchPlain,$compact,$suppliers,['supplier_no'=>42,'name'=>32,'company'=>32,'street'=>12,'city'=>8,'email'=>24,'website'=>24,'url'=>24]);
 
         $customerId=$customer['id']; $projectId=$project['id']; $supplierId=$supplier['id'];
+
+        // Einkaufsbelege sind lieferantenseitig. Ein schwacher Kundentreffer darf hier
+        // nicht zu einer falschen Vorauswahl führen. Ein eindeutig erkanntes Projekt
+        // kann seinen Kunden weiter unten weiterhin sauber setzen.
+        if (in_array($type, ['delivery_note','incoming_invoice','credit_note','order'], true) && $project['score'] < 45) {
+            $customerId = null;
+            $customer = ['id'=>null,'score'=>0];
+        }
         $entityScore=max($customer['score'],$project['score'],$supplier['score']);
         if($project['score']>=45)$signals[]='Projektnummer eindeutig erkannt';
         elseif($project['score']>0)$signals[]='Projektbezeichnung erkannt';
@@ -86,6 +94,13 @@ final class DocumentClassifierService {
 
     private function detectType(string $file,string $content):array{
         $all=trim($file.' '.$content);
+        // Rechnungen haben Vorrang vor beiläufigen Hinweisen wie „auch Lieferschein“.
+        // Viele Lieferanten drucken beide Begriffe in den Kopf; maßgeblich ist der
+        // eigentliche Dokumenttitel bzw. die Rechnungsnummer.
+        if (preg_match('/\b(rechnung|invoice|rechnungsnummer|rechnungsnr)\b/u', $content)
+            && !preg_match('/\b(stornorechnung|gutschrift)\b/u', $content)) {
+            return ['incoming_invoice',96,'Rechnung im Dokumentinhalt erkannt'];
+        }
         $rules=[
             'delivery_note'=>[['lieferschein','delivery note','warenbegleitschein'],94,'Lieferschein erkannt'],
             'credit_note'=>[['gutschrift','credit note','stornorechnung'],94,'Gutschrift/Storno erkannt'],
@@ -99,27 +114,42 @@ final class DocumentClassifierService {
             'incoming_invoice'=>[['eingangsrechnung','lieferantenrechnung','rechnungseingang','supplier invoice'],96,'Eingangsrechnung erkannt'],
         ];
         if(preg_match('/^(rechnung|rg|re)\s*(nr|nummer)?\s*20\d{6,}/u',$file)||str_contains($file,'ausgangsrechnung')||str_contains($file,'kundenrechnung'))return ['outgoing_invoice',96,'Eigene Ausgangsrechnung im Dateinamen erkannt'];
-        foreach($rules as [$type,$words,$score,$reason])foreach($words as $w)if($this->containsFlexible($all,$this->compact($all),$w))return [$type,$score,$reason];
+        foreach($rules as $type=>[$words,$score,$reason])foreach($words as $w)if($this->containsFlexible($all,$this->compact($all),$w))return [$type,$score,$reason];
         if(preg_match('/\b(rechnung|invoice|rechnungsnummer|rechnungs nr)\b/u',$content))return ['incoming_invoice',74,'Dokumentinhalt als Rechnung erkannt; Richtung bitte prüfen'];
         if(str_contains($all,'rechnung'))return ['incoming_invoice',58,'Allgemeines Wort „Rechnung“ erkannt; Richtung bitte prüfen'];
         return ['unassigned',0,''];
     }
 
     private function documentNumber(string $filename,string $content):?string{
+        // Zuerst explizite Nummern aus dem Dokument verwenden. Der Dateiname ist
+        // nur Fallback, weil Scanner/Downloads oft technische Namen vergeben.
+        $base = pathinfo($filename, PATHINFO_FILENAME);
         foreach([
+            '/(?:^|\R)\s*(?:rechnungs?(?:nummer|nr\.?)|rechnung\s*(?:nr\.?)?|nr\.?)\s*[:#]?\s*([0-9]{4,})(?=\s|$)/imu',
+            '/\b(?:nr\.?|nummer)\s*[:#]\s*([0-9]{4,})(?=\s|$)/iu',
             '/(?:rechnungs(?:nummer|nr\.?)|beleg(?:nummer|nr\.?)|lieferschein(?:nummer|nr\.?)|gutschrift(?:nummer|nr\.?)|angebots(?:nummer|nr\.?)|auftragsbestaetigungs(?:nummer|nr\.?)|ab(?:nummer|nr\.?)|bestell(?:nummer|nr\.?))\s*[:#]?\s*([A-Z0-9][A-Z0-9._\/-]{2,})/iu',
+            // Viele Warenwirtschafts-Lieferscheine verwenden nur "NUMMER:".
+            // Den Wert aus dem Dokumentinhalt vor Dateinamen-Heuristiken bevorzugen.
+            '/(?:^|\R)\s*(?:nummer|nr\.?)\s*[:#]\s*([A-Z0-9][A-Z0-9._\/-]{2,})/imu',
             '/(?:nr|nummer|re|rg|ls|an|au)[-_ .]*(\d{4,})/iu'
-        ] as $p){if(preg_match($p,$content.'\n'.$filename,$m))return trim($m[1]);}
+        ] as $p){if(preg_match($p,$content,$m))return trim($m[1]);}
+        if (preg_match('/\b([A-Z]{1,6}\d{2,}[-_. ]\d{2,})\b/iu', $base, $m)) {
+            return str_replace([' ','.','-'], '_', trim($m[1]));
+        }
         if(preg_match('/\b(20\d{6,})\b/u',$filename,$m))return $m[1];
         return null;
     }
     private function documentDate(string $filename,string $content):?string{
         $sources=[
-            ['/(?:rechnungsdatum|belegdatum|lieferscheindatum|datum)\s*:?\s*(\d{1,2})[.\/-](\d{1,2})[.\/-](20\d{2})/iu',$content,true],
+            // Externe Belege verwenden häufig ein zweistelliges Jahr (z. B. 28.09.26).
+            ['/(?:rechnungsdatum|belegdatum|lieferscheindatum|datum)\s*:?\s*(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{2}|20\d{2})/iu',$content,true],
             ['/(?<!\d)(20\d{2})[-_.](0?[1-9]|1[0-2])[-_.]([0-2]?\d|3[01])(?!\d)/u',$filename,false],
             ['/(?<!\d)([0-2]?\d|3[01])[-_.](0?[1-9]|1[0-2])[-_.](20\d{2})(?!\d)/u',$filename,true],
         ];
-        foreach($sources as [$p,$s,$dmy])if(preg_match($p,$s,$m))return $dmy?sprintf('%04d-%02d-%02d',(int)$m[3],(int)$m[2],(int)$m[1]):sprintf('%04d-%02d-%02d',(int)$m[1],(int)$m[2],(int)$m[3]);
+        foreach($sources as [$p,$s,$dmy])if(preg_match($p,$s,$m)){
+            if($dmy){$year=(int)$m[3];if($year<100)$year+=2000;return sprintf('%04d-%02d-%02d',$year,(int)$m[2],(int)$m[1]);}
+            return sprintf('%04d-%02d-%02d',(int)$m[1],(int)$m[2],(int)$m[3]);
+        }
         return null;
     }
 
@@ -128,6 +158,13 @@ final class DocumentClassifierService {
         $best=['id'=>null,'score'=>0];
         foreach($rows as $row){$score=0;
             foreach($fields as $field=>$weight){$raw=trim((string)($row[$field]??''));if(mb_strlen($raw)<3)continue;if($this->containsFlexible($haystack,$compact,$raw))$score+=$weight;}
+            // Lieferantennamen tauchen in extrahiertem PDF-Text oft nur als Teil einer
+            // Domain oder Mailadresse auf (z. B. Jordan -> jordanshop.de).
+            foreach(['name','company'] as $nameField){
+                $raw=trim((string)($row[$nameField]??''));
+                $token=$this->compact($raw);
+                if(strlen($token)>=5 && str_contains($compact,$token) && $score===0){$score+=24;break;}
+            }
             // Multiple independent fields on the same entity are especially meaningful.
             if($score>40)$score+=12;
             if($score>$best['score'])$best=['id'=>(int)($row['id']??0)?:null,'score'=>min(100,$score)];

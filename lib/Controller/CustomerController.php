@@ -13,6 +13,7 @@ use OCA\ReinhardtERP\Service\PermissionService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\RedirectResponse;
+use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IURLGenerator;
 use OCP\IUserSession;
@@ -153,6 +154,50 @@ final class CustomerController extends Controller {
             $target .= '?message=' . rawurlencode($message);
         }
         return new RedirectResponse($target);
+    }
+
+    #[NoAdminRequired]
+    public function quickCreate(
+        string $name,
+        ?string $contactName = null,
+        ?string $phone = null,
+        ?string $email = null,
+        ?string $street = null,
+        ?string $postalCode = null,
+        ?string $city = null,
+        ?string $country = 'Deutschland',
+    ): JSONResponse {
+        $this->permissions->assert('customers');
+        $name = trim($name);
+        if ($name === '') {
+            return new JSONResponse(['ok' => false, 'message' => 'Firma / Kundenname ist Pflicht.'], 400);
+        }
+        try {
+            $now = new \DateTime();
+            $number = $this->numbers->next('customer');
+            $customer = new Customer();
+            $customer->setName($name);
+            $customer->setCustomerNo($number);
+            $customer->setContactName($this->nullable($contactName));
+            $customer->setPhone($this->nullable($phone));
+            $customer->setEmail($this->nullable($email));
+            $customer->setStreet($this->nullable($street));
+            $customer->setPostalCode($this->nullable($postalCode));
+            $customer->setCity($this->nullable($city));
+            $customer->setCountry($this->nullable($country));
+            $customer->setAddress($this->composeAddress($street, $postalCode, $city, $country));
+            $customer->setCustomerType('business');
+            $customer->setInvoiceFormat('pdf');
+            $customer->setCreatedAt($now);
+            $customer->setUpdatedAt($now);
+            $customer->setCreatedBy($this->users->getUser()?->getUID() ?? 'system');
+            $customer->setFolderPath($this->folders->ensureCustomerFolder($number, $name));
+            $this->mapper->insert($customer);
+            $this->activities->record('customer', $customer->getId(), 'created', 'Kunde erstellt', $number . ' · ' . $name, $customer->getId(), null);
+            return new JSONResponse(['ok' => true, 'customer' => ['id' => $customer->getId(), 'name' => $customer->getName(), 'customerNo' => $customer->getCustomerNo()]]);
+        } catch (\Throwable $e) {
+            return new JSONResponse(['ok' => false, 'message' => 'Kunde konnte nicht gespeichert werden.'], 500);
+        }
     }
 
     #[NoAdminRequired]

@@ -28,8 +28,13 @@ Funktionen:
 - Verknüpfung Angebot → Auftrag → Rechnung
 - Rapporte mit Unterschrift und PDF
 - Zeiterfassung und Zeitauswertung
+- digitale Stempeluhr mit Pausen und manuellen Korrekturen
+- individuelle Arbeitszeitprofile und Arbeitszeitkonto
+- Urlaub, Krankheit, Schulung und weitere Abwesenheiten
+- Personalplanung und Teamkalender
 - Material- und Lagerverwaltung
 - Dokumente, Fotos und Projektdateien
+- Smart Document Inbox für eingehende Belege
 - Termine und Projekt-Timeline
 - Finanzübersichten und offene Posten
 - Kassenbuch und Steuerübersichten
@@ -38,6 +43,10 @@ Funktionen:
 - Kamera- und Barcode-Funktionen
 - Integration in Nextcloud Files
 - deutsche und englische Benutzeroberfläche
+
+Anwesenheitszeit, Projektzeit und Planzeit werden bewusst getrennt geführt. Das Arbeitszeitkonto berücksichtigt individuelle Sollzeiten je Wochentag, genehmigte Abwesenheiten sowie einen frei definierbaren Startstichtag und Startsaldo.
+
+Nach einem Update informiert Betrio jeden Benutzer einmalig über wichtige Neuerungen. Die Versionshinweise bleiben anschließend unter Hilfe → Was ist neu? erreichbar.
 
 Zusätzlich steht mit „Betrio Mobile“ eine separate Android-App zur Verfügung.
 
@@ -75,6 +84,11 @@ Features:
 - Time tracking and evaluation
 - Material and inventory management
 - Documents, photos and project files
+- Smart Document Inbox for incoming documents
+- Digital attendance clock with breaks and manual corrections
+- Individual work schedules and working-time account
+- Vacation, sickness, training and other absences
+- Workforce planning and team calendar
 - Appointments and project timeline
 - Financial overviews and open items
 - Cash book and tax overviews
@@ -83,6 +97,10 @@ Features:
 - Camera and barcode functions
 - Integration with Nextcloud Files
 - German and English user interface
+
+Attendance time, project time and planned time are deliberately kept separate. The working-time account supports individual target hours per weekday, approved absences, a configurable start date and an opening balance.
+
+After an update, Betrio shows each user a one-time overview of important changes. Release information remains available under Help → What's new?.
 
 A separate Android app, “Betrio Mobile”, is also available.
 
@@ -96,7 +114,7 @@ XRechnung is integrated and continues to be developed and validated.
 
 Betrio does not replace tax or legal advice. Accounting and export functions should be checked against the requirements of your business and, where appropriate, coordinated with your tax adviser before productive use.
   ]]></description>
-<version>2.4.93</version>
+<version>2.8.0</version>
   <licence>AGPL-3.0-or-later</licence>
 
   <author homepage="https://www.schreinerei-reinhardt.de">André Reinhardt</author>
@@ -127,10 +145,10 @@ Betrio does not replace tax or legal advice. Accounting and export functions sho
     </navigation>
   </navigations>
 
-  <screenshot small-thumbnail="https://schreinereireinhardt.github.io/NextERP/img/betrio01_small.png?v=2493">https://schreinereireinhardt.github.io/NextERP/img/betrio01.png?v=2493</screenshot>
-  <screenshot>https://schreinereireinhardt.github.io/NextERP/img/01-betrio-dashboard.png?v=2493</screenshot>
-  <screenshot>https://schreinereireinhardt.github.io/NextERP/img/02-betrio-projekte.png?v=2493</screenshot>
-  <screenshot>https://schreinereireinhardt.github.io/NextERP/img/03-betrio-projektdetails.png?v=2493</screenshot>
-  <screenshot>https://schreinereireinhardt.github.io/NextERP/img/04-betrio-rapporte.png?v=2493</screenshot>
-  <screenshot>https://schreinereireinhardt.github.io/NextERP/img/05-betrio-mobil.png?v=2493</screenshot>
+  <screenshot small-thumbnail="https://schreinereireinhardt.github.io/NextERP/img/betrio01_small.png?v=2500">https://schreinereireinhardt.github.io/NextERP/img/betrio01.png?v=2500</screenshot>
+  <screenshot>https://schreinereireinhardt.github.io/NextERP/img/01-betrio-dashboard.png?v=2500</screenshot>
+  <screenshot>https://schreinereireinhardt.github.io/NextERP/img/02-betrio-projekte.png?v=2500</screenshot>
+  <screenshot>https://schreinereireinhardt.github.io/NextERP/img/03-betrio-projektdetails.png?v=2500</screenshot>
+  <screenshot>https://schreinereireinhardt.github.io/NextERP/img/04-betrio-rapporte.png?v=2500</screenshot>
+  <screenshot>https://schreinereireinhardt.github.io/NextERP/img/05-betrio-mobil.png?v=2500</screenshot>
 </info>

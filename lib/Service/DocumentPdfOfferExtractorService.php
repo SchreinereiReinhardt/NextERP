@@ -26,6 +26,7 @@ final class DocumentPdfOfferExtractorService {
             'document_no' => '',
             'offer_date' => '',
             'valid_until' => '',
+            'due_date' => '',
             'net_amount' => null,
             'vat_amount' => null,
             'gross_amount' => null,
@@ -117,10 +118,13 @@ final class DocumentPdfOfferExtractorService {
             }
 
             $result['net_amount'] = $this->extractAmount($text, [
-                '/(?:Nettosumme|Summe\s+netto|Nettobetrag|Netto)\s*:?\s*(?:EUR|€)?\s*([0-9][0-9.\s]*,[0-9]{2})/iu',
+                '/(?:Nettosumme|Summe\s+netto|Nettobetrag|Netto|Warenwert)\s*:?\s*(?:EUR|€)?\s*([0-9][0-9.\s]*,[0-9]{2})/iu',
             ]);
             $result['gross_amount'] = $this->extractAmount($text, [
-                '/(?:Angebotssumme|Gesamtbetrag|Gesamtsumme|Summe\s+brutto|Bruttobetrag|Brutto)\s*:?\s*(?:EUR|€)?\s*([0-9][0-9.\s]*,[0-9]{2})/iu',
+                '/(?:Angebotssumme|Gesamtbetrag|Gesamtsumme|Summe\s+brutto|Bruttobetrag|Brutto|Rechnungswert|Rechnungsbetrag|Zahlbetrag)\s*:?\s*(?:EUR|€)?\s*([0-9][0-9.\s]*,[0-9]{2})/iu',
+            ]);
+            $result['due_date'] = $this->extractDate($text, [
+                '/(?:Nettofälligkeit|Nettofaelligkeit|Fällig(?:keit|\s+am)?|Faellig(?:keit|\s+am)?|zahlbar\s+bis)\s*:?[ \t]*(\d{1,2}[.\/-]\d{1,2}[.\/-]\d{2,4})/iu',
             ]);
             $vatMatch = $this->firstMatches($text, [
                 '/(?:MwSt\.?|USt\.?|Umsatzsteuer|Mehrwertsteuer)\s*(?:von\s+[^\n]*?)?\s*([0-9]{1,2}(?:[,.][0-9]+)?)\s*%[^\n]*?([0-9][0-9.\s]*,[0-9]{2})/iu',

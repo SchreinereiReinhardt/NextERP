@@ -14,13 +14,13 @@ if(!$items)$items=[['description'=>'','quantity'=>1,'unit'=>'Stk.','unit_price'=
   <form enctype="multipart/form-data" method="post" action="<?php p($action);?>" id="offerCreateForm">
    <input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']);?>">
    <div class="erp-form-grid">
-    <div><label>Kunde</label><select name="customerId" id="offerCustomerId" required><?php foreach($_['customers'] as $c):?><option value="<?php p($c['id']);?>" <?php if($editing&&(int)$o['customer_id']===(int)$c['id']):?>selected<?php endif;?>><?php p($c['name']);?></option><?php endforeach;?></select></div>
+    <div><label>Kunde</label><select name="customerId" id="offerCustomerId" required class="erp-customer-select" data-quick-create-url="<?php p($url->linkToRoute('reinhardterp.customer.quickCreate'));?>"><?php foreach($_['customers'] as $c):?><option value="<?php p($c['id']);?>" <?php if($editing&&(int)$o['customer_id']===(int)$c['id']):?>selected<?php endif;?>><?php p($c['name']);?></option><?php endforeach;?></select></div>
     <div><label>Projekt</label><select name="projectId" id="offerProjectId"><option value="">ohne Projekt</option><?php foreach($_['projects'] as $p):?><option value="<?php p($p['id']);?>" data-customer-id="<?php p($p['customer_id']??'');?>" <?php if($editing&&(int)($o['project_id']??0)===(int)$p['id']):?>selected<?php endif;?>><?php p($p['project_no'].' · '.$p['title']);?></option><?php endforeach;?></select></div>
     <div class="erp-span-2"><label>Angebotstitel</label><input name="title" required value="<?php p($editing?(string)$o['title']:'');?>" placeholder="z. B. Einbauschrank Schlafzimmer"></div>
     <div><label>Gültig bis</label><input type="date" name="validUntil" value="<?php p($editing?(string)($o['valid_until']??''):'');?>"></div>
     <div><label>USt.</label><div class="erp-input-suffix"><input type="number" step="0.01" min="0" max="100" name="vatRate" id="offerVatRate" value="<?php p($editing?(string)$o['vat_rate']:'19');?>"><span>%</span></div></div>
    </div>
-   <div class="erp-form-grid"><div style="grid-column:1/-1"><label>Betreff</label><input name="subject" value="<?php p($editing?(string)($o['subject']??''):'');?>" placeholder="z. B. Angebot Reparaturarbeiten Fensterrahmen"></div></div>
+   <div class="erp-form-grid"><div class="erp-form-full"><label>Betreff</label><input name="subject" value="<?php p($editing?(string)($o['subject']??''):'');?>" placeholder="z. B. Angebot Reparaturarbeiten Fensterrahmen"></div></div>
    <div><label>Einleitungstext</label><textarea name="introText" rows="4" placeholder="Individueller Einleitungstext"><?php p($editing?(string)($o['intro_text']??''):'');?></textarea></div>
    <div><label>Schlusstext</label><textarea name="outroText" rows="4" placeholder="Individueller Schlusstext"><?php p($editing?(string)($o['outro_text']??''):'');?></textarea></div>
    <div class="erp-offer-items-head"><div><h2>Positionen</h2><p class="erp-muted">Leistungen und Produkte einzeln aufführen.</p></div><button type="button" class="button" id="offerAddItem">+ Position</button></div>

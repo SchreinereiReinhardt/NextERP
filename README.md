@@ -89,3 +89,7 @@ Projekt-Cockpit mit Live-Kennzahlen, Material- und Fotoübersicht.
 ## Nextcloud Contacts
 
 Kunden können aus Nextcloud Contacts importiert werden. Neue Kunden lassen sich beim Speichern automatisch im ausgewählten Nextcloud-Adressbuch anlegen; verknüpfte Kontakte werden bei Änderungen aktualisiert.
+
+## Arbeitszeit, Abwesenheit und Personalplanung
+
+Betrio trennt Anwesenheit und Projektzeit. Die digitale Stempeluhr erfasst Kommen, Pausen und Gehen; Projekt-Timer und manuelle Buchungen ordnen Zeiten Projekten zu. Arbeitszeitprofile definieren Sollstunden je Wochentag, Jahresurlaub sowie Startdatum und Startsaldo des Arbeitszeitkontos. Genehmigte Abwesenheiten werden mit der Sollzeit des jeweiligen Arbeitstags gutgeschrieben. Personalplanung bleibt Planzeit und erzeugt keine Arbeitszeit. Details und Berechnungslogik stehen in der integrierten Dokumentation unter Zeiterfassung und Arbeitszeitkonto.

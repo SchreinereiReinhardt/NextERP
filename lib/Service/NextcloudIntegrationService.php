@@ -406,10 +406,24 @@ final class NextcloudIntegrationService {
     public function createCalendarEvent(string $title,string $startAt,?string $endAt,?string $location,?string $description): ?array {
         $selectedKey=$this->selectedCalendarKey();if($selectedKey==='')return null;
         $calendar=$this->nativeCalendarByUri($selectedKey);if($calendar===null)throw new \RuntimeException('Der konfigurierte Nextcloud-Kalender ist nicht verfügbar oder nicht beschreibbar.');
-        $start=new DateTimeImmutable($startAt);$end=$endAt!==null&&trim($endAt)!==''?new DateTimeImmutable($endAt):$start->modify('+1 hour');if($end<=$start)throw new \InvalidArgumentException('Das Terminende muss nach dem Beginn liegen.');
+        $localTz=new DateTimeZone('Europe/Berlin');$start=new DateTimeImmutable($startAt,$localTz);$end=$endAt!==null&&trim($endAt)!==''?new DateTimeImmutable($endAt,$localTz):$start->modify('+1 hour');if($end<=$start)throw new \InvalidArgumentException('Das Terminende muss nach dem Beginn liegen.');
         $uid=bin2hex(random_bytes(16)).'@nexterp';$uri=$uid.'.ics';$ics=$this->buildIcs($uid,trim($title),$start,$end,$location,$description);
         $backend=$this->calDavBackend();$backend->createCalendarObject((int)$calendar['id'],$uri,$ics);
         return ['calendarKey'=>$selectedKey,'calendarName'=>$this->selectedCalendarName(),'objectUri'=>$uri,'uid'=>$uid];
+    }
+
+    public function updateCalendarEvent(string $calendarKey,string $objectUri,string $uid,string $title,string $startAt,?string $endAt,?string $location,?string $description): void {
+        if($calendarKey===''||$objectUri==='')return;
+        $calendar=$this->nativeCalendarByUri($calendarKey);if($calendar===null)throw new \RuntimeException('Der verknüpfte Nextcloud-Kalender ist nicht verfügbar oder nicht beschreibbar.');
+        $localTz=new DateTimeZone('Europe/Berlin');$start=new DateTimeImmutable($startAt,$localTz);$end=$endAt!==null&&trim($endAt)!==''?new DateTimeImmutable($endAt,$localTz):$start->modify('+1 hour');if($end<=$start)throw new \InvalidArgumentException('Das Terminende muss nach dem Beginn liegen.');
+        $ics=$this->buildIcs($uid!==''?$uid:bin2hex(random_bytes(16)).'@nexterp',trim($title),$start,$end,$location,$description);
+        $this->calDavBackend()->updateCalendarObject((int)$calendar['id'],$objectUri,$ics);
+    }
+
+    public function deleteCalendarEvent(string $calendarKey,string $objectUri): void {
+        if($calendarKey===''||$objectUri==='')return;
+        $calendar=$this->nativeCalendarByUri($calendarKey);if($calendar===null)throw new \RuntimeException('Der verknüpfte Nextcloud-Kalender ist nicht verfügbar oder nicht beschreibbar.');
+        $this->calDavBackend()->deleteCalendarObject((int)$calendar['id'],$objectUri);
     }
 
     private function selectedCalendar(): ?object {
@@ -701,7 +715,7 @@ ORG:" . $this->vEscape(trim($name)) . "
     }
 
     private function nativeEventFromIcs(string $uri,string $ics,string $calendarKey): ?array {
-        $vcal=\Sabre\VObject\Reader::read($ics);$event=$vcal->VEVENT??null;if($event===null)return null;$start=$event->DTSTART->getDateTime();$end=isset($event->DTEND)?$event->DTEND->getDateTime():$start->modify('+1 hour');if($end<=$start)$end=$start->modify('+1 hour');
+        $vcal=\Sabre\VObject\Reader::read($ics);$event=$vcal->VEVENT??null;if($event===null)return null;$localTz=new DateTimeZone('Europe/Berlin');$start=$event->DTSTART->getDateTime()->setTimezone($localTz);$end=isset($event->DTEND)?$event->DTEND->getDateTime()->setTimezone($localTz):$start->modify('+1 hour');if($end<=$start)$end=$start->modify('+1 hour');
         $data=['title'=>trim((string)($event->SUMMARY??'Termin'))?:'Termin','start_at'=>$start->format('Y-m-d H:i:s'),'end_at'=>$end->format('Y-m-d H:i:s'),'location'=>isset($event->LOCATION)?trim((string)$event->LOCATION):null,'description'=>isset($event->DESCRIPTION)?trim((string)$event->DESCRIPTION):null,'calendar_uri'=>$calendarKey,'calendar_object_uri'=>$uri,'calendar_uid'=>isset($event->UID)?trim((string)$event->UID):null];$data['sync_hash']=hash('sha256',json_encode($data,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));return $data;
     }
 

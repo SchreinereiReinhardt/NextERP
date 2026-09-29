@@ -9,6 +9,8 @@ Util::addStyle('reinhardterp', 'style');
 Util::addScript('reinhardterp', 'navigation');
 Util::addScript('reinhardterp', 'command_palette');
 Util::addScript('reinhardterp', 'context_help');
+Util::addScript('reinhardterp', 'customer_select');
+Util::addScript('reinhardterp', 'whats_new');
 $currentPath = (string)($_SERVER['REQUEST_URI'] ?? '');
 
 $groups = [
@@ -41,7 +43,10 @@ $groups = [
     [
         'label' => 'Mitarbeiter', 'icon' => 'employee', 'key' => 'staff',
         'items' => [
+            ['Mitarbeiter', 'reinhardterp.module.staff', 'staff', '/staff'],
             ['Zeiterfassung', 'reinhardterp.module.workdays', 'time', '/workdays'],
+            ['Abwesenheiten', 'reinhardterp.module.absences', 'time', '/absences'],
+            ['Personalplanung', 'reinhardterp.module.staffPlanning', 'settings', '/staff-planning'],
             ['Teamkalender', 'reinhardterp.module.teamEvents', 'calendar', '/team-events'],
             ['Monteuransicht', 'reinhardterp.business.mobile', 'mobile', '/mobile'],
         ],
@@ -68,7 +73,8 @@ $groups = [
         'label' => 'Finanzen', 'icon' => 'statistics', 'key' => 'finance',
         'items' => [
             ['Übersicht', 'reinhardterp.document.finance', 'documents', '/finance'],
-            ['Kontoauszüge', 'reinhardterp.document.bankStatements', 'documents', '/finance/bank-statements'],
+            ['Bankumsätze', 'reinhardterp.document.bankStatements', 'documents', '/finance/bank-statements'],
+            ['Kontoauszüge', 'reinhardterp.document.finance', 'documents', '/finance?type=bank_statement'],
             ['Kasse', 'reinhardterp.document.cashbook', 'documents', '/finance/cash'],
             ['Steuern', 'reinhardterp.document.taxes', 'documents', '/finance/taxes'],
         ],
@@ -76,6 +82,7 @@ $groups = [
     [
         'label' => 'Auswertung', 'icon' => 'statistics', 'key' => 'evaluation',
         'items' => [
+            ['Arbeitszeitkonto', 'reinhardterp.module.workingTimeAccount', 'time', '/working-time-account'],
             ['Zeitauswertung', 'reinhardterp.module.timeEvaluation', 'time_billing', '/time-evaluation'],
             ['Abrechnung', 'reinhardterp.module.invoicePreparation', 'invoices', '/invoice-preparation'],
         ],
@@ -95,7 +102,8 @@ $groups = [
     [
         'label' => 'Hilfe', 'icon' => 'document', 'key' => 'help',
         'items' => [
-            ['Dokumentation', 'reinhardterp.business.documentation', 'mobile', '/documentation'],
+            ['Dokumentation', 'reinhardterp.business.documentation', 'help', '/documentation'],
+            ['Was ist neu?', 'reinhardterp.business.whatsNew', 'help', '/whats-new'],
         ],
     ],
 ];
@@ -176,3 +184,25 @@ $quickCreate = [
         <footer><span>Betrio Schnellsuche</span><span>Strg + K</span></footer>
     </section>
 </div>
+
+<?php
+$erpReleaseNotes=require __DIR__.'/../config/release_notes.php';
+$erpConfig=\OC::$server->get(\OCP\IConfig::class);
+$erpUser=\OC::$server->get(\OCP\IUserSession::class)->getUser();
+$erpCurrentVersion=$erpConfig->getAppValue('reinhardterp','installed_version','');
+$erpSeenVersion=$erpUser?$erpConfig->getUserValue($erpUser->getUID(),'reinhardterp','whats_new_seen',''):'';
+$erpCurrentNote=$erpReleaseNotes[$erpCurrentVersion]??null;
+?>
+<?php if($erpUser && $erpCurrentNote && $erpSeenVersion!==$erpCurrentVersion && !str_contains($currentPath,'/whats-new')): ?>
+<div class="erp-whatsnew-overlay" id="erpWhatsNew" data-version="<?php p($erpCurrentVersion); ?>" data-dismiss-url="<?php p($url->linkToRoute('reinhardterp.business.dismissWhatsNew')); ?>">
+ <section class="erp-whatsnew-dialog" role="dialog" aria-modal="true" aria-labelledby="erpWhatsNewTitle">
+  <button type="button" class="erp-whatsnew-close" id="erpWhatsNewClose" aria-label="Was ist neu schließen" title="Für diese Version nicht erneut anzeigen">×</button>
+  <span class="erp-whatsnew-kicker">Betrio Update</span>
+  <h2 id="erpWhatsNewTitle"><?php p($erpCurrentNote['title']); ?></h2>
+  <p><?php p($erpCurrentNote['intro']); ?></p>
+  <ul><?php foreach($erpCurrentNote['items'] as $item): ?><li><?php p($item); ?></li><?php endforeach; ?></ul>
+  <div class="erp-whatsnew-actions"><a class="button primary" href="<?php p($url->linkToRoute('reinhardterp.business.whatsNew')); ?>">Alle Neuerungen ansehen</a><button type="button" class="button" id="erpWhatsNewDone">Verstanden</button></div>
+  <small>Schließen mit × oder „Verstanden“ blendet diesen Hinweis für Version <?php p($erpCurrentVersion); ?> dauerhaft für deinen Benutzer aus.</small>
+ </section>
+</div>
+<?php endif; ?>

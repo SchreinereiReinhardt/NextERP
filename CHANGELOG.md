@@ -1,3 +1,42 @@
+# Betrio 2.8.0 – Mitarbeiter, Arbeitszeit und „Was ist neu?“
+
+Betrio 2.8.0 schließt den neuen Mitarbeiter- und Arbeitszeitbereich ab und verbessert die Orientierung nach Updates.
+
+- individuelle Arbeitszeitprofile mit Sollstunden je Wochentag
+- digitale Stempeluhr mit Pausen und nachvollziehbaren Korrekturen
+- Arbeitszeitkonto mit Startstichtag und Startsaldo
+- Urlaub, Krankheit, Schulung und weitere Abwesenheiten
+- Personalplanung und Teamkalender
+- klare Trennung von Anwesenheitszeit, Projektzeit und Planzeit
+- überarbeitete Berechnungslogik für Sollzeiten und Abwesenheitsgutschriften
+- erweiterte Tooltips und Dokumentation im Arbeitszeitbereich
+- neuer benutzerbezogener Hinweis „Was ist neu?“ nach einem Update
+- dauerhafte Versionshistorie unter Hilfe → Was ist neu?
+
+Die Update-Meldung wird pro Benutzer und Version nur so lange automatisch angezeigt, bis sie geschlossen oder mit „Verstanden“ bestätigt wurde. Der Status wird in der Nextcloud-Benutzerkonfiguration gespeichert und nicht nur im Browser.
+
+Keine neue Datenbankmigration.
+
+## 2.5.1
+
+- Banking als eigener Menüpunkt unter Finanzen sichtbar.
+- Kontoauszüge bleiben als eigener Belegbereich erhalten.
+- Banking-Route, Controller und Zahlungsabgleich aus 2.5.0 unverändert.
+
+## 2.5.0
+
+### Banking-Grundlage
+
+- neuer Banking-Bereich unter Finanzen
+- Bankkonten können als Stammdaten angelegt werden; Kasseler Sparkasse ist als erste FinTS-Referenz vorgesehen
+- strukturierte CSV-Kontoumsätze können eingelesen werden
+- Duplikatschutz über stabilen Umsatz-Prüfwert
+- automatische Rechnungsvorschläge anhand Rechnungsnummer, Betrag und Kunde
+- bestätigte Treffer werden in das bestehende Rechnungs-Zahlungssystem übernommen
+- bezahlte Rechnungen aktualisieren weiterhin die vorhandenen Finanz- und Projektprozesse
+- PDF-Kontoauszüge bleiben reine Belege; Betrio erzeugt daraus keine erfundenen Buchungen
+- direkter FinTS-Abruf ist vorbereitet, aber noch nicht aktiviert; Zugangsdaten werden in 2.5.0 noch nicht gespeichert
+
 ## 2.4.93
 
 ### Das bisher größte Betrio-Update

@@ -116,7 +116,7 @@ final class BusinessController extends Controller {
  #[NoAdminRequired] public function updateOfferStatus(int $id,string $status):RedirectResponse{$this->permissions->assert('offers');if(!in_array($status,['draft','sent','accepted','rejected','expired'],true))throw new \InvalidArgumentException('Ungültiger Status.');$this->update('re_erp_offers',$id,['status'=>$status,'updated_at'=>date('Y-m-d H:i:s')]);return $this->go('reinhardterp.business.offerDetail',['id'=>$id]);}
  #[NoAdminRequired] public function deleteOffer(int $id):RedirectResponse|\OCP\AppFramework\Http\NotFoundResponse{
   $this->permissions->assert('offers');$offer=$this->offer($id);if(!$offer)return new \OCP\AppFramework\Http\NotFoundResponse();
-  if($this->oneBy('re_erp_orders','offer_id',$id))throw new \InvalidArgumentException('Angebot kann nicht gelöscht werden, weil bereits ein Auftrag daraus entstanden ist.');
+  if($this->oneBy('re_erp_orders','offer_id',$id))return $this->go('reinhardterp.business.offers',['delete_error'=>'Angebot kann nicht gelöscht werden, weil bereits ein Auftrag daraus entstanden ist.']);
   $this->db->beginTransaction();try{$q=$this->db->getQueryBuilder();$q->delete('re_erp_offer_items')->where($q->expr()->eq('offer_id',$q->createNamedParameter($id)))->executeStatement();$q=$this->db->getQueryBuilder();$q->delete('re_erp_offers')->where($q->expr()->eq('id',$q->createNamedParameter($id)))->executeStatement();$this->db->commit();}catch(\Throwable $e){$this->db->rollBack();throw $e;}
   return $this->go('reinhardterp.business.offers');
  }
@@ -369,7 +369,7 @@ final class BusinessController extends Controller {
  }
  #[NoAdminRequired] public function deleteInvoice(int $id):RedirectResponse|\OCP\AppFramework\Http\NotFoundResponse{
   $this->permissions->assert('invoices');$invoice=$this->invoice($id);if(!$invoice)return new \OCP\AppFramework\Http\NotFoundResponse();
-  if((string)($invoice['status']??'')!=='draft')throw new \InvalidArgumentException('Nur Rechnungsentwürfe dürfen gelöscht werden. Finalisierte Rechnungen bitte stornieren.');
+  if((string)($invoice['status']??'')!=='draft')return $this->go('reinhardterp.business.invoices',['delete_error'=>'Nur Rechnungsentwürfe dürfen gelöscht werden. Finalisierte Rechnungen bitte stornieren.']);
   $this->db->beginTransaction();try{
    foreach(['re_erp_invoice_payments'=>'invoice_id','re_erp_invoice_items'=>'invoice_id'] as $table=>$col){$q=$this->db->getQueryBuilder();$q->delete($table)->where($q->expr()->eq($col,$q->createNamedParameter($id)))->executeStatement();}
    $q=$this->db->getQueryBuilder();$q->delete('re_erp_invoices')->where($q->expr()->eq('id',$q->createNamedParameter($id)))->executeStatement();$this->db->commit();
@@ -422,6 +422,20 @@ final class BusinessController extends Controller {
  }
  #[NoAdminRequired,NoCSRFRequired] public function documentation():TemplateResponse{
   return $this->page('documentation',['urlGenerator'=>$this->url]);
+ }
+ #[NoAdminRequired,NoCSRFRequired] public function whatsNew():TemplateResponse{
+  $this->permissions->assert('help');
+  $notes=require __DIR__.'/../../config/release_notes.php';
+  return $this->page('whats_new',['urlGenerator'=>$this->url,'releaseNotes'=>$notes]);
+ }
+ #[NoAdminRequired] public function dismissWhatsNew():JSONResponse{
+  $this->permissions->assert('help');
+  $uid=$this->uid();
+  $version=trim((string)$this->request->getParam('version',''));
+  $notes=require __DIR__.'/../../config/release_notes.php';
+  if($version===''||!isset($notes[$version]))return new JSONResponse(['ok'=>false],400);
+  $this->config->setUserValue($uid,$this->appName,'whats_new_seen',$version);
+  return new JSONResponse(['ok'=>true,'version'=>$version]);
  }
  #[NoAdminRequired,NoCSRFRequired] public function privacy():TemplateResponse{
   $this->permissions->assert('settings');

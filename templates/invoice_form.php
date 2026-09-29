@@ -17,7 +17,7 @@ $statusLabels=['draft'=>'Entwurf','open'=>'Offen','paid'=>'Bezahlt','cancelled'=
    <input type="hidden" name="orderId" value="<?php p($prefill['id']??'');?>">
 
    <div class="erp-form-grid">
-    <div><label>Kunde</label><select name="customerId" id="invoiceCustomerId" required><?php foreach($_['customers'] as $c):?><option value="<?php p($c['id']);?>" <?php if($prefillCustomerId===(int)$c['id']):?>selected<?php endif;?>><?php p($c['name']);?></option><?php endforeach;?></select></div>
+    <div><label>Kunde</label><select name="customerId" id="invoiceCustomerId" required class="erp-customer-select" data-quick-create-url="<?php p($url->linkToRoute('reinhardterp.customer.quickCreate'));?>"><?php foreach($_['customers'] as $c):?><option value="<?php p($c['id']);?>" <?php if($prefillCustomerId===(int)$c['id']):?>selected<?php endif;?>><?php p($c['name']);?></option><?php endforeach;?></select></div>
     <div><label>Projekt</label><select name="projectId" id="invoiceProjectId"><option value="">ohne Projekt</option><?php foreach($_['projects'] as $p):?><option value="<?php p($p['id']);?>" data-customer-id="<?php p($p['customer_id']??'');?>" <?php if($prefillProjectId===(int)$p['id']):?>selected<?php endif;?>><?php p($p['project_no'].' · '.$p['title']);?></option><?php endforeach;?></select></div>
     <div><label>Sachbearbeiter</label><input name="clerkName" value="<?php p($_['defaultClerkName']??'');?>" placeholder="wird aus dem angemeldeten Benutzer übernommen"><small class="erp-muted">Kann für dieses Dokument manuell überschrieben werden.</small></div>
     <div><label>Rechnungsdatum</label><input type="date" name="invoiceDate" value="<?php p(date('Y-m-d'));?>" required></div>
@@ -30,7 +30,7 @@ $statusLabels=['draft'=>'Entwurf','open'=>'Offen','paid'=>'Bezahlt','cancelled'=
 
 
    <div class="erp-form-grid">
-    <div style="grid-column:1/-1"><label>Betreff</label><input name="subject" placeholder="z. B. Rechnung Fensterreparatur / Projekt Musterstraße"></div>
+    <div class="erp-form-full"><label>Betreff</label><input name="subject" placeholder="z. B. Rechnung Fensterreparatur / Projekt Musterstraße"></div>
    </div>
    <div>
     <label>Einleitungstext</label>

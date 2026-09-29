@@ -6,13 +6,14 @@ $url=\OCP\Server::get(IURLGenerator::class);
 Util::addScript('reinhardterp','invoices');
 $statusLabels=['draft'=>'Entwurf','open'=>'Offen','paid'=>'Bezahlt','cancelled'=>'Storniert'];$typeLabels=['invoice'=>'Rechnung','advance'=>'Abschlag','final'=>'Schlussrechnung','credit'=>'Gutschrift'];
 ?>
-<div id="app-content"><div class="erp-page erp-offers-v2 erp-invoices-premium">
- <?php if(!empty($_['datevError'])):?><div class="erp-card" style="margin-bottom:16px;padding:16px 18px;border-left:4px solid var(--color-warning);"><strong>DATEV-Export nicht möglich</strong><p style="margin:6px 0 0"><?php p($_['datevError']);?></p></div><?php endif;?>
+<div id="app-content">
+ <?php if(!empty($_GET['delete_error'])):?><div class="erp-notice is-error erp-space-bottom"><?php p((string)$_GET['delete_error']);?></div><?php endif;?><div class="erp-page erp-offers-v2 erp-invoices-premium">
+ <?php if(!empty($_['datevError'])):?><div class="erp-card erp-datev-warning"><strong>DATEV-Export nicht möglich</strong><p class="erp-notice-text"><?php p($_['datevError']);?></p></div><?php endif;?>
  <div class="erp-head"><div><span class="erp-eyebrow">FINANZEN</span><h1>Rechnungen</h1><p class="erp-sub">Rechnungen und Entwürfe suchen, filtern und öffnen.</p></div><div class="erp-actions"><a class="button primary" href="<?php p($url->linkToRoute('reinhardterp.business.invoiceForm'));?>">+ Neue Rechnung</a></div></div>
 
- <div class="erp-card" style="margin-bottom:16px">
+ <div class="erp-card erp-space-bottom">
   <div class="erp-section-head"><div><h2 class="erp-help-target" data-betrio-help="datev">DATEV Export</h2><p class="erp-muted">Finalisierte Ausgangsrechnungen und Gutschriften als Buchungsdaten-CSV für die Übergabe an die Buchhaltung. Kontierung vor dem ersten Produktiveinsatz mit dem Steuerbüro abstimmen.</p></div></div>
-  <form method="get" action="<?php p($url->linkToRoute('reinhardterp.business.datevExport'));?>" class="erp-form-grid" style="padding:0 18px 18px">
+  <form method="get" action="<?php p($url->linkToRoute('reinhardterp.business.datevExport'));?>" class="erp-form-grid erp-form-inset">
    <div><label>Von</label><input type="date" name="from" value="<?php p(date('Y-m-01'));?>" required></div>
    <div><label>Bis</label><input type="date" name="to" value="<?php p(date('Y-m-t'));?>" required></div>
    <div><label>Kontenrahmen</label><input value="SKR <?php p($_['datevSettings']['skr']??'03');?>" disabled></div>

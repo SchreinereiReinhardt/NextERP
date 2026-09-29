@@ -1,3 +1,22 @@
+# Betrio 2.8.0 – Staff, working time and “What’s new?”
+
+Betrio 2.8.0 completes the new staff and working-time area and improves orientation after updates.
+
+- individual work schedules with target hours per weekday
+- digital attendance clock with breaks and traceable corrections
+- working-time account with configurable start date and opening balance
+- vacation, sickness, training and other absences
+- workforce planning and team calendar
+- clear separation of attendance time, project time and planned time
+- improved calculation logic for target hours and absence credits
+- expanded tooltips and documentation for working time
+- new per-user “What’s new?” notice after an update
+- permanent release history under Help → What’s new?
+
+The update notice is shown once per user and version until it is closed or confirmed. Its state is stored in the Nextcloud user configuration rather than only in the browser.
+
+No new database migration.
+
 ## 2.4.93
 
 ### The biggest Betrio update so far

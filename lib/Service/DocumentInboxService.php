@@ -42,6 +42,10 @@ final class DocumentInboxService {
 
     public function syncInbox(): int {
         $this->ensureStructure();
+        // Dateien können auch direkt in Nextcloud gelöscht werden. Entferne in diesem Fall
+        // nur noch nicht zugeordnete Inbox-Datensätze. Archivierte/zugeordnete Belege
+        // bleiben aus Nachvollziehbarkeitsgründen unangetastet.
+        $this->cleanupMissingInboxDocuments();
         $added = 0;
         foreach ($this->folders->listFiles(self::INBOX, 1000, 0) as $file) {
             if ($this->findByPath((string)$file['path'])) {
@@ -293,6 +297,10 @@ final class DocumentInboxService {
 
     public function get(int $id): ?array {
         $document = $this->one($id);
+        if ($document && ($document['processing_status'] ?? 'new') !== 'assigned' && $this->isInboxPath((string)($document['file_path'] ?? '')) && !$this->folders->exists((string)$document['file_path'])) {
+            $this->deleteDocumentRow($id);
+            return null;
+        }
         if ($document && ($document['processing_status'] ?? 'new') === 'new') {
             $this->update($id, ['processing_status' => 'review', 'updated_at' => date('Y-m-d H:i:s')]);
             $document['processing_status'] = 'review';
@@ -422,24 +430,69 @@ final class DocumentInboxService {
         $base=tempnam(sys_get_temp_dir(),'nexterp_doc_');if($base===false)return '';
         @unlink($base);$source=$base.'.'.$ext;
         if(file_put_contents($source,(string)$file['content'])===false)return '';
-        $text='';
+
+        $native='';$ocr='';
         try{
+            // Digitale PDFs zuerst verlustfrei auslesen. OCR ist nur Fallback, wenn
+            // der vorhandene Text zu kurz oder qualitativ offensichtlich schwach ist.
             if($ext==='pdf'&&$this->commandExists('pdftotext')){
-                $txt=$base.'.txt';$this->runCommand(['pdftotext','-layout','-enc','UTF-8',$source,$txt]);
-                if(is_file($txt))$text=(string)file_get_contents($txt);
+                $txt=$base.'.txt';
+                $this->runCommand(['pdftotext','-layout','-enc','UTF-8',$source,$txt]);
+                if(is_file($txt))$native=(string)file_get_contents($txt);
                 @unlink($txt);
             }
-            if(mb_strlen(preg_replace('/\s+/u','',$text)??'')<30&&$this->commandExists('tesseract')){
+
+            $needsOcr=$ext!=='pdf'||$this->documentTextQuality($native)<55;
+            if($needsOcr&&$this->commandExists('tesseract')){
                 if($ext==='pdf'&&$this->commandExists('pdftoppm')){
-                    $prefix=$base.'_page';$this->runCommand(['pdftoppm','-jpeg','-r','180',$source,$prefix]);
-                    $pages=glob($prefix.'-*.jpg')?:[];natsort($pages);
-                    foreach($pages as $page){$out=$page.'_ocr';$this->runCommand(['tesseract',$page,$out,'-l','deu+eng','--psm','6']);if(is_file($out.'.txt'))$text.="\n".file_get_contents($out.'.txt');@unlink($out.'.txt');@unlink($page);}
+                    // 240 dpi + PNG liefert bei kleinen Rechnungs-/Lieferschein-Schriften
+                    // deutlich stabilere Zeichen als die frühere 180-dpi-JPEG-Stufe.
+                    $prefix=$base.'_page';
+                    $this->runCommand(['pdftoppm','-png','-gray','-r','240','-f','1','-l','12',$source,$prefix]);
+                    $pages=glob($prefix.'-*.png')?:[];natsort($pages);
+                    foreach($pages as $page){
+                        $ocr.="\n".$this->ocrBestText($page,$base);
+                        @unlink($page);
+                    }
                 }else{
-                    $out=$base.'_ocr';$this->runCommand(['tesseract',$source,$out,'-l','deu+eng','--psm','6']);if(is_file($out.'.txt')){$text=(string)file_get_contents($out.'.txt');@unlink($out.'.txt');}
+                    $ocr=$this->ocrBestText($source,$base);
                 }
             }
         }finally{@unlink($source);}
+
+        // Niemals guten eingebetteten PDF-Text durch schlechteres OCR ersetzen.
+        // Bei Scans bzw. kaputten Text-Layern gewinnt die plausiblere Variante.
+        $text=$this->documentTextQuality($ocr)>$this->documentTextQuality($native)?$ocr:$native;
         return trim((string)(preg_replace('/[\x{00A0}\t]+/u',' ',$text)??$text));
+    }
+
+    private function ocrBestText(string $source,string $base):string{
+        $best='';$bestScore=-1;
+        foreach([6,11] as $psm){
+            $out=$base.'_ocr_'.$psm.'_'.substr(sha1($source),0,8);
+            $this->runCommand(['tesseract',$source,$out,'-l','deu+eng','--psm',(string)$psm,'-c','preserve_interword_spaces=1']);
+            $candidate=is_file($out.'.txt')?(string)file_get_contents($out.'.txt'):'';
+            @unlink($out.'.txt');
+            $score=$this->documentTextQuality($candidate);
+            if($score>$bestScore){$best=$candidate;$bestScore=$score;}
+        }
+        return $best;
+    }
+
+    private function documentTextQuality(string $text):int{
+        $text=trim($text);if($text==='')return 0;
+        $compact=preg_replace('/\s+/u','',$text)??'';
+        $len=mb_strlen($compact);if($len<30)return min(20,$len);
+        $score=min(45,(int)floor($len/12));
+        // Typische Belegmerkmale erhöhen die Wahrscheinlichkeit, dass der Textlayer
+        // tatsächlich brauchbar ist und nicht nur aus wenigen PDF-Metadaten besteht.
+        if(preg_match('/\b(rechnung|invoice|lieferschein|beleg|gutschrift)\b/ui',$text))$score+=15;
+        if(preg_match('/\b\d{1,2}[.\/-]\d{1,2}[.\/-]\d{2,4}\b/u',$text))$score+=10;
+        if(preg_match('/\b(?:eur|€|netto|brutto|mwst|ust)\b/ui',$text))$score+=10;
+        if(preg_match('/\b(?:nr\.?|nummer|kundennr|rechnungsnr|belegnr)\b/ui',$text))$score+=10;
+        $letters=preg_match_all('/\p{L}/u',$compact,$m);
+        if($len>0&&$letters/$len>0.45)$score+=10;
+        return min(100,$score);
     }
     private function commandExists(string $command):bool{
         $p=proc_open(['sh','-lc','command -v '.escapeshellarg($command)], [1=>['pipe','w'],2=>['pipe','w']],$pipes);
@@ -632,6 +685,36 @@ final class DocumentInboxService {
         }
         $timestamp = strtotime($value);
         return $timestamp === false ? null : date('Y-m-d', $timestamp);
+    }
+
+
+    private function cleanupMissingInboxDocuments(): int {
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('id', 'file_path', 'processing_status')
+            ->from('re_erp_documents')
+            ->where($qb->expr()->neq('processing_status', $qb->createNamedParameter('assigned')));
+        $rows = $qb->executeQuery()->fetchAll();
+        $removed = 0;
+        foreach ($rows as $row) {
+            $path = (string)($row['file_path'] ?? '');
+            if (!$this->isInboxPath($path) || $this->folders->exists($path)) {
+                continue;
+            }
+            $this->deleteDocumentRow((int)$row['id']);
+            $removed++;
+        }
+        return $removed;
+    }
+
+    private function isInboxPath(string $path): bool {
+        return str_starts_with(trim(str_replace('\\', '/', $path), '/'), 'ERP/00_Dokumenteneingang/');
+    }
+
+    private function deleteDocumentRow(int $id): void {
+        $qb = $this->db->getQueryBuilder();
+        $qb->delete('re_erp_documents')
+            ->where($qb->expr()->eq('id', $qb->createNamedParameter($id)))
+            ->executeStatement();
     }
 
     private function one(int $id): ?array {

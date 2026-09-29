@@ -8,7 +8,7 @@ $url=\OCP\Server::get(IURLGenerator::class);Util::addScript('reinhardterp','invo
 <input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']);?>">
 <div class="erp-form-grid">
  <div><label>Sachbearbeiter</label><input name="clerkName" value="<?php p($_['clerkName']??'');?>"><small class="erp-muted">Standard: angemeldeter Betrio-/Nextcloud-Benutzer; hier manuell überschreibbar.</small></div>
-<div><label>Kunde</label><select name="customerId" id="invoiceCustomerId"><?php foreach($_['customers'] as $c):?><option value="<?php p($c['id']);?>" <?php if((int)$c['id']===(int)$i['customer_id']):?>selected<?php endif;?>><?php p($c['name']);?></option><?php endforeach;?></select></div>
+<div><label>Kunde</label><select name="customerId" id="invoiceCustomerId" class="erp-customer-select" data-quick-create-url="<?php p($url->linkToRoute('reinhardterp.customer.quickCreate'));?>"><?php foreach($_['customers'] as $c):?><option value="<?php p($c['id']);?>" <?php if((int)$c['id']===(int)$i['customer_id']):?>selected<?php endif;?>><?php p($c['name']);?></option><?php endforeach;?></select></div>
 <div><label>Projekt</label><select name="projectId" id="invoiceProjectId"><option value="">ohne Projekt</option><?php foreach($_['projects'] as $p):?><option value="<?php p($p['id']);?>" data-customer-id="<?php p($p['customer_id']??'');?>" <?php if((int)$p['id']===(int)($i['project_id']??0)):?>selected<?php endif;?>><?php p($p['project_no'].' · '.$p['title']);?></option><?php endforeach;?></select></div>
 <div><label>Rechnungsart</label><select name="invoiceType"><?php foreach(['invoice'=>'Rechnung','advance'=>'Abschlagsrechnung','final'=>'Schlussrechnung','credit'=>'Gutschrift'] as $v=>$l):?><option value="<?php p($v);?>" <?php if(($i['invoice_type']??'invoice')===$v):?>selected<?php endif;?>><?php p($l);?></option><?php endforeach;?></select></div>
 <div><label>Rechnungsdatum</label><input type="date" name="invoiceDate" value="<?php p($i['invoice_date']);?>"></div>
@@ -19,7 +19,7 @@ $url=\OCP\Server::get(IURLGenerator::class);Util::addScript('reinhardterp','invo
 </div>
 
 <div class="erp-form-grid">
- <div style="grid-column:1/-1"><label>Betreff</label><input name="subject" value="<?php p($i['subject']??'');?>"></div>
+ <div class="erp-form-full"><label>Betreff</label><input name="subject" value="<?php p($i['subject']??'');?>"></div>
 </div>
 <div><label>Einleitungstext</label><textarea name="introText" rows="4"><?php p($i['intro_text']??'');?></textarea></div>
 <div><label>Schlusstext</label><textarea name="outroText" rows="4"><?php p($i['outro_text']??'');?></textarea></div>

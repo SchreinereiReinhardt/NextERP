@@ -39,7 +39,7 @@ $statusLabels=['draft'=>'Entwurf','open'=>'Offen','paid'=>'Bezahlt','cancelled'=
      <input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']);?>">
      <div><label>Empfänger</label><input type="email" name="to" required value="<?php p($mailRecipient);?>"></div>
      <div><label>Betreff</label><input type="text" name="subject" required value="<?php p($mailSubject);?>"></div>
-     <div style="grid-column:1/-1"><label>Nachricht</label><textarea name="body" rows="7" required><?php p($mailBody);?></textarea></div>
+     <div class="erp-form-full"><label>Nachricht</label><textarea name="body" rows="7" required><?php p($mailBody);?></textarea></div>
      <div><label><input type="checkbox" name="attachPdf" value="1" checked> PDF anhängen</label></div>
      <div><label><input type="checkbox" name="attachXml" value="1"> XRechnung XML zusätzlich anhängen</label></div>
      <div><label>&nbsp;</label><button class="button primary" type="submit">E-Mail jetzt senden</button></div>

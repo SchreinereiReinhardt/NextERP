@@ -1,8 +1,5 @@
 <?php require __DIR__.'/_nav.php'; ?>
 <?php $url=$_['urlGenerator']; ?>
-<style>
-.rel{max-width:1100px;margin:0 auto;padding:28px}.rel-head{padding:26px;border:1px solid #dfe6ef;border-radius:20px;background:#fff;margin-bottom:18px}.rel-head h1{margin:0;color:#0b1f55}.rel-badge{display:inline-block;margin-top:10px;padding:6px 10px;border-radius:999px;background:#fff4d6;color:#7a5000;font-weight:800}.rel-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.rel-card{border:1px solid #dfe6ef;border-radius:18px;background:#fff;padding:22px}.rel-card.wide{grid-column:1/-1}.rel-card h2{margin-top:0;color:#172554}.rel-list{line-height:1.7;color:#475569;padding-left:21px}.rel-btn{display:inline-block;padding:10px 14px;border-radius:10px;background:#1265d8;color:#fff!important;text-decoration:none;font-weight:700;margin:4px 5px 4px 0}.rel-btn.alt{background:#eef5ff;color:#1265d8!important}.rel-ok{color:#237333;font-weight:800}.rel-warn{padding:13px;border-radius:11px;background:#fff7e5;border-left:4px solid #d38a00}@media(max-width:800px){.rel{padding:16px}.rel-grid{grid-template-columns:1fr}.rel-card.wide{grid-column:auto}}
-</style>
 <div id="app-content"><main class="rel">
 <section class="rel-head"><h1>Über Betrio & Release</h1><p>Administration, Versionsstand und Freigabe-Check für den produktiven Betrieb.</p><span class="rel-badge">Betrio <?php p($_['appVersion']); ?></span></section>
 <div class="rel-grid">

@@ -83,7 +83,7 @@ require __DIR__ . '/_nav.php';
  <?php $ps=$_['paymentSettings']??['default'=>'net14','custom'=>[]];?>
  <div class="erp-form-grid"><div><label>Standard bei neuen Rechnungen</label><select name="payment_terms_default"><?php foreach(['due'=>'Sofort ohne Abzug','net10'=>'10 Tage netto','net14'=>'14 Tage netto','net30'=>'30 Tage netto','skonto2_10_30'=>'2 % Skonto / 10 Tage, 30 Tage netto','skonto3_10_30'=>'3 % Skonto / 10 Tage, 30 Tage netto','custom1'=>'Eigene Vorlage 1','custom2'=>'Eigene Vorlage 2','custom3'=>'Eigene Vorlage 3'] as $k=>$l):?><option value="<?php p($k);?>" <?php if(($ps['default']??'net14')===$k):?>selected<?php endif;?>><?php p($l);?></option><?php endforeach;?></select></div></div>
  <?php for($pi=1;$pi<=3;$pi++):$pc=$ps['custom'][$pi]??[];?>
- <div class="erp-form-grid"><div><label>Eigene Vorlage <?php p($pi);?> – Name</label><input name="payment_custom_<?php p($pi);?>_label" value="<?php p($pc['label']??'');?>" placeholder="z. B. Stammkunde 7 Tage"></div><div><label>Zahlungsziel in Tagen</label><input type="number" min="0" max="365" name="payment_custom_<?php p($pi);?>_days" value="<?php p($pc['days']??14);?>"></div><div style="grid-column:1/-1"><label>Text auf der Rechnung</label><input name="payment_custom_<?php p($pi);?>_text" value="<?php p($pc['text']??'');?>" placeholder="Zahlbar innerhalb von ..."></div></div>
+ <div class="erp-form-grid"><div><label>Eigene Vorlage <?php p($pi);?> – Name</label><input name="payment_custom_<?php p($pi);?>_label" value="<?php p($pc['label']??'');?>" placeholder="z. B. Stammkunde 7 Tage"></div><div><label>Zahlungsziel in Tagen</label><input type="number" min="0" max="365" name="payment_custom_<?php p($pi);?>_days" value="<?php p($pc['days']??14);?>"></div><div class="erp-form-full"><label>Text auf der Rechnung</label><input name="payment_custom_<?php p($pi);?>_text" value="<?php p($pc['text']??'');?>" placeholder="Zahlbar innerhalb von ..."></div></div>
  <?php endfor;?>
 </fieldset>
 
@@ -172,7 +172,7 @@ require __DIR__ . '/_nav.php';
 				</div>
 				<div class="erp-actions"><button class="button primary" type="submit">DATEV-Einstellungen speichern</button></div>
 				</form>
-				<form method="post" action="<?php p($url->linkToRoute('reinhardterp.module.resetDatevSettings')); ?>" onsubmit="return confirm('DATEV Beraternummer und Mandantennummer wirklich leeren? Kontenrahmen und Sachkonten bleiben erhalten.');" style="margin-top:10px">
+				<form method="post" action="<?php p($url->linkToRoute('reinhardterp.module.resetDatevSettings')); ?>" onsubmit="return confirm('DATEV Beraternummer und Mandantennummer wirklich leeren? Kontenrahmen und Sachkonten bleiben erhalten.');" class="erp-space-top-sm">
 					<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
 					<button class="button" type="submit">Berater- und Mandantennummer leeren</button>
 				</form>
@@ -203,7 +203,7 @@ require __DIR__ . '/_nav.php';
                 <div class="erp-actions"><a class="button" href="https://www.schreinerei-reinhardt.de" target="_blank" rel="noopener">Website</a></div>
                 <form id="betrio-support-form" method="post" action="<?php p($url->linkToRoute('reinhardterp.module.saveSettings')); ?>" class="erp-settings-form">
                     <input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
-                    <div class="erp-doc-box" style="margin-top:16px"><b>Betrio unterstützen</b><p>Wer die Weiterentwicklung freiwillig unterstützen möchte, kann dies über PayPal tun.</p><a class="button primary" href="https://paypal.me/betrio" target="_blank" rel="noopener noreferrer">Entwicklung unterstützen</a><p class="erp-muted">Freiwillige Unterstützung ohne Gegenleistung. Keine steuerlich absetzbare Spende.</p></div>
+                    <div class="erp-doc-box erp-space-top"><b>Betrio unterstützen</b><p>Wer die Weiterentwicklung freiwillig unterstützen möchte, kann dies über PayPal tun.</p><a class="button primary" href="https://paypal.me/betrio" target="_blank" rel="noopener noreferrer">Entwicklung unterstützen</a><p class="erp-muted">Freiwillige Unterstützung ohne Gegenleistung. Keine steuerlich absetzbare Spende.</p></div>
                 </form>
                 <p class="erp-muted">Optional. Wird unter „Über Betrio & Release“ als freiwillige Unterstützung ohne Gegenleistung angezeigt. Keine steuerlich absetzbare Spende.</p>
 			</section>

@@ -105,7 +105,7 @@ $tabUrl = static function(string $tab) use ($url): string {
             <form method="post" action="<?php p($url->linkToRoute('reinhardterp.business.saveCommunication')); ?>">
                 <input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
                 <div class="erp-form-grid">
-                    <div><label>Kunde</label><select name="customerId" required><?php foreach($customers as $c):?><option value="<?php p($c['id']);?>"><?php p($c['name']);?></option><?php endforeach;?></select></div>
+                    <div><label>Kunde</label><select name="customerId" required class="erp-customer-select"><?php foreach($customers as $c):?><option value="<?php p($c['id']);?>"><?php p($c['name']);?></option><?php endforeach;?></select></div>
                     <div><label>Projekt</label><select name="projectId"><option value="">ohne Projekt</option><?php foreach($projects as $project):?><option value="<?php p($project['id']);?>"><?php p($project['project_no'].' · '.$project['title']);?></option><?php endforeach;?></select></div>
                     <div><label>Art</label><select name="type"><option value="call">Telefonat</option><option value="email">E-Mail</option><option value="meeting">Besprechung</option><option value="note">Notiz</option></select></div>
                     <div><label>Zeitpunkt</label><input type="datetime-local" name="contactAt" value="<?php p(date('Y-m-d\TH:i')); ?>"></div>

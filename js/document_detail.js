@@ -124,6 +124,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const supplierId = supplier?.value || ''
         options.forEach((option, index) => {
             if (index === 0) return
+            if (option.dataset.directLink === '1') {
+                const enabled = Boolean(projectId && supplierId)
+                option.hidden = !enabled
+                option.disabled = !enabled
+                return
+            }
             const matchesProject = projectId && option.dataset.projectId === projectId
             const matchesSupplier = !supplierId || option.dataset.supplierId === supplierId
             option.hidden = !(matchesProject && matchesSupplier)

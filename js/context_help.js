@@ -9,7 +9,14 @@
     'supplier-cockpit': ['Lieferanten & Wareneingang', 'Verknüpft Bestellung, Auftragsbestätigung, Lieferschein und Eingangsrechnung mit dem Projekt.', 'supplier-cockpit'],
     'datev': ['DATEV-Export', 'Exportiert festgeschriebene Ausgangsbelege. Kontierung und Import vor Produktiveinsatz mit dem Steuerbüro prüfen.', 'datev'],
     'internal-rate': ['Interner Kostensatz', 'Interne Kosten je Arbeitsstunde für die Nachkalkulation. Er wird nicht auf Kundenbelegen ausgegeben.', 'project-controlling'],
-    'project-close': ['Projektabschluss', 'Vor dem Abschluss prüft Betrio offene Rapporte, Leistungen, Lieferungen, Belege und Abrechnungspunkte.', 'project-close']
+    'project-close': ['Projektabschluss', 'Vor dem Abschluss prüft Betrio offene Rapporte, Leistungen, Lieferungen, Belege und Abrechnungspunkte.', 'project-close'],
+    'working-time-profile': ['Arbeitszeitprofil', 'Legt Sollstunden je Wochentag, Jahresurlaub sowie Startdatum und Startsaldo des Arbeitszeitkontos fest.', 'working-time-profile'],
+    'attendance-clock': ['Digitale Stempeluhr', 'Erfasst Anwesenheit unabhängig von Projektzeiten. Pausen werden von der Anwesenheit abgezogen.', 'attendance-clock'],
+    'project-time': ['Projektzeit', 'Ordnet geleistete Zeit einem Projekt zu. Projektzeit und Anwesenheit bleiben getrennte Größen.', 'project-time'],
+    'absence-time': ['Abwesenheiten', 'Genehmigte Abwesenheiten schreiben an geplanten Arbeitstagen die hinterlegte Sollzeit gut.', 'absence-time'],
+    'staff-planning': ['Personalplanung', 'Planzeit zeigt den vorgesehenen Einsatz. Sie zählt nicht als geleistete Arbeitszeit.', 'staff-planning'],
+    'working-time-account': ['Arbeitszeitkonto', 'Berechnung: Anwesenheit + genehmigte Abwesenheitsgutschrift − Sollzeit, zuzüglich Startsaldo.', 'working-time-account'],
+    'unallocated-time': ['Nicht zugeordnet', 'Differenz aus Anwesenheit und Projektzeit. Negative Werte bedeuten Projektzeit ohne passende Anwesenheit.', 'working-time-account']
   };
 
   let openButton = null;
