@@ -1,5 +1,25 @@
 <?php
 return [
+ '2.8.5'=>[
+  'title'=>'Was ist neu in Betrio 2.8.5?',
+  'intro'=>'Dieses Update korrigiert den Lieferantenbereich und stellt den Versionshinweis für die aktuelle Version wieder korrekt bereit.',
+  'items'=>[
+   '„+ Neuer Lieferant“ im Lieferantenbereich wieder funktionsfähig',
+   'Bearbeitung von Lieferanten innerhalb eines Projekts übersichtlicher dargestellt',
+   'Lieferantenformular für Desktop und mobile Ansichten verbessert',
+   'Versionshistorie unter Hilfe → Was ist neu? auf den aktuellen Stand gebracht',
+   'Automatischer „Was ist neu?“-Hinweis nach dem Update wieder aktiviert',
+  ],
+ ],
+ '2.8.4'=>[
+  'title'=>'Betrio 2.8.4 – Lieferanten-Fixes',
+  'intro'=>'Fehlerbehebungen und Verbesserungen im Lieferantenbereich.',
+  'items'=>[
+   '„+ Neuer Lieferant“ korrigiert',
+   'Projektbezogene Lieferantenbearbeitung überarbeitet',
+   'Darstellung des Bearbeitungsformulars verbessert',
+  ],
+ ],
  '2.8.0'=>[
   'title'=>'Was ist neu in Betrio 2.8.0?',
   'intro'=>'Betrio informiert jetzt nach einem Update einmalig über wichtige Neuerungen. Die Meldung wird für jeden Benutzer getrennt gespeichert.',
