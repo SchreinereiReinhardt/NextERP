@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
    const grip=document.createElement('div');grip.className='erp-rte-resize';grip.title='Textfeld größer/kleiner ziehen';wrap.appendChild(grip);
    let startY=0,startH=0;
    grip.addEventListener('pointerdown',e=>{startY=e.clientY;startH=editor.getBoundingClientRect().height;grip.setPointerCapture(e.pointerId);e.preventDefault();});
-   grip.addEventListener('pointermove',e=>{if(!grip.hasPointerCapture(e.pointerId))return;editor.style.height=Math.max(90,Math.min(650,startH+(e.clientY-startY)))+'px';});
+   grip.addEventListener('pointermove',e=>{if(!grip.hasPointerCapture(e.pointerId))return;editor.style.setProperty('height',Math.max(90,Math.min(900,startH+(e.clientY-startY)))+'px','important');});
    textarea.classList.add('erp-rte-source');textarea.hidden=true;
    textarea.form?.addEventListener('submit',sync);
  });
