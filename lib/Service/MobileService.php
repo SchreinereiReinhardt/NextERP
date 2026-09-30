@@ -26,6 +26,7 @@ final class MobileService {
   private PermissionService $permissions,
   private CollaborativeTagService $collaborativeTags,
   private WorkingTimeService $workingTime,
+  private AttendanceService $attendance,
  ){}
  public function status():array{return ['app'=>'betrio','appId'=>'reinhardterp','apiVersion'=>1,'serverVersion'=>$this->version(),'loginAvailable'=>true];}
  public function login(string $username,string $password,?string $deviceName=null):array{
@@ -523,6 +524,65 @@ final class MobileService {
   if(!$parsed||$parsed->format('Y-m-d')!==$date)throw new \InvalidArgumentException('Datum muss YYYY-MM-DD sein.');
   return $this->workingTime->daySummary($uid,$date);
  }
+ public function attendanceStatus(string $uid):array{
+  $today=date('Y-m-d');$day=$this->attendance->day($uid,$today);$wt=$this->workingTimeDay($uid,$today);$wt['attendanceHours']=(float)($day['hours']??0);$wt['remainingHours']=round((float)$wt['attendanceHours']-(float)($wt['allocatedHours']??0),2);
+  return ['date'=>$today,'status'=>($day['current']['status']??'stopped'),'current'=>$day['current'],'attendanceHours'=>(float)($day['hours']??0),'breakMinutes'=>(int)($day['breakMinutes']??0),'workingTime'=>$wt,'account'=>$this->timeAccount($uid)];
+ }
+ public function attendanceAction(string $uid,string $action):array{
+  // Mobile actions are intentionally idempotent. A retry/double tap must not
+  // turn a successful clock-in into HTTP 400 just because the first request
+  // already created the open attendance row.
+  $current=$this->attendance->current($uid);
+  switch($action){
+   case 'in':
+    if($current===null)$this->attendance->clockIn($uid,$uid);
+    break;
+   case 'pause':
+    if($current!==null&&($current['status']??'')==='working')$this->attendance->pause($uid,$uid);
+    break;
+   case 'resume':
+    if($current!==null&&($current['status']??'')==='paused')$this->attendance->resume($uid,$uid);
+    break;
+   case 'out':
+    if($current!==null)$this->attendance->clockOut($uid,$uid);
+    break;
+   default:
+    throw new \InvalidArgumentException('Ungültige Arbeitszeit-Aktion.');
+  }
+  return $this->attendanceStatus($uid);
+ }
+ public function absences(string $uid):array{$q=$this->db->getQueryBuilder();$q->select('*')->from('re_erp_absences')->where($q->expr()->eq('user_id',$q->createNamedParameter($uid)))->orderBy('date_from','DESC')->setMaxResults(200);return $q->executeQuery()->fetchAll();}
+ public function createAbsence(string $uid,array $data):array{
+  $type=trim((string)($data['type']??''));$from=trim((string)($data['dateFrom']??''));$to=trim((string)($data['dateTo']??''));if(!in_array($type,['vacation','sick','training','other'],true))throw new \InvalidArgumentException('Ungültige Abwesenheitsart.');if(!preg_match('/^\\d{4}-\\d{2}-\\d{2}$/',$from)||!preg_match('/^\\d{4}-\\d{2}-\\d{2}$/',$to)||$to<$from)throw new \InvalidArgumentException('Ungültiger Zeitraum.');
+  $q=$this->db->getQueryBuilder();$q->select('id')->from('re_erp_absences')->where($q->expr()->eq('user_id',$q->createNamedParameter($uid)))->andWhere($q->expr()->neq('status',$q->createNamedParameter('rejected')))->andWhere($q->expr()->lte('date_from',$q->createNamedParameter($to)))->andWhere($q->expr()->gte('date_to',$q->createNamedParameter($from)))->setMaxResults(1);if($q->executeQuery()->fetch())throw new \InvalidArgumentException('In diesem Zeitraum besteht bereits eine Abwesenheit.');
+  $status=$type==='vacation'?'pending':'approved';$now=date('Y-m-d H:i:s');$i=$this->db->getQueryBuilder();$i->insert('re_erp_absences')->values(['user_id'=>$i->createNamedParameter($uid),'type'=>$i->createNamedParameter($type),'date_from'=>$i->createNamedParameter($from),'date_to'=>$i->createNamedParameter($to),'status'=>$i->createNamedParameter($status),'note'=>$i->createNamedParameter(trim((string)($data['note']??''))?:null),'created_by'=>$i->createNamedParameter($uid),'approved_by'=>$i->createNamedParameter($status==='approved'?$uid:null),'approved_at'=>$i->createNamedParameter($status==='approved'?$now:null),'created_at'=>$i->createNamedParameter($now),'updated_at'=>$i->createNamedParameter($now)]);$i->executeStatement();return ['id'=>(int)$this->db->lastInsertId('*PREFIX*re_erp_absences'),'status'=>$status];
+ }
+ public function planning(string $uid,string $from='',string $to=''):array{
+  if(!preg_match('/^\d{4}-\d{2}-\d{2}$/',$from))$from=date('Y-m-d',strtotime('monday this week'));
+  if(!preg_match('/^\d{4}-\d{2}-\d{2}$/',$to))$to=date('Y-m-d',strtotime($from.' +6 days'));
+  $user=$this->requiredUser($uid);$displayName=$user->getDisplayName();
+  $q=$this->db->getQueryBuilder();
+  $q->select('e.*','p.project_no','p.title AS project_title')
+   ->from('re_erp_team_events','e')
+   ->leftJoin('e','re_erp_team_event_users','eu',$q->expr()->eq('eu.event_id','e.id'))
+   ->leftJoin('e','re_erp_projects','p',$q->expr()->eq('p.id','e.project_id'))
+   ->where($q->expr()->eq('e.is_deleted',$q->createNamedParameter(0)))
+   ->andWhere($q->expr()->gte('e.start_at',$q->createNamedParameter($from.' 00:00:00')))
+   ->andWhere($q->expr()->lte('e.start_at',$q->createNamedParameter($to.' 23:59:59')))
+   ->andWhere($q->expr()->orX($q->expr()->eq('eu.user_id',$q->createNamedParameter($uid)),$q->expr()->eq('e.assigned_user_id',$q->createNamedParameter($uid))))
+   ->orderBy('e.start_at','ASC');
+  $events=$q->executeQuery()->fetchAll();$planning=[];$seen=[];
+  foreach($events as $e){$id=(int)$e['id'];if(isset($seen[$id]))continue;$seen[$id]=true;$startAt=(string)$e['start_at'];$endAt=(string)$e['end_at'];$seconds=max(0,strtotime($endAt)-strtotime($startAt));$projectName=trim((string)($e['project_no']??'').' · '.(string)($e['project_title']??''),' ·');$planning[]=['id'=>$id,'kind'=>'event','employeeId'=>$uid,'employeeName'=>$displayName,'date'=>substr($startAt,0,10),'startAt'=>$startAt,'endAt'=>$endAt,'hours'=>round($seconds/3600,2),'projectId'=>(int)($e['project_id']??0),'projectName'=>$projectName,'activity'=>(string)($e['title']??''),'title'=>(string)($e['title']??''),'location'=>(string)($e['location']??''),'note'=>(string)($e['description']??'')];}
+  $a=$this->db->getQueryBuilder();$a->select('*')->from('re_erp_absences')->where($a->expr()->eq('user_id',$a->createNamedParameter($uid)))->andWhere($a->expr()->eq('status',$a->createNamedParameter('approved')))->andWhere($a->expr()->lte('date_from',$a->createNamedParameter($to)))->andWhere($a->expr()->gte('date_to',$a->createNamedParameter($from)))->orderBy('date_from','ASC');$absences=$a->executeQuery()->fetchAll();
+  $labels=['vacation'=>'Urlaub','sick'=>'Krank','training'=>'Schulung','other'=>'Abwesend'];foreach($absences as $r){$d=max((string)$r['date_from'],$from);$last=min((string)$r['date_to'],$to);while($d<=$last){$planning[]=['id'=>(int)$r['id'],'kind'=>'absence','employeeId'=>$uid,'employeeName'=>$displayName,'date'=>$d,'absenceType'=>(string)$r['type'],'activity'=>$labels[(string)$r['type']]??'Abwesend','title'=>$labels[(string)$r['type']]??'Abwesend','note'=>(string)($r['note']??'')];$d=date('Y-m-d',strtotime($d.' +1 day'));}}
+  usort($planning,static fn(array $x,array $y):int=>strcmp((string)$x['date'],(string)$y['date'])?:strcmp((string)($x['startAt']??''),(string)($y['startAt']??'')));
+  return ['from'=>$from,'to'=>$to,'planning'=>$planning,'events'=>$events,'absences'=>$absences];
+ }
+ public function suppliers(string $uid,string $search=''):array{$this->requireMobilePermission($uid,'materials.read');$q=$this->db->getQueryBuilder();$q->select('*')->from('re_erp_suppliers');$search=trim($search);if($search!==''){$n='%'.$this->db->escapeLikeParameter($search).'%';$q->where($q->expr()->orX($q->expr()->iLike('name',$q->createNamedParameter($n)),$q->expr()->iLike('customer_no',$q->createNamedParameter($n)),$q->expr()->iLike('contact_person',$q->createNamedParameter($n))));}$q->orderBy('name','ASC')->setMaxResults(500);return $q->executeQuery()->fetchAll();}
+ public function saveSupplier(string $uid,array $data,?int $id=null):array{$this->requireMobilePermission($uid,'materials.read');$name=trim((string)($data['name']??''));if($name==='')throw new \InvalidArgumentException('Name des Lieferanten fehlt.');$fields=['name'=>$name,'contact_person'=>trim((string)($data['contactPerson']??''))?:null,'email'=>trim((string)($data['email']??''))?:null,'phone'=>trim((string)($data['phone']??''))?:null,'customer_no'=>trim((string)($data['customerNo']??''))?:null,'street'=>trim((string)($data['street']??''))?:null,'postal_code'=>trim((string)($data['postalCode']??''))?:null,'city'=>trim((string)($data['city']??''))?:null,'country'=>trim((string)($data['country']??''))?:null,'website'=>trim((string)($data['website']??''))?:null,'payment_terms'=>trim((string)($data['paymentTerms']??''))?:null,'notes'=>trim((string)($data['notes']??''))?:null,'active'=>isset($data['active'])?((bool)$data['active']?1:0):1];if($id){$u=$this->db->getQueryBuilder();$u->update('re_erp_suppliers');foreach($fields as $k=>$v)$u->set($k,$u->createNamedParameter($v));$u->where($u->expr()->eq('id',$u->createNamedParameter($id)))->executeStatement();}else{$fields['created_at']=date('Y-m-d H:i:s');$i=$this->db->getQueryBuilder();$i->insert('re_erp_suppliers');foreach($fields as $k=>$v)$i->setValue($k,$i->createNamedParameter($v));$i->executeStatement();$id=(int)$this->db->lastInsertId('*PREFIX*re_erp_suppliers');}return ['id'=>$id,'name'=>$name];}
+ public function projectSuppliers(string $uid,int $projectId):array{$this->assertProjectAccess($uid,$projectId);$q=$this->db->getQueryBuilder();$q->select('ps.*','s.name AS supplier_name')->from('re_erp_project_suppliers','ps')->leftJoin('ps','re_erp_suppliers','s',$q->expr()->eq('s.id','ps.supplier_id'))->where($q->expr()->eq('ps.project_id',$q->createNamedParameter($projectId)))->orderBy('ps.mounting_relevant','DESC')->addOrderBy('ps.id','ASC');return $q->executeQuery()->fetchAll();}
+ public function saveProjectSupplier(string $uid,int $projectId,array $data,?int $rowId=null):array{$this->assertProjectAccess($uid,$projectId);$supplierId=(int)($data['supplierId']??0);if($supplierId<=0)throw new \InvalidArgumentException('Lieferant fehlt.');$fields=['project_id'=>$projectId,'supplier_id'=>$supplierId,'trade'=>trim((string)($data['trade']??''))?:null,'purchase_no'=>trim((string)($data['purchaseNo']??''))?:null,'confirmation_status'=>(string)($data['confirmationStatus']??'open'),'confirmation_no'=>trim((string)($data['confirmationNo']??''))?:null,'expected_week'=>isset($data['expectedWeek'])&&$data['expectedWeek']!==''?(int)$data['expectedWeek']:null,'receipt_status'=>(string)($data['receiptStatus']??'open'),'mounting_relevant'=>!empty($data['mountingRelevant'])?1:0,'confirmation_document_id'=>!empty($data['confirmationDocumentId'])?(int)$data['confirmationDocumentId']:null,'delivery_document_id'=>!empty($data['deliveryDocumentId'])?(int)$data['deliveryDocumentId']:null,'notes'=>trim((string)($data['notes']??''))?:null,'updated_at'=>date('Y-m-d H:i:s')];if($rowId){$u=$this->db->getQueryBuilder();$u->update('re_erp_project_suppliers');foreach($fields as $k=>$v)$u->set($k,$u->createNamedParameter($v));$u->where($u->expr()->eq('id',$u->createNamedParameter($rowId)))->andWhere($u->expr()->eq('project_id',$u->createNamedParameter($projectId)))->executeStatement();}else{$fields['created_by']=$uid;$fields['created_at']=date('Y-m-d H:i:s');$i=$this->db->getQueryBuilder();$i->insert('re_erp_project_suppliers');foreach($fields as $k=>$v)$i->setValue($k,$i->createNamedParameter($v));$i->executeStatement();$rowId=(int)$this->db->lastInsertId('*PREFIX*re_erp_project_suppliers');}return ['id'=>$rowId,'projectId'=>$projectId,'supplierId'=>$supplierId];}
+ private function timeAccount(string $uid):array{$q=$this->db->getQueryBuilder();$q->select('*')->from('re_erp_user_roles')->where($q->expr()->eq('user_id',$q->createNamedParameter($uid)))->setMaxResults(1);$p=$q->executeQuery()->fetch()?:[];$start=(string)($p['time_account_start_date']??'');if($start===''||$start>date('Y-m-d'))return ['startDate'=>$start,'startBalance'=>(float)($p['time_account_start_balance']??0),'balance'=>(float)($p['time_account_start_balance']??0)];$days=[(float)($p['monday_hours']??8),(float)($p['tuesday_hours']??8),(float)($p['wednesday_hours']??8),(float)($p['thursday_hours']??8),(float)($p['friday_hours']??8),(float)($p['saturday_hours']??0),(float)($p['sunday_hours']??0)];$target=0.0;$absence=0.0;for($ts=strtotime($start);$ts<=strtotime(date('Y-m-d'));$ts+=86400)$target+=$days[((int)date('N',$ts))-1]??0;$aq=$this->db->getQueryBuilder();$aq->select('*')->from('re_erp_absences')->where($aq->expr()->eq('user_id',$aq->createNamedParameter($uid)))->andWhere($aq->expr()->eq('status',$aq->createNamedParameter('approved')))->andWhere($aq->expr()->gte('date_to',$aq->createNamedParameter($start)))->andWhere($aq->expr()->lte('date_from',$aq->createNamedParameter(date('Y-m-d'))));foreach($aq->executeQuery()->fetchAll() as $a){$f=max($start,(string)$a['date_from']);$t=min(date('Y-m-d'),(string)$a['date_to']);for($ts=strtotime($f);$ts<=strtotime($t);$ts+=86400)$absence+=$days[((int)date('N',$ts))-1]??0;}$att=0.0;$w=$this->attendance->week($uid,$start);$q=$this->db->getQueryBuilder();$q->select('*')->from('re_erp_attendance')->where($q->expr()->eq('user_id',$q->createNamedParameter($uid)))->andWhere($q->expr()->gte('work_date',$q->createNamedParameter($start)))->andWhere($q->expr()->lte('work_date',$q->createNamedParameter(date('Y-m-d'))));foreach($q->executeQuery()->fetchAll() as $r){$end=!empty($r['clock_out'])?strtotime((string)$r['clock_out']):time();$b=(int)$r['break_minutes'];if(($r['status']??'')==='paused'&&!empty($r['break_started_at']))$b+=max(0,(int)floor((time()-strtotime((string)$r['break_started_at']))/60));$att+=max(0,($end-strtotime((string)$r['clock_in']))/3600-$b/60);} $base=(float)($p['time_account_start_balance']??0);return ['startDate'=>$start,'startBalance'=>$base,'attendance'=>round($att,2),'absence'=>round($absence,2),'target'=>round($target,2),'balance'=>round($base+$att+$absence-$target,2)];}
  public function projectTimes(string $uid,int $projectId):array{
   $this->assertProjectAccess($uid,$projectId);
   $q=$this->db->getQueryBuilder();
@@ -824,6 +884,7 @@ final class MobileService {
  private function userPayload(IUser $u):array{return ['id'=>$u->getUID(),'displayName'=>$u->getDisplayName(),'username'=>$u->getUID()];}
  private function requiredUser(string $uid):IUser{$u=$this->users->get($uid);if(!$u instanceof IUser)throw new \RuntimeException('Benutzer nicht gefunden.');return $u;}
  private function role(string $uid):string{if($this->groups->isAdmin($uid))return 'administrator';$q=$this->db->getQueryBuilder();$q->select('role')->from('re_erp_user_roles')->where($q->expr()->eq('user_id',$q->createNamedParameter($uid)));$r=$q->executeQuery()->fetchOne();return is_string($r)&&$r!==''?$r:'employee';}
+ private function requireMobilePermission(string $uid,string $permission):void{$p=$this->permissions($uid);if(!in_array('*',$p,true)&&!in_array($permission,$p,true))throw new \OCP\AppFramework\Http\ForbiddenException('Keine Berechtigung für diesen ERP-Bereich.');}
  private function permissions(string $uid):array{$role=$this->role($uid);return match($role){'administrator','admin'=>['*'],'office'=>['dashboard.read','projects.read','projects.write','documents.read','documents.upload','reports.read','reports.write','time.read','time.write','materials.read'],'manager'=>['dashboard.read','projects.read','projects.write','documents.read','documents.upload','reports.read','reports.write','time.read','time.write','materials.read'],'employee'=>['dashboard.read','projects.read','documents.read','documents.upload','reports.read','reports.write','time.write','materials.read'],default=>['projects.read','time.write']};}
  private function version():string{return (string)$this->config->getAppValue('reinhardterp','installed_version','0.66.0');}
  private function simpleList(string $table,string $id,string $label,string $active):array{$q=$this->db->getQueryBuilder();$q->select($id,$label)->from($table)->where($q->expr()->eq($active,$q->createNamedParameter(1)))->orderBy($label,'ASC');return $q->executeQuery()->fetchAll();}

@@ -1,5 +1,16 @@
 <?php
 return [
+ '2.8.9'=>[
+  'title'=>'Was ist neu in Betrio 2.8.9?',
+  'intro'=>'Die mobile Arbeitszeiterfassung wurde für die aktuelle Nextcloud-Version stabilisiert und die Attendance-API robuster gemacht.',
+  'items'=>[
+   'Mobile Arbeitszeiterfassung mit festen API-Routen für Kommen, Pause, Fortsetzen und Gehen',
+   'HTTP-400-Fehler bei den mobilen Anwesenheitsaktionen behoben',
+   'Anwesenheitsaktionen robuster gegen Wiederholungen, Retries und Doppeltipps gemacht',
+   'Pause, Fortsetzen und Gehen liefern auch bei bereits erreichtem Zustand zuverlässig den aktuellen Status zurück',
+   'Temporäre Diagnose- und Debug-Ausgaben nach erfolgreicher Fehlerbehebung entfernt',
+  ],
+ ],
  '2.8.5'=>[
   'title'=>'Was ist neu in Betrio 2.8.5?',
   'intro'=>'Dieses Update korrigiert den Lieferantenbereich und stellt den Versionshinweis für die aktuelle Version wieder korrekt bereit.',

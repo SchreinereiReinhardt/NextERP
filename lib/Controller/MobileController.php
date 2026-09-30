@@ -58,6 +58,20 @@ final class MobileController extends Controller {
   }
  }
  #[PublicPage,NoCSRFRequired] public function workingTimeDay(string $date=''):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->workingTimeDay((string)$a['uid'],$date!==''?$date:null));}
+ #[PublicPage,NoCSRFRequired] public function attendanceStatus():JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->attendanceStatus((string)$a['uid']));}
+ #[PublicPage,NoCSRFRequired] public function attendanceIn():JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->attendanceAction((string)$a['uid'],'in'));}
+ #[PublicPage,NoCSRFRequired] public function attendancePause():JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->attendanceAction((string)$a['uid'],'pause'));}
+ #[PublicPage,NoCSRFRequired] public function attendanceResume():JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->attendanceAction((string)$a['uid'],'resume'));}
+ #[PublicPage,NoCSRFRequired] public function attendanceOut():JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->attendanceAction((string)$a['uid'],'out'));}
+ #[PublicPage,NoCSRFRequired] public function absences():JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->absences((string)$a['uid']));}
+ #[PublicPage,NoCSRFRequired] public function createAbsence():JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->createAbsence((string)$a['uid'],$this->jsonBody()));}
+ #[PublicPage,NoCSRFRequired] public function planning(string $from='',string $to=''):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->planning((string)$a['uid'],$from,$to));}
+ #[PublicPage,NoCSRFRequired] public function suppliers(string $q=''):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->suppliers((string)$a['uid'],$q));}
+ #[PublicPage,NoCSRFRequired] public function createSupplier():JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->saveSupplier((string)$a['uid'],$this->jsonBody()));}
+ #[PublicPage,NoCSRFRequired] public function updateSupplier(int $id):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->saveSupplier((string)$a['uid'],$this->jsonBody(),$id));}
+ #[PublicPage,NoCSRFRequired] public function projectSuppliers(int $id):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->projectSuppliers((string)$a['uid'],$id));}
+ #[PublicPage,NoCSRFRequired] public function createProjectSupplier(int $id):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->saveProjectSupplier((string)$a['uid'],$id,$this->jsonBody()));}
+ #[PublicPage,NoCSRFRequired] public function updateProjectSupplier(int $id,int $rowId):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->saveProjectSupplier((string)$a['uid'],$id,$this->jsonBody(),$rowId));}
  #[PublicPage,NoCSRFRequired] public function projectTimes(int $id):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->projectTimes((string)$a['uid'],$id));}
  #[PublicPage,NoCSRFRequired] public function projectReports(int $id):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->mobileProjectReports((string)$a['uid'],$id));}
  #[PublicPage,NoCSRFRequired] public function reportDetail(int $id):JSONResponse{return $this->authRun(fn(array $a)=>$this->mobile->mobileReportDetail((string)$a['uid'],$id));}
