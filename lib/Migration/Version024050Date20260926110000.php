@@ -20,7 +20,7 @@ final class Version024050Date20260926110000 extends SimpleMigrationStep {
    $t->addColumn('result_json','text',['notnull'=>false]);
    $t->addColumn('created_at','datetime',['notnull'=>true]);
    $t->addColumn('updated_at','datetime',['notnull'=>true]);
-   $t->setPrimaryKey(['id']);
+   $t->setPrimaryKey(['id'], 're_erp_msync_pk');
    $t->addUniqueIndex(['user_id','operation','client_id'],'re_erp_mobile_sync_unique');
    $t->addIndex(['updated_at'],'re_erp_mobile_sync_updated');
   }

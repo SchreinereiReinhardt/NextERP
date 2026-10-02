@@ -1,5 +1,17 @@
 <?php
 return [
+ '2.9.0'=>[
+  'title'=>'Was ist neu in Betrio 2.9.0?',
+  'intro'=>'Die digitale Projektakte wird zum echten Nextcloud-Dateimanager und protokolliert Dateiaktivitäten projektbezogen.',
+  'items'=>[
+   'Eigene Ordner und Unterordner direkt in der Projektakte anlegen',
+   'Neue zentrale Übersicht für Dateiaktivitäten über alle Projekte',
+   'Neue, geänderte, verschobene und gelöschte Dateien werden projektbezogen protokolliert',
+   'Dateiänderungen aus Nextcloud Files, Desktop-Sync und WebDAV werden über Nextcloud-Dateiereignisse erfasst',
+   'Dateiaktivitäten direkt in der jeweiligen Projektakte sichtbar',
+   'NC32-Kompatibilität verbessert: verbliebener automatisch benannter Primärindex durch kurzen expliziten Namen ersetzt',
+  ],
+ ],
  '2.8.9'=>[
   'title'=>'Was ist neu in Betrio 2.8.9?',
   'intro'=>'Die mobile Arbeitszeiterfassung wurde für die aktuelle Nextcloud-Version stabilisiert und die Attendance-API robuster gemacht.',

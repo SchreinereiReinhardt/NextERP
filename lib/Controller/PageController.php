@@ -121,6 +121,11 @@ final class PageController extends Controller {
   $activeCount=count($this->filterProjects($this->projects->findAllActive()));$archiveCount=count($this->filterProjects($this->projects->findAllArchived()));
   return new TemplateResponse($this->appName,'projects',['projects'=>$projects,'customerNames'=>$customerNames,'view'=>$archived?'archive':'active','search'=>$search,'activeCount'=>$activeCount,'archiveCount'=>$archiveCount]);
  }
+ #[NoAdminRequired,NoCSRFRequired] public function fileActivities():TemplateResponse{
+  $this->permissions->assert('projects');$rows=$this->activities->recent(250);$items=[];
+  foreach($rows as $row){if(!str_starts_with((string)($row['action']??''),'file_'))continue;$pid=(int)($row['project_id']??0);if($pid<1)continue;try{$project=$this->queryProject($pid);$this->permissions->assertProjectAccess($pid);}catch(\Throwable){continue;}$row['project_no']=$project['project_no']??'';$row['project_title']=$project['title']??'';$items[]=$row;}
+  return new TemplateResponse($this->appName,'file_activities',['activities'=>$items]);
+ }
  #[NoAdminRequired,NoCSRFRequired] public function projectForm(?int $id=null,?int $customerId=null):TemplateResponse{$this->permissions->assertProjectManager();$project=$id?$this->projects->find($id):null;return new TemplateResponse($this->appName,'project_form',['project'=>$project,'customers'=>$this->customers->findAllActive(),'selectedCustomerId'=>$project?->getCustomerId()??$customerId]);}
  #[NoAdminRequired,NoCSRFRequired] public function projectDetail(int $id):TemplateResponse{
   $this->permissions->assertProjectAccess($id);
@@ -151,6 +156,7 @@ final class PageController extends Controller {
    'projectCosts'=>$this->projectCosts($id,$p,$times),
    'projectPerformance'=>$this->projectPerformance($id,$p,$times,$reports,$this->queryProjectSuppliers($id)),
    'activities'=>$this->activities->forProject($id,80),
+   'fileActivities'=>array_values(array_filter($this->activities->forProject($id,120),static fn(array $a):bool=>str_starts_with((string)($a['action']??''),'file_'))),
    'cockpit'=>$this->projectCockpit($id,$p,$reports,$times,$documents),
    'projectMembers'=>$this->projectMembers($id),
    'assignmentUsers'=>$this->assignmentUsers(),

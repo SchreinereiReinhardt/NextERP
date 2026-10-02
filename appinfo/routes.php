@@ -26,6 +26,7 @@ return ['routes'=>[
  ['name'=>'integration#syncCustomerContact','url'=>'/api/customers/{customerId}/nextcloud-contact/sync','verb'=>'POST'],
  ['name'=>'integration#unlinkCustomerContact','url'=>'/api/customers/{customerId}/nextcloud-contact/unlink','verb'=>'POST'],
  ['name'=>'page#projects','url'=>'/projects','verb'=>'GET'],
+ ['name'=>'page#fileActivities','url'=>'/file-activities','verb'=>'GET'],
  ['name'=>'page#projectForm','url'=>'/projects/form','verb'=>'GET'],
  ['name'=>'page#projectDetail','url'=>'/projects/{id}','verb'=>'GET'],
  ['name'=>'page#saveProjectNote','url'=>'/projects/{id}/notes','verb'=>'POST','requirements'=>['id'=>'\d+']],

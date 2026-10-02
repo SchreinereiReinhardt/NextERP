@@ -26,6 +26,7 @@ $groups = [
         'label' => 'Projekte', 'icon' => 'project', 'key' => 'projects',
         'items' => [
             ['Projektakten', 'reinhardterp.page.projects', 'projects', '/projects'],
+            ['Dateiaktivitäten', 'reinhardterp.page.fileActivities', 'projects', '/file-activities'],
             ['Rapporte', 'reinhardterp.module.reports', 'reports', '/reports'],
             ['Abrechnung vorbereiten', 'reinhardterp.module.invoicePreparation', 'invoices', '/invoice-preparation'],
         ],
