@@ -1,5 +1,14 @@
 <?php
 return [
+ '2.9.1'=>[
+  'title'=>'Was ist neu in Betrio 2.9.1?',
+  'intro'=>'Die PDF- und Dokumentenverarbeitung wurde weiter verbessert.',
+  'items'=>[
+   'Verbesserte Texterkennung bei eingescannten PDF-Dokumenten',
+   'Robustere Verarbeitung unterschiedlicher PDF-Dokumente',
+   'Optimierte Dokumentenerkennung im Betrio Dokumenteneingang',
+  ],
+ ],
  '2.9.0'=>[
   'title'=>'Was ist neu in Betrio 2.9.0?',
   'intro'=>'Die digitale Projektakte wird zum echten Nextcloud-Dateimanager und protokolliert Dateiaktivitäten projektbezogen.',

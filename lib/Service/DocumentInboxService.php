@@ -6,6 +6,8 @@ namespace OCA\ReinhardtERP\Service;
 use OCP\IDBConnection;
 use OCP\IUserSession;
 use OCP\IConfig;
+use OCP\TaskProcessing\IManager as TaskProcessingManager;
+use OCP\TaskProcessing\Task;
 
 final class DocumentInboxService {
     public const INBOX = 'ERP/00_Dokumenteneingang/01_Unbearbeitet';
@@ -17,6 +19,7 @@ final class DocumentInboxService {
         private DocumentClassifierService $classifier,
         private DocumentRuleService $rules,
         private IConfig $config,
+        private TaskProcessingManager $taskProcessing,
     ) {
     }
 
@@ -97,6 +100,9 @@ final class DocumentInboxService {
             throw new \InvalidArgumentException('Dokument nicht gefunden.');
         }
         $content = $this->extractDocumentText($document);
+        if ($content !== '') {
+            $this->update($id, ['extracted_text' => $content, 'ocr_status' => 'done']);
+        }
         $suggestion = $this->classifier->classify(
             (string)$document['original_name'],
             $this->tableRows('re_erp_customers', 'name'),
@@ -423,6 +429,8 @@ final class DocumentInboxService {
     }
 
     private function extractDocumentText(array $document): string {
+        $stored=trim((string)($document['extracted_text']??''));
+        if($stored!=='')return $stored;
         $name=(string)($document['file_name']??$document['original_name']??'');
         $ext=strtolower(pathinfo($name,PATHINFO_EXTENSION));
         if(!in_array($ext,['pdf','png','jpg','jpeg','webp'],true))return '';
@@ -445,10 +453,10 @@ final class DocumentInboxService {
             $needsOcr=$ext!=='pdf'||$this->documentTextQuality($native)<55;
             if($needsOcr&&$this->commandExists('tesseract')){
                 if($ext==='pdf'&&$this->commandExists('pdftoppm')){
-                    // 240 dpi + PNG liefert bei kleinen Rechnungs-/Lieferschein-Schriften
-                    // deutlich stabilere Zeichen als die frühere 180-dpi-JPEG-Stufe.
+                    // 300 dpi + PNG liefert auch bei kleiner Rechnungs-/Lieferschein-Schrift
+                    // eine belastbare OCR-Basis; 12 Seiten begrenzen Laufzeit und Speicherbedarf.
                     $prefix=$base.'_page';
-                    $this->runCommand(['pdftoppm','-png','-gray','-r','240','-f','1','-l','12',$source,$prefix]);
+                    $this->runCommand(['pdftoppm','-png','-gray','-r','300','-f','1','-l','12',$source,$prefix]);
                     $pages=glob($prefix.'-*.png')?:[];natsort($pages);
                     foreach($pages as $page){
                         $ocr.="\n".$this->ocrBestText($page,$base);
@@ -503,6 +511,35 @@ final class DocumentInboxService {
         stream_get_contents($pipes[1]);fclose($pipes[1]);stream_get_contents($pipes[2]);fclose($pipes[2]);proc_close($p);
     }
 
+    private function scheduleNativeOcr(int $id,int $fileId):void{
+        try{
+            if(!$this->taskProcessing->hasProviders())return;
+            $ids=method_exists($this->taskProcessing,'getAvailableTaskTypeIds')
+                ? $this->taskProcessing->getAvailableTaskTypeIds()
+                : array_keys($this->taskProcessing->getAvailableTaskTypes());
+            if(!in_array('core:image2text:ocr',$ids,true))return;
+            $task=new Task('core:image2text:ocr',['input'=>[$fileId]],'reinhardterp',$this->session->getUser()?->getUID(),'document:'.$id);
+            $this->taskProcessing->scheduleTask($task);
+            if($task->getId()!==null)$this->markOcrScheduled($id,(int)$task->getId());
+        }catch(\Throwable){
+            // Lokale Werkzeuge bleiben Fallback; fehlende/abgelehnte Provider dürfen den Inbox-Scan nicht abbrechen.
+        }
+    }
+
+    public function storeOcrText(int $id,string $text):void{
+        $text=trim((string)(preg_replace('/[\x{00A0}\t]+/u',' ',$text)??$text));
+        if($text==='')return;
+        $this->update($id,['extracted_text'=>$text,'ocr_status'=>'done','analyzed_at'=>date('Y-m-d H:i:s')]);
+    }
+
+    public function markOcrScheduled(int $id,int $taskId):void{
+        $this->update($id,['ocr_status'=>'scheduled','ocr_task_id'=>$taskId]);
+    }
+
+    public function markOcrFailed(int $id):void{
+        $this->update($id,['ocr_status'=>'failed']);
+    }
+
     private function normaliseProcessingStates(): void {
         $qb=$this->db->getQueryBuilder();
         $qb->update('re_erp_documents')->set('processing_status',$qb->createNamedParameter('assigned'))
@@ -524,7 +561,7 @@ final class DocumentInboxService {
             $this->projectSupplierRows(),
         );
         $now = date('Y-m-d H:i:s');
-        return $this->insert(array_merge($fileData, $suggestion, [
+        $id=$this->insert(array_merge($fileData, $suggestion, [
             'document_type' => 'unassigned',
             'status' => 'unassigned',
             'processing_status' => 'new',
@@ -532,11 +569,15 @@ final class DocumentInboxService {
             'last_seen_at' => $now,
             'currency' => 'EUR',
             'duplicate_of' => $duplicateOf,
+            'extracted_text' => $content !== '' ? $content : null,
+            'ocr_status' => $content !== '' ? 'done' : 'pending',
             'analyzed_at' => $now,
             'created_by' => $this->uid(),
             'created_at' => $now,
             'updated_at' => $now,
         ]));
+        if($content===''&&!empty($fileData['file_id']))$this->scheduleNativeOcr($id,(int)$fileData['file_id']);
+        return $id;
     }
 
     private function projectSupplierRows(): array {

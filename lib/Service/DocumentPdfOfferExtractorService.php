@@ -45,8 +45,12 @@ final class DocumentPdfOfferExtractorService {
             return $result;
         }
 
-        if (!$this->commandExists('pdftotext')) {
-            $result['error'] = 'Das Serverprogramm „pdftotext“ fehlt. Bitte das Paket poppler-utils installieren.';
+        $storedText=trim((string)($document['extracted_text']??''));
+        if ($storedText==='' && !$this->commandExists('pdftotext')) {
+            $status=(string)($document['ocr_status']??'');
+            $result['error']=$status==='scheduled'
+                ? 'Die Nextcloud-OCR läuft im Hintergrund. Bitte die Seite in Kürze erneut öffnen.'
+                : 'Für diese PDF ist noch kein Text verfügbar. Betrio verwendet Nextcloud-OCR, sofern ein OCR-Provider eingerichtet ist; alternativ stehen pdftotext/Tesseract als Server-Fallback zur Verfügung.';
             return $result;
         }
 
@@ -71,23 +75,25 @@ final class DocumentPdfOfferExtractorService {
                 $result['error'] = 'PDF konnte nicht temporär gespeichert werden.';
                 return $result;
             }
-            $command = ['pdftotext', '-layout', '-enc', 'UTF-8', $pdfPath, $txtPath];
-            $descriptor = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
-            $process = proc_open($command, $descriptor, $pipes);
-            if (!is_resource($process)) {
-                $result['error'] = 'PDF-Textauslesung konnte nicht gestartet werden.';
-                return $result;
+            if($storedText!==''){
+                $text=$storedText;
+            }else{
+                $command = ['pdftotext', '-layout', '-enc', 'UTF-8', $pdfPath, $txtPath];
+                $descriptor = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+                $process = proc_open($command, $descriptor, $pipes);
+                if (!is_resource($process)) {
+                    $result['error'] = 'PDF-Textauslesung konnte nicht gestartet werden.';
+                    return $result;
+                }
+                stream_get_contents($pipes[1]); fclose($pipes[1]);
+                $stderr = stream_get_contents($pipes[2]); fclose($pipes[2]);
+                $exit = proc_close($process);
+                if ($exit !== 0 || !is_file($txtPath)) {
+                    $result['error'] = 'PDF-Textauslesung fehlgeschlagen'.($stderr !== '' ? ': '.trim($stderr) : '.');
+                    return $result;
+                }
+                $text = (string)file_get_contents($txtPath);
             }
-            $stdout = stream_get_contents($pipes[1]);
-            fclose($pipes[1]);
-            $stderr = stream_get_contents($pipes[2]);
-            fclose($pipes[2]);
-            $exit = proc_close($process);
-            if ($exit !== 0 || !is_file($txtPath)) {
-                $result['error'] = 'PDF-Textauslesung fehlgeschlagen'.($stderr !== '' ? ': '.trim($stderr) : '.');
-                return $result;
-            }
-            $text = (string)file_get_contents($txtPath);
             $text = str_replace(["\r\n", "\r", "\f"], ["\n", "\n", "\n"], $text);
             $text = preg_replace('/[\x{00A0}\t]+/u', ' ', $text) ?? $text;
             $text = trim($text);

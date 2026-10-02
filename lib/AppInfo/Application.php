@@ -11,6 +11,9 @@ use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\BackgroundJob\IJobList;
 use OCA\ReinhardtERP\Listener\ProjectFileActivityListener;
+use OCA\ReinhardtERP\Listener\DocumentOcrTaskListener;
+use OCP\TaskProcessing\Events\TaskSuccessfulEvent;
+use OCP\TaskProcessing\Events\TaskFailedEvent;
 use OCP\Files\Events\Node\NodeCreatedEvent;
 use OCP\Files\Events\Node\NodeWrittenEvent;
 use OCP\Files\Events\Node\NodeDeletedEvent;
@@ -34,6 +37,8 @@ final class Application extends App implements IBootstrap {
         $context->registerEventListener(NodeWrittenEvent::class, ProjectFileActivityListener::class);
         $context->registerEventListener(NodeDeletedEvent::class, ProjectFileActivityListener::class);
         $context->registerEventListener(NodeRenamedEvent::class, ProjectFileActivityListener::class);
+        $context->registerEventListener(TaskSuccessfulEvent::class, DocumentOcrTaskListener::class);
+        $context->registerEventListener(TaskFailedEvent::class, DocumentOcrTaskListener::class);
     }
 
     public function boot(IBootContext $context): void {
