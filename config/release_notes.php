@@ -1,5 +1,13 @@
 <?php
 return [
+ '2.9.10'=>[
+  'title'=>'Was ist neu in Betrio 2.9.10?',
+  'intro'=>'Dieses Update verbessert die Stabilität der digitalen Projektakte.',
+  'items'=>[
+   'Fehler beim Öffnen einzelner Projekte behoben',
+   'PDF-Aufruf der Projekt-Nachkalkulation korrigiert',
+  ],
+ ],
  '2.9.8'=>[
   'title'=>'Was ist neu in Betrio 2.9.8?',
   'intro'=>'Dieses Release bündelt die neuen Lager-, Inventur-, DATANORM- und PDF-Funktionen.',
