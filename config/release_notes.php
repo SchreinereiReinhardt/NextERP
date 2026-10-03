@@ -1,11 +1,14 @@
 <?php
 return [
- '2.9.7'=>[
-  'title'=>'Was ist neu in Betrio 2.9.7?',
-  'intro'=>'Dieses Wartungsrelease korrigiert die Darstellung von Betrio im Nextcloud App Store.',
+ '2.9.8'=>[
+  'title'=>'Was ist neu in Betrio 2.9.8?',
+  'intro'=>'Dieses Release bündelt die neuen Lager-, Inventur-, DATANORM- und PDF-Funktionen.',
   'items'=>[
-   'Store-Screenshots werden jetzt schema-konform in den App-Metadaten eingebunden',
-   'App-Store-Metadaten für die Veröffentlichung korrigiert',
+   'DATANORM-Import mit Vorschau, Lieferantenzuordnung, EAN und Preisbasis',
+   'Materialstamm nach Lieferant filtern und sortieren',
+   'Inventur-Assistent sowie Inventurliste als PDF und Druckansicht',
+   'PDF-Auswertungen für Arbeitszeit, Abrechnung, Finanzen, Steuern und Projekt-Nachkalkulation',
+   'Druckzugriff für Angebote, Rechnungen, Lieferscheine und Rapporte erweitert',
   ],
  ],
  '2.9.6'=>[
