@@ -176,7 +176,7 @@ $quickCreate = [
     <section class="erp-command-dialog" role="dialog" aria-modal="true" aria-labelledby="erpCommandTitle" data-search-url="<?php p($url->linkToRoute('reinhardterp.search.index')); ?>">
         <header>
             <span class="erp-ui-icon erp-icon-search erp-command-search-icon" aria-hidden="true"></span>
-            <input id="erpCommandInput" type="search" autocomplete="off" placeholder="Kunde, Projekt, Rapport oder Befehl suchen …" aria-label="Betrio durchsuchen">
+            <input id="erpCommandInput" type="search" autocomplete="off" aria-label="Betrio durchsuchen">
             <kbd>Esc</kbd>
         </header>
         <div class="erp-command-results" id="erpCommandResults">

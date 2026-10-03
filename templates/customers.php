@@ -29,7 +29,7 @@ script('reinhardterp', 'customers');
 <section class="erp-customer-filter" aria-label="Kunden filtern">
     <div class="erp-customer-search-wrap">
         <span aria-hidden="true">⌕</span>
-        <input id="erpCustomerSearch" type="search" autocomplete="off" placeholder="Kunde, Ansprechpartner, Nummer, Telefon, Mobilnummer oder E-Mail suchen …" aria-label="Kunden durchsuchen">
+        <input id="erpCustomerSearch" type="search" autocomplete="off" aria-label="Kunden durchsuchen">
         <button id="erpCustomerSearchClear" type="button" class="erp-search-clear" hidden aria-label="Suche leeren">×</button>
     </div>
     <div class="erp-alpha-filter" id="erpCustomerAlpha" aria-label="Kunden nach Anfangsbuchstaben filtern">

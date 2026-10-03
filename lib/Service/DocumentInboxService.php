@@ -102,6 +102,10 @@ final class DocumentInboxService {
         $content = $this->extractDocumentText($document);
         if ($content !== '') {
             $this->update($id, ['extracted_text' => $content, 'ocr_status' => 'done']);
+        } elseif (!empty($document['file_id'])) {
+            // A manual re-analysis must also retry the native Nextcloud OCR path.
+            // This keeps managed installations usable without local poppler/Tesseract binaries.
+            $this->scheduleNativeOcr($id, (int)$document['file_id']);
         }
         $suggestion = $this->classifier->classify(
             (string)$document['original_name'],

@@ -312,6 +312,19 @@ final class PdfService {
    $pdf->SetX($x4);$pdf->Cell($w4,3.2,$this->text((string)($bank2[$i]??'')),0,1);
   }
  }
+ public function createEvaluation(string $title,string $subtitle,array $summary,array $headers,array $rows,array $widths=[]):string{
+  require_once __DIR__.'/../tfpdf/tfpdf.php';
+  $pdf=new \tFPDF('L','mm','A4');$pdf->SetMargins(12,12,12);$pdf->SetAutoPageBreak(true,14);$pdf->AddPage();
+  $pdf->SetTextColor(28,37,46);$pdf->SetFont('Helvetica','B',18);$pdf->Cell(0,9,$this->text($title),0,1);
+  if($subtitle!==''){$pdf->SetTextColor(95,105,115);$pdf->SetFont('Helvetica','',9);$pdf->MultiCell(0,5,$this->text($subtitle));$pdf->Ln(2);}
+  if($summary!==[]){$pdf->SetFillColor(246,248,250);$pdf->SetTextColor(40,48,56);$pdf->SetFont('Helvetica','',8.5);foreach($summary as $label=>$value){$pdf->Cell(42,7,$this->text((string)$label),0,0,'L',true);$pdf->SetFont('Helvetica','B',8.5);$pdf->Cell(48,7,$this->text((string)$value),0,0,'L',true);$pdf->SetFont('Helvetica','',8.5);} $pdf->Ln(10);}
+  $usable=273.0;$count=max(1,count($headers));if($widths===[]||count($widths)!==count($headers))$widths=array_fill(0,$count,$usable/$count);else{$sum=array_sum($widths);if($sum>0)$widths=array_map(static fn($w)=>(float)$w/$sum*$usable,$widths);}
+  $drawHeader=function()use($pdf,$headers,$widths){$pdf->SetFillColor(235,239,243);$pdf->SetTextColor(55,65,75);$pdf->SetFont('Helvetica','B',7.5);foreach($headers as $i=>$h)$pdf->Cell($widths[$i],7,$this->text((string)$h),0,0,'L',true);$pdf->Ln();};$drawHeader();
+  $pdf->SetTextColor(35,42,49);$pdf->SetFont('Helvetica','',7.5);
+  foreach($rows as $row){if($pdf->GetY()>190){$pdf->AddPage();$drawHeader();$pdf->SetTextColor(35,42,49);$pdf->SetFont('Helvetica','',7.5);}foreach(array_values($row) as $i=>$v){if(!isset($widths[$i]))break;$txt=preg_replace('/\s+/u',' ',trim((string)$v));$max=max(6,(int)floor($widths[$i]*2.2));if(mb_strlen($txt)>$max)$txt=mb_substr($txt,0,$max-1).'…';$pdf->Cell($widths[$i],6,$this->text($txt),'B',0,'L');}$pdf->Ln();}
+  $pdf->Ln(3);$pdf->SetTextColor(120,128,136);$pdf->SetFont('Helvetica','',7);$pdf->Cell(0,4,$this->text('Erstellt mit Betrio · '.date('d.m.Y H:i')),0,1,'R');
+  return $pdf->Output('S');
+ }
  private function plain(string $html):string{
   $html=preg_replace('#<br\s*/?>#i',"\n",$html);$html=preg_replace('#</(p|li|h2|h3|h4)>#i',"\n",$html);$html=preg_replace('#<li[^>]*>#i','• ',$html);return trim(html_entity_decode(strip_tags($html),ENT_QUOTES|ENT_HTML5,'UTF-8'));
  }

@@ -410,7 +410,35 @@ final class BusinessController extends Controller {
 
 	return $this->go('reinhardterp.business.orderDetail',['id'=>$id]);
  }
- #[NoAdminRequired,NoCSRFRequired] public function inventory():TemplateResponse{$this->permissions->assert('inventory');return $this->page('inventory',['materials'=>$this->materialsWithMeta(),'movements'=>$this->stockRows(),'projects'=>$this->rows('re_erp_projects','project_no')]);}
+ #[NoAdminRequired,NoCSRFRequired] public function inventory():TemplateResponse{$this->permissions->assert('inventory');return $this->page('inventory',['materials'=>$this->materialsWithMeta(),'movements'=>$this->stockRows(),'projects'=>$this->rows('re_erp_projects','project_no'),'suppliers'=>$this->rows('re_erp_suppliers','name')]);}
+ #[NoAdminRequired,NoCSRFRequired] public function inventoryAssistant():TemplateResponse{
+  $this->permissions->assert('inventory');
+  return $this->page('inventory_assistant',['materials'=>$this->materialsWithMeta()]);
+ }
+ #[NoAdminRequired] public function saveInventoryCount(array $materialIds=[],array $countedQuantities=[]):RedirectResponse{
+  $this->permissions->assert('inventory');$changed=0;$unchanged=0;$now=date('Y-m-d H:i:s');
+  $this->db->beginTransaction();
+  try{
+   foreach($materialIds as $idx=>$rawId){$id=(int)$rawId;if($id<=0||!array_key_exists($idx,$countedQuantities)||trim((string)$countedQuantities[$idx])==='')continue;$m=$this->one('re_erp_materials',$id);if(!$m)continue;$new=(float)str_replace(',','.',(string)$countedQuantities[$idx]);if($new<0)throw new \InvalidArgumentException('Inventurbestand darf nicht negativ sein.');$old=(float)($m['stock_quantity']??0);if(abs($new-$old)<0.0005){$unchanged++;continue;}$this->update('re_erp_materials',$id,['stock_quantity'=>$new]);$this->insert('re_erp_stock_movements',['material_id'=>$id,'project_id'=>null,'movement_type'=>'adjustment','quantity'=>$new-$old,'note'=>'Inventurkorrektur: '.number_format($old,3,'.','').' → '.number_format($new,3,'.',''),'unit_cost'=>(float)($m['purchase_price']??$m['price']??0),'created_by'=>$this->uid(),'created_at'=>$now]);$changed++;}
+   $this->db->commit();
+  }catch(\Throwable $e){$this->db->rollBack();throw $e;}
+  return new RedirectResponse($this->url->linkToRoute('reinhardterp.business.inventory').'?inventoryCount=1&changed='.$changed.'&unchanged='.$unchanged);
+ }
+ #[NoAdminRequired,NoCSRFRequired] public function inventoryPrint():TemplateResponse{$this->permissions->assert('inventory');return new TemplateResponse($this->appName,'inventory_print',['materials'=>$this->materialsWithMeta()],'blank');}
+ #[NoAdminRequired,NoCSRFRequired] public function inventoryPdf():DataDownloadResponse{
+  $this->permissions->assert('inventory');$materials=$this->materialsWithMeta();$rows=[];$value=0.0;
+  foreach($materials as $m){$stock=(float)($m['stock_quantity']??0);$ek=(float)($m['purchase_price']??$m['price']??0);$value+=$stock*$ek;$rows[]=[(string)($m['article_no']??''),(string)($m['name']??''),(string)($m['storage_location']??''),number_format($stock,3,',','.'),(string)($m['unit']??''),'________________',number_format($ek,2,',','.').' €'];}
+  $data=$this->pdf->createEvaluation('Inventurliste','Zählliste für den Lagerbestand · Stand '.date('d.m.Y'),['Artikel'=>count($materials),'Lagerwert EK'=>number_format($value,2,',','.').' €'],['Artikel','Bezeichnung','Lagerort','Soll','Einheit','Ist / gezählt','EK netto'],$rows,[28,72,35,22,18,45,28]);
+  return new DataDownloadResponse($data,'Inventurliste_'.date('Y-m-d').'.pdf','application/pdf');
+ }
+ #[NoAdminRequired] public function datanormPreview():JSONResponse{
+  $this->permissions->assert('inventory');try{$supplierId=(int)$this->request->getParam('supplierId',0);if($supplierId<=0||!$this->one('re_erp_suppliers',$supplierId))throw new \InvalidArgumentException('Bitte zuerst einen Lieferanten auswählen.');$file=$this->datanormUpload();$parsed=$this->parseDatanorm((string)$file['tmp_name']);$sample=array_slice($parsed['items'],0,20);return new JSONResponse(['ok'=>true,'version'=>$parsed['version'],'supplierName'=>$parsed['supplier_name']??'','supplierCode'=>$parsed['supplier_code']??'','count'=>count($parsed['items']),'warnings'=>$parsed['warnings'],'items'=>$sample]);}catch(\Throwable $e){return new JSONResponse(['ok'=>false,'message'=>$e->getMessage()],400);}
+ }
+ #[NoAdminRequired] public function datanormImport():RedirectResponse{
+  $this->permissions->assert('inventory');$supplierId=(int)$this->request->getParam('supplierId',0);if($supplierId<=0||!$this->one('re_erp_suppliers',$supplierId))throw new \InvalidArgumentException('Bitte einen gültigen Lieferanten auswählen.');$file=$this->datanormUpload();$parsed=$this->parseDatanorm((string)$file['tmp_name']);if($parsed['items']===[])throw new \InvalidArgumentException('Keine importierbaren DATANORM-Artikelsätze gefunden.');$created=0;$updated=0;$skipped=0;
+  $this->db->beginTransaction();try{foreach($parsed['items'] as $item){$article=trim((string)$item['article_no']);$name=trim((string)$item['name']);if($article===''||$name===''){$skipped++;continue;}$q=$this->db->getQueryBuilder();$q->select('*')->from('re_erp_materials')->where($q->expr()->eq('article_no',$q->createNamedParameter($article)))->andWhere($q->expr()->orX($q->expr()->eq('supplier_id',$q->createNamedParameter($supplierId)),$q->expr()->isNull('supplier_id')))->setMaxResults(1);$existing=$q->executeQuery()->fetch();$data=['name'=>$name,'unit'=>$item['unit']?:null,'purchase_price'=>$item['price'],'price'=>$item['price'],'supplier_id'=>$supplierId,'barcode'=>$item['ean']?:null,'active'=>1];if($existing){$this->update('re_erp_materials',(int)$existing['id'],$data);$updated++;}else{$data['article_no']=$article;$data['created_at']=date('Y-m-d H:i:s');$this->insert('re_erp_materials',$data);$created++;}}$this->db->commit();}catch(\Throwable $e){$this->db->rollBack();throw $e;}
+  return new RedirectResponse($this->url->linkToRoute('reinhardterp.business.inventory').'?datanorm=1&created='.$created.'&updated='.$updated.'&skipped='.$skipped);
+ }
  #[NoAdminRequired] public function saveStockMovement(int $materialId,string $movementType,float $quantity,?int $projectId=null,?string $note=null,?float $purchasePrice=null,?float $saleMarkupPercent=null):RedirectResponse{$this->permissions->assert('inventory');if(!in_array($movementType,['in','out','adjustment'],true))throw new \InvalidArgumentException('Ungültige Lagerbewegung.');$m=$this->one('re_erp_materials',$materialId);if(!$m)throw new \InvalidArgumentException('Material nicht gefunden.');$qty=abs($quantity);$current=(float)($m['stock_quantity']??0);$new=$movementType==='in'?$current+$qty:($movementType==='out'?$current-$qty:$quantity);if($new<0)throw new \InvalidArgumentException('Lagerbestand darf nicht negativ werden.');$materialUpdate=['stock_quantity'=>$new];if($movementType==='in'){$ek=$purchasePrice!==null?max(0,(float)$purchasePrice):(float)($m['purchase_price']??$m['price']??0);if($purchasePrice!==null)$materialUpdate['purchase_price']=$ek;if($saleMarkupPercent!==null){$markup=max(0,(float)$saleMarkupPercent);$materialUpdate['sale_price']=round($ek*(1+($markup/100)),2);}}$this->db->beginTransaction();try{$this->insert('re_erp_stock_movements',['material_id'=>$materialId,'project_id'=>$projectId&&$projectId>0?$projectId:null,'movement_type'=>$movementType,'quantity'=>$movementType==='out'?-1*$qty:($movementType==='in'?$qty:$quantity),'note'=>$note,'unit_cost'=>($movementType==='out'?(float)($m['purchase_price']??$m['price']??0):null),'created_by'=>$this->uid(),'created_at'=>date('Y-m-d H:i:s')]);$this->update('re_erp_materials',$materialId,$materialUpdate);$this->db->commit();}catch(\Throwable $e){$this->db->rollBack();throw $e;}return $this->go('reinhardterp.business.inventory');}
  #[NoAdminRequired,NoCSRFRequired] public function aboutRelease():TemplateResponse{
   $this->permissions->assert('settings');
@@ -776,6 +804,36 @@ final class BusinessController extends Controller {
 		->addOrderBy('id','DESC');
 	return $q->executeQuery()->fetchAll();
 }
+ private function datanormUpload():array{
+  $file=$this->request->getUploadedFile('datanorm');if(!is_array($file)||($file['error']??UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_OK)throw new \InvalidArgumentException('Bitte eine DATANORM-Datei auswählen.');if((int)($file['size']??0)>50*1024*1024)throw new \InvalidArgumentException('Die DATANORM-Datei darf maximal 50 MB groß sein.');$name=strtoupper((string)($file['name']??''));if(!preg_match('/^(DATANORM|DATPREIS)(\.[0-9]{3}|\.(DAT|TXT))$/',$name)&&!preg_match('/\.(001|002|003|004|005|DAT|TXT)$/',$name))throw new \InvalidArgumentException('Dateityp nicht erkannt. Erwartet wird z. B. DATANORM.001.');return $file;
+ }
+ private function parseDatanorm(string $path):array{
+  $raw=file_get_contents($path);if($raw===false||$raw==='')throw new \InvalidArgumentException('DATANORM-Datei ist leer oder nicht lesbar.');
+  // DATANORM ist klassisch CP850. Viele aktuelle Lieferanten liefern jedoch UTF-8.
+  // UTF-8 deshalb zuerst unverändert übernehmen, sonst würden Umlaute doppelt konvertiert.
+  $utf=preg_match('//u',$raw)===1?$raw:@iconv('CP850','UTF-8//IGNORE',$raw);if(!is_string($utf)||$utf==='')$utf=$raw;
+  $lines=preg_split('/\r\n|\n|\r/',$utf)?:[];$items=[];$warnings=[];$version='4/5';$supplierName='';$supplierCode='';
+  foreach($lines as $line){
+   $line=trim($line);if($line==='')continue;
+   if(str_starts_with($line,'V;')){
+    $v=str_getcsv($line,';');$rawVersion=trim((string)($v[1]??''));if(preg_match('/^0?([345])([0-9])0$/',$rawVersion,$m))$version=$m[1].'.'.$m[2];elseif(preg_match('/^0?([345])0$/',$rawVersion,$m))$version=$m[1].'.0';
+    $supplierName=trim((string)($v[6]??''));$supplierCode=trim((string)($v[7]??''));continue;
+   }
+   if(!str_starts_with($line,'A;'))continue;$f=str_getcsv($line,';');if(count($f)<19){$warnings[]='Ein A-Satz konnte wegen zu weniger Felder nicht gelesen werden.';continue;}
+   // DATANORM 5 A-Satz: 2 Artikelnummer, 3/4 Kurztext, 5 Mengeneinheit,
+   // 6 Preiskennzeichen, 7 Preiseinheit, 8 Preis, 18 EAN.
+   $article=trim((string)($f[2]??''));$short1=preg_replace('/\s+/u',' ',trim((string)($f[3]??'')))??'';$short2=preg_replace('/\s+/u',' ',trim((string)($f[4]??'')))??'';$unit=trim((string)($f[5]??''));
+   $priceType=trim((string)($f[6]??''));$priceBasis=max(1,(int)($f[7]??1));$priceRaw=trim((string)($f[8]??''));$price=0.0;
+   // DATANORM-Preisfeld wird ohne Dezimaltrennzeichen in Cent übertragen; die Preiseinheit
+   // gibt an, für welche Menge der Preis gilt (z. B. 100). Ergebnis ist der Stück-/Einheitspreis.
+   if($priceRaw!==''&&preg_match('/^-?\d+$/',$priceRaw))$price=((float)$priceRaw/100.0)/$priceBasis;
+   elseif($priceRaw!==''){$norm=str_replace(['.',' ',','],['','','.'],$priceRaw);if(is_numeric($norm))$price=((float)$norm)/$priceBasis;}
+   $ean=trim((string)($f[18]??''));$discountGroup=trim((string)($f[25]??''));
+   $items[]=['article_no'=>$article,'name'=>trim($short1.($short2!==''?' '.$short2:'')),'unit'=>$unit,'price'=>round(max(0,$price),2),'price_basis'=>$priceBasis,'price_type'=>$priceType,'ean'=>$ean,'discount_group'=>$discountGroup,'group'=>''];
+  }
+  if($items===[])throw new \InvalidArgumentException('Keine DATANORM-A-Artikelsätze gefunden. Unterstützt werden DATANORM 4/5 Artikelstammdaten mit Semikolon-Feldtrennung.');
+  return ['version'=>$version,'supplier_name'=>$supplierName,'supplier_code'=>$supplierCode,'items'=>$items,'warnings'=>array_values(array_unique($warnings))];
+ }
  private function materialsWithMeta():array{$q=$this->db->getQueryBuilder();$q->select('m.*','g.name AS group_name','s.name AS supplier_name')->from('re_erp_materials','m')->leftJoin('m','re_erp_material_groups','g',$q->expr()->eq('g.id','m.material_group_id'))->leftJoin('m','re_erp_suppliers','s',$q->expr()->eq('s.id','m.supplier_id'))->orderBy('m.name','ASC');return $q->executeQuery()->fetchAll();}
  private function stockRows():array{$q=$this->db->getQueryBuilder();$q->select('s.*','m.article_no','m.name AS material_name','m.unit','p.project_no')->from('re_erp_stock_movements','s')->leftJoin('s','re_erp_materials','m',$q->expr()->eq('m.id','s.material_id'))->leftJoin('s','re_erp_projects','p',$q->expr()->eq('p.id','s.project_id'))->orderBy('s.created_at','DESC')->setMaxResults(100);return $q->executeQuery()->fetchAll();}
  private function activeTimer(string $uid):?array{$q=$this->db->getQueryBuilder();$q->select('t.*','p.project_no','p.title')->from('re_erp_time_timers','t')->leftJoin('t','re_erp_projects','p',$q->expr()->eq('p.id','t.project_id'))->where($q->expr()->eq('t.user_id',$q->createNamedParameter($uid)))->andWhere($q->expr()->in('t.status',[$q->createNamedParameter('running'),$q->createNamedParameter('paused')]))->orderBy('t.id','DESC')->setMaxResults(1);$r=$q->executeQuery()->fetch();return $r?:null;}

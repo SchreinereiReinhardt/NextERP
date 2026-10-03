@@ -1,5 +1,58 @@
 <?php
 return [
+ '2.9.6'=>[
+  'title'=>'Was ist neu in Betrio 2.9.6?',
+  'intro'=>'Dieses Release bündelt die neuen Lager-, Inventur-, DATANORM- und PDF-Funktionen für den offiziellen Store-Stand.',
+  'items'=>[
+   'DATANORM-Import mit Vorschau, Lieferantenzuordnung, EAN und Preisbasis',
+   'Materialstamm nach Lieferant filtern und sortieren',
+   'Inventur-Assistent sowie Inventurliste als PDF und Druckansicht',
+   'PDF-Auswertungen für Arbeitszeit, Abrechnung, Finanzen, Steuern und Projekt-Nachkalkulation',
+   'Druckzugriff für Angebote, Rechnungen, Lieferscheine und Rapporte erweitert',
+   'Store-Beschreibung und Store-Screenshots auf den aktuellen Funktionsstand gebracht',
+  ],
+ ],
+ '2.9.5'=>[
+  'title'=>'Was ist neu in Betrio 2.9.5?',
+  'intro'=>'Der Materialstamm lässt sich jetzt direkt nach Lieferanten filtern und sortieren.',
+  'items'=>[
+   'Neuer Lieferantenfilter direkt im Materialstamm',
+   'Lieferantenfilter ist mit Suche, Materialgruppe und Bestandsfilter kombinierbar',
+   'Spalte Lieferant kann auf- und absteigend sortiert werden',
+  ],
+ ],
+ '2.9.4'=>[
+  'title'=>'Was ist neu in Betrio 2.9.4?',
+  'intro'=>'Der DATANORM-Import wurde mit echten Lieferantendaten korrigiert und erweitert.',
+  'items'=>[
+   'DATANORM-5-Feldzuordnung für Artikelnummer, Bezeichnung, Einheit, Preis und EAN korrigiert',
+   'UTF-8- und klassische CP850-DATANORM-Dateien werden automatisch erkannt',
+   'Preisbasis wird bei der Berechnung des Einheitspreises berücksichtigt',
+   'EAN wird beim Import in das Barcode-Feld des Materialstamms übernommen',
+   'Lieferantenname aus dem DATANORM-Vorlaufsatz wird in der Vorschau angezeigt',
+  ],
+ ],
+ '2.9.3'=>[
+  'title'=>'Was ist neu in Betrio 2.9.3?',
+  'intro'=>'Lager und Inventur wurden erweitert und der DATANORM-Import sauber mit den Lieferanten verknüpft.',
+  'items'=>[
+   'DATANORM-Import mit verpflichtender Lieferantenzuordnung und Vorschau',
+   'Importierte und aktualisierte DATANORM-Artikel werden dem gewählten Lieferanten zugeordnet',
+   'Lagerübersicht nach Lieferant filtern und nach Lieferant, Artikel, Bezeichnung oder Bestand sortieren',
+   'Inventur-Assistent zum Erfassen und Korrigieren gezählter Lagerbestände',
+   'Inventurliste als PDF und Druckansicht',
+   'PDF- und Druckfunktionen für betriebliche Auswertungen erweitert',
+  ],
+ ],
+ '2.9.2'=>[
+  'title'=>'Was ist neu in Betrio 2.9.2?',
+  'intro'=>'Lager und Inventur wurden um DATANORM und einen geführten Inventurablauf erweitert.',
+  'items'=>[
+   'Inventur-Assistent zum Erfassen gezählter Bestände und Buchen von Abweichungen',
+   'Inventurliste als PDF und Druckansicht',
+   'DATANORM-Import mit Dateiprüfung und Vorschau vor dem Import',
+  ],
+ ],
  '2.9.1'=>[
   'title'=>'Was ist neu in Betrio 2.9.1?',
   'intro'=>'Die PDF- und Dokumentenverarbeitung wurde weiter verbessert.',

@@ -109,8 +109,8 @@ $tabUrl = static function(string $tab) use ($url): string {
                     <div><label>Projekt</label><select name="projectId"><option value="">ohne Projekt</option><?php foreach($projects as $project):?><option value="<?php p($project['id']);?>"><?php p($project['project_no'].' · '.$project['title']);?></option><?php endforeach;?></select></div>
                     <div><label>Art</label><select name="type"><option value="call">Telefonat</option><option value="email">E-Mail</option><option value="meeting">Besprechung</option><option value="note">Notiz</option></select></div>
                     <div><label>Zeitpunkt</label><input type="datetime-local" name="contactAt" value="<?php p(date('Y-m-d\TH:i')); ?>"></div>
-                    <div class="erp-span-2"><label>Betreff</label><input name="subject" required placeholder="Kurz zusammenfassen, worum es ging"></div>
-                    <div class="erp-span-2"><label>Details</label><textarea name="details" rows="6" placeholder="Gesprächsinhalt, Ergebnis oder nächste Schritte …"></textarea></div>
+                    <div class="erp-span-2"><label>Betreff</label><input name="subject" required></div>
+                    <div class="erp-span-2"><label>Details</label><textarea name="details" rows="6"></textarea></div>
                     <div><label>Wiedervorlage</label><input type="datetime-local" name="followUpAt"></div>
                 </div>
                 <div class="erp-actions erp-crm-form-actions"><button class="button primary">Speichern</button><a class="button" href="<?php p($tabUrl('overview')); ?>">Abbrechen</a></div>

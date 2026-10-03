@@ -32,15 +32,15 @@ require __DIR__ . '/_nav.php';
         <input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
         <?php $company = $_['company'] ?? []; ?>
         <div class="erp-form-grid">
-            <div><label>Firmenname *</label><input name="company_name" value="<?php p($company['name'] ?? ''); ?>" placeholder="Muster Schreinerei GmbH" required></div>
-            <div><label>Inhaber / Geschäftsführung</label><input name="company_owner" value="<?php p($company['owner'] ?? ''); ?>" placeholder="Max Mustermann"></div>
-            <div><label>Straße / Hausnummer</label><input name="company_street" value="<?php p($company['street'] ?? ''); ?>" placeholder="Musterstraße 1"></div>
-            <div><label>PLZ</label><input name="company_zip" value="<?php p($company['zip'] ?? ''); ?>" placeholder="34100"></div>
-            <div><label>Ort</label><input name="company_city" value="<?php p($company['city'] ?? ''); ?>" placeholder="Kassel"></div>
-            <div><label>Land</label><input name="company_country" value="<?php p($company['country'] ?? 'Deutschland'); ?>" placeholder="Deutschland"></div>
+            <div><label>Firmenname *</label><input name="company_name" value="<?php p($company['name'] ?? ''); ?>" required></div>
+            <div><label>Inhaber / Geschäftsführung</label><input name="company_owner" value="<?php p($company['owner'] ?? ''); ?>"></div>
+            <div><label>Straße / Hausnummer</label><input name="company_street" value="<?php p($company['street'] ?? ''); ?>"></div>
+            <div><label>PLZ</label><input name="company_zip" value="<?php p($company['zip'] ?? ''); ?>"></div>
+            <div><label>Ort</label><input name="company_city" value="<?php p($company['city'] ?? ''); ?>"></div>
+            <div><label>Land</label><input name="company_country" value="<?php p($company['country'] ?? 'Deutschland'); ?>"></div>
             <div><label>Telefon</label><input name="company_phone" value="<?php p($company['phone'] ?? ''); ?>"></div>
             <div><label>E-Mail</label><input type="email" name="company_email" value="<?php p($company['email'] ?? ''); ?>"></div>
-            <div><label>Website</label><input name="company_website" value="<?php p($company['website'] ?? ''); ?>" placeholder="www.example.de"></div>
+            <div><label>Website</label><input name="company_website" value="<?php p($company['website'] ?? ''); ?>"></div>
             <div><label>Steuernummer</label><input name="company_taxNo" value="<?php p($company['taxNo'] ?? ''); ?>"></div>
             <div><label>USt-IdNr.</label><input name="company_vatId" value="<?php p($company['vatId'] ?? ''); ?>"></div>
             <div><label>Registergericht</label><input name="company_registerCourt" value="<?php p($company['registerCourt'] ?? ''); ?>"></div>
@@ -83,7 +83,7 @@ require __DIR__ . '/_nav.php';
  <?php $ps=$_['paymentSettings']??['default'=>'net14','custom'=>[]];?>
  <div class="erp-form-grid"><div><label>Standard bei neuen Rechnungen</label><select name="payment_terms_default"><?php foreach(['due'=>'Sofort ohne Abzug','net10'=>'10 Tage netto','net14'=>'14 Tage netto','net30'=>'30 Tage netto','skonto2_10_30'=>'2 % Skonto / 10 Tage, 30 Tage netto','skonto3_10_30'=>'3 % Skonto / 10 Tage, 30 Tage netto','custom1'=>'Eigene Vorlage 1','custom2'=>'Eigene Vorlage 2','custom3'=>'Eigene Vorlage 3'] as $k=>$l):?><option value="<?php p($k);?>" <?php if(($ps['default']??'net14')===$k):?>selected<?php endif;?>><?php p($l);?></option><?php endforeach;?></select></div></div>
  <?php for($pi=1;$pi<=3;$pi++):$pc=$ps['custom'][$pi]??[];?>
- <div class="erp-form-grid"><div><label>Eigene Vorlage <?php p($pi);?> – Name</label><input name="payment_custom_<?php p($pi);?>_label" value="<?php p($pc['label']??'');?>" placeholder="z. B. Stammkunde 7 Tage"></div><div><label>Zahlungsziel in Tagen</label><input type="number" min="0" max="365" name="payment_custom_<?php p($pi);?>_days" value="<?php p($pc['days']??14);?>"></div><div class="erp-form-full"><label>Text auf der Rechnung</label><input name="payment_custom_<?php p($pi);?>_text" value="<?php p($pc['text']??'');?>" placeholder="Zahlbar innerhalb von ..."></div></div>
+ <div class="erp-form-grid"><div><label>Eigene Vorlage <?php p($pi);?> – Name</label><input name="payment_custom_<?php p($pi);?>_label" value="<?php p($pc['label']??'');?>"></div><div><label>Zahlungsziel in Tagen</label><input type="number" min="0" max="365" name="payment_custom_<?php p($pi);?>_days" value="<?php p($pc['days']??14);?>"></div><div class="erp-form-full"><label>Text auf der Rechnung</label><input name="payment_custom_<?php p($pi);?>_text" value="<?php p($pc['text']??'');?>"></div></div>
  <?php endfor;?>
 </fieldset>
 
@@ -136,10 +136,10 @@ require __DIR__ . '/_nav.php';
 				<form class="erp-settings-form" method="post" action="<?php p($url->linkToRoute('reinhardterp.module.saveHourlyRate')); ?>">
 					<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
 					<div class="erp-form-grid">
-						<div><label>Bezeichnung</label><input name="name" required placeholder="z. B. Monteur"></div>
-						<div><label>Kürzel</label><input name="code" required placeholder="MONTEUR"></div>
-						<div><label>Verrechnungssatz netto</label><input type="number" name="salesRate" min="0" step="0.01" required placeholder="68,00"></div>
-						<div><label>Interner Kostensatz</label><input type="number" name="costRate" min="0" step="0.01" placeholder="31,00"></div>
+						<div><label>Bezeichnung</label><input name="name" required></div>
+						<div><label>Kürzel</label><input name="code" required></div>
+						<div><label>Verrechnungssatz netto</label><input type="number" name="salesRate" min="0" step="0.01" required></div>
+						<div><label>Interner Kostensatz</label><input type="number" name="costRate" min="0" step="0.01"></div>
 						<div><label>Gültig ab</label><input type="date" name="validFrom"></div>
 						<div><label>Status</label><select name="active"><option value="1">Aktiv</option><option value="0">Inaktiv</option></select></div>
 					</div>
@@ -165,7 +165,7 @@ require __DIR__ . '/_nav.php';
 					<div><label>DATEV Beraternummer</label><input name="datev_consultant_no" inputmode="numeric" value="<?php p($_['datevSettings']['consultant_no']??'');?>"></div>
 					<div><label>DATEV Mandantennummer</label><input name="datev_client_no" inputmode="numeric" value="<?php p($_['datevSettings']['client_no']??'');?>"></div>
 					<div><label>Sachkontenlänge</label><input name="datev_account_length" inputmode="numeric" value="<?php p($_['datevSettings']['account_length']??'4');?>" min="4" max="8"></div>
-					<div><label>Wirtschaftsjahr beginnt (MM-TT)</label><input name="datev_fiscal_year_start" value="<?php p($_['datevSettings']['fiscal_year_start']??'01-01');?>" placeholder="01-01"></div>
+					<div><label>Wirtschaftsjahr beginnt (MM-TT)</label><input name="datev_fiscal_year_start" value="<?php p($_['datevSettings']['fiscal_year_start']??'01-01');?>"></div>
 					<div><label>Erlöskonto 19 %</label><input name="datev_revenue19" inputmode="numeric" value="<?php p($_['datevSettings']['revenue19']??'8400');?>"></div>
 					<div><label>Erlöskonto 7 %</label><input name="datev_revenue7" inputmode="numeric" value="<?php p($_['datevSettings']['revenue7']??'8300');?>"></div>
 					<div><label>Erlöskonto 0 %</label><input name="datev_revenue0" inputmode="numeric" value="<?php p($_['datevSettings']['revenue0']??'8120');?>"></div>
@@ -200,7 +200,7 @@ require __DIR__ . '/_nav.php';
 				<h2>Über Betrio</h2>
 				<p><strong>Entwickler: André Reinhardt</strong></p>
 				<p>Betrio wird als praxisnahes ERP für das Handwerk entwickelt.</p>
-                <div class="erp-actions"><a class="button" href="https://www.schreinerei-reinhardt.de" target="_blank" rel="noopener">Website</a></div>
+                <div class="erp-actions"><a class="button" href="mailto:AndreReinhardt@kassel-net.de">E-Mail an den Entwickler</a></div>
                 <form id="betrio-support-form" method="post" action="<?php p($url->linkToRoute('reinhardterp.module.saveSettings')); ?>" class="erp-settings-form">
                     <input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
                     <div class="erp-doc-box erp-space-top"><b>Betrio unterstützen</b><p>Wer die Weiterentwicklung freiwillig unterstützen möchte, kann dies über PayPal tun.</p><a class="button primary" href="https://paypal.me/betrio" target="_blank" rel="noopener noreferrer">Entwicklung unterstützen</a><p class="erp-muted">Freiwillige Unterstützung ohne Gegenleistung. Keine steuerlich absetzbare Spende.</p></div>

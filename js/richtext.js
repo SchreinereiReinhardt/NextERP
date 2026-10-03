@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
    const formats=document.createElement('select');formats.className='erp-rte-format';formats.innerHTML='<option value="p">Normal</option><option value="h2">Überschrift groß</option><option value="h3">Überschrift</option><option value="h4">Überschrift klein</option>';
    formats.addEventListener('change',()=>exec('formatBlock',formats.value));bar.appendChild(formats);
    bar.appendChild(button('🔗','Link',()=>{const u=prompt('Link-Adresse');if(u&&/^https?:\/\//i.test(u))exec('createLink',u);}));
-   const find=document.createElement('input');find.type='search';find.className='erp-rte-find';find.placeholder='Im Text suchen…';find.title='Text durchsuchen';
+   const find=document.createElement('input');find.type='search';find.className='erp-rte-find';find;find.title='Text durchsuchen';
    find.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const term=find.value.trim();if(!term)return;editor.focus();window.find(term,false,false,true,false,false,false);}});
    bar.appendChild(find);
    const sync=()=>{textarea.value=stripUnsafe(editor.innerHTML);};

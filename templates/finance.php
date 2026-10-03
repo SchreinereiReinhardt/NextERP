@@ -23,7 +23,7 @@ $folders=[
 ];
 ?>
 <div id="app-content"><div class="erp-page erp-finance-page erp-finance-premium">
-<div class="erp-head"><div><h1>Finanzen</h1><p class="erp-sub">Belege zentral ablegen, automatisch erkennen und der Buchhaltung zuordnen.</p></div><div class="erp-actions"><a class="button" href="<?php p($url->linkToRoute('reinhardterp.document.index')); ?>">Dokumenteneingang</a></div></div>
+<div class="erp-head"><div><h1>Finanzen</h1><p class="erp-sub">Belege zentral ablegen, automatisch erkennen und der Buchhaltung zuordnen.</p></div><div class="erp-actions"><a class="button" target="_blank" href="<?php p($url->linkToRoute('reinhardterp.document.finance',['pdf'=>1,'metricPeriod'=>$_['metricPeriod']??'year'])); ?>">PDF erstellen</a><a class="button" href="<?php p($url->linkToRoute('reinhardterp.document.index')); ?>">Dokumenteneingang</a></div></div>
 <?php if(!empty($_['message'])):?><div class="erp-notice"><?php p($_['message']);?></div><?php endif;?>
 <?php if(!empty($_['error'])):?><div class="erp-notice erp-notice-warning"><?php p($_['error']);?></div><?php endif;?>
 
@@ -75,7 +75,7 @@ $folders=[
 <label>Lieferant<select name="supplierId"><option value="">Alle</option><?php foreach($_['suppliers'] as $x):?><option value="<?php p((string)$x['id']);?>" <?php if((int)($_['supplierId']??0)===(int)$x['id'])p('selected');?>><?php p($x['name']);?></option><?php endforeach;?></select></label>
 <label>Kunde<select name="customerId" class="erp-customer-select"><option value="">Alle</option><?php foreach($_['customers'] as $x):?><option value="<?php p((string)$x['id']);?>" <?php if((int)($_['customerId']??0)===(int)$x['id'])p('selected');?>><?php p($x['name']);?></option><?php endforeach;?></select></label>
 <label>Projekt<select name="projectId"><option value="">Alle</option><?php foreach($_['projects'] as $x):?><option value="<?php p((string)$x['id']);?>" <?php if((int)($_['projectId']??0)===(int)$x['id'])p('selected');?>><?php p(trim(($x['project_no']??'').' '.($x['title']??'')));?></option><?php endforeach;?></select></label>
-<label class="erp-finance-search">Suche<input type="search" name="q" value="<?php p($_['q']??'');?>" placeholder="Nummer, Lieferant, Kunde, Projekt …"></label>
+<label class="erp-finance-search">Suche<input type="search" name="q" value="<?php p($_['q']??'');?>"></label>
 <div class="erp-actions"><button class="button primary">Filter anwenden</button><a class="button" href="<?php p($url->linkToRoute('reinhardterp.document.finance'));?>">Zurücksetzen</a>
 <a class="button" href="<?php p($url->linkToRoute('reinhardterp.document.financeExport',['type'=>$_['type']??'all','q'=>$_['q']??'','year'=>$_['year']??'','month'=>$_['month']??'','supplierId'=>$_['supplierId']??0,'customerId'=>$_['customerId']??0,'projectId'=>$_['projectId']??0]));?>">ZIP fürs Steuerbüro</a></div>
 </form>
@@ -83,7 +83,7 @@ $folders=[
 
 <section class="erp-card erp-wide">
  <div class="erp-section-head"><div><h2><?php p(($_['type']??'all')==='all'?'Alle Buchhaltungsbelege':($types[$_['type']]??'Buchhaltungsbelege'));?></h2><p class="erp-muted">Erkannte und bereits zugeordnete Belege.</p></div>
- <form method="get" class="erp-inline-filter"><input type="hidden" name="type" value="<?php p($_['type']??'all');?>"><input type="search" name="q" value="<?php p($_['q']??'');?>" placeholder="Beleg, Nummer, Kunde, Projekt …"><button class="button">Suchen</button><?php if(!empty($_['q'])):?><a class="button" href="<?php p($url->linkToRoute('reinhardterp.document.finance',['type'=>$_['type']??'all']));?>">Zurücksetzen</a><?php endif;?></form>
+ <form method="get" class="erp-inline-filter"><input type="hidden" name="type" value="<?php p($_['type']??'all');?>"><input type="search" name="q" value="<?php p($_['q']??'');?>"><button class="button">Suchen</button><?php if(!empty($_['q'])):?><a class="button" href="<?php p($url->linkToRoute('reinhardterp.document.finance',['type'=>$_['type']??'all']));?>">Zurücksetzen</a><?php endif;?></form>
  </div>
  <?php if(empty($_['documents'])):?><p class="erp-muted">Keine passenden Buchhaltungsbelege vorhanden.</p><?php else:?><div class="erp-dms-list">
  <?php foreach($_['documents'] as $document):

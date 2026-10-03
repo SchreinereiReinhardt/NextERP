@@ -33,6 +33,10 @@ Funktionen:
 - Urlaub, Krankheit, Schulung und weitere Abwesenheiten
 - Personalplanung und Teamkalender
 - Material- und Lagerverwaltung
+- DATANORM-Import mit Vorschau und Lieferantenzuordnung
+- Inventur-Assistent und Inventurliste als PDF
+- Lieferantenfilter und -sortierung im Materialstamm
+- PDF-Auswertungen für Arbeitszeit, Abrechnung, Finanzen, Steuern und Projekt-Nachkalkulation
 - Dokumente, Fotos und Projektdateien
 - Smart Document Inbox für eingehende Belege
 - Termine und Projekt-Timeline
@@ -83,6 +87,10 @@ Features:
 - Work reports with signature and PDF
 - Time tracking and evaluation
 - Material and inventory management
+- DATANORM import with preview and supplier assignment
+- Inventory assistant and inventory list as PDF
+- Supplier filtering and sorting in the material master data
+- PDF evaluations for working time, billing, finance, taxes and project post-calculation
 - Documents, photos and project files
 - Smart Document Inbox for incoming documents
 - Digital attendance clock with breaks and manual corrections
@@ -114,16 +122,15 @@ XRechnung is integrated and continues to be developed and validated.
 
 Betrio does not replace tax or legal advice. Accounting and export functions should be checked against the requirements of your business and, where appropriate, coordinated with your tax adviser before productive use.
   ]]></description>
-<version>2.9.1</version>
+<version>2.9.6</version>
   <licence>AGPL-3.0-or-later</licence>
 
-  <author homepage="https://www.schreinerei-reinhardt.de">André Reinhardt</author>
+  <author>André Reinhardt</author>
 
   <namespace>ReinhardtERP</namespace>
 
   <category>organization</category>
 
-  <website>https://www.schreinerei-reinhardt.de</website>
   <bugs>https://github.com/SchreinereiReinhardt/NextERP/issues</bugs>
   <repository>https://github.com/SchreinereiReinhardt/NextERP</repository>
 

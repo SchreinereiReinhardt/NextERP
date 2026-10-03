@@ -5,7 +5,7 @@ $route=(string)($_['sectionRoute']??'reinhardterp.document.finance');
 ?>
 <section class="erp-card erp-wide">
  <div class="erp-section-head"><div><h2><?php p($typeLabel); ?></h2><p class="erp-muted"><?php p((string)($_['sectionHelp']??'')); ?></p></div>
- <form method="get" class="erp-inline-filter"><input type="search" name="q" value="<?php p($_['q']??''); ?>" placeholder="Beleg, Nummer, Name …"><button class="button">Suchen</button><?php if(!empty($_['q'])):?><a class="button" href="<?php p($url->linkToRoute($route)); ?>">Zurücksetzen</a><?php endif;?></form></div>
+ <form method="get" class="erp-inline-filter"><input type="search" name="q" value="<?php p($_['q']??''); ?>"><button class="button">Suchen</button><?php if(!empty($_['q'])):?><a class="button" href="<?php p($url->linkToRoute($route)); ?>">Zurücksetzen</a><?php endif;?></form></div>
  <?php if(empty($_['documents'])):?><p class="erp-muted"><?php p((string)($_['emptyText']??'Noch keine Belege vorhanden.')); ?></p><?php else:?><div class="erp-dms-list">
  <?php foreach($_['documents'] as $document): ?>
   <a class="erp-dms-row" href="<?php p($url->linkToRoute('reinhardterp.document.review',['id'=>$document['id']])); ?>">

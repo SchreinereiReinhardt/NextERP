@@ -39,7 +39,7 @@ btn.addEventListener('click',async function(){if(deferred){deferred.prompt();try
 
 <?php elseif ($view === 'projects'): ?>
 <section class="erp-mobile-section"><div class="erp-mobile-sectionhead"><h2>Meine Projekte</h2><span><?php p((string)count($projects)); ?></span></div>
-<div class="erp-mobile-search"><span>⌕</span><input id="nexterp-project-search" type="search" placeholder="Projekt, Nummer oder Status suchen" autocomplete="off"></div>
+<div class="erp-mobile-search"><span>⌕</span><input id="nexterp-project-search" type="search" autocomplete="off"></div>
 <?php if (!$projects): ?><div class="erp-mobile-empty">Dir sind aktuell keine Projekte freigegeben.</div><?php else: ?><div class="erp-mobile-projects" id="nexterp-project-list">
 <?php foreach($projects as $project): ?><a class="erp-mobile-project" data-search="<?php p(strtolower(trim(($project['project_no']??'').' '.($project['title']??'').' '.($project['status']??'')))); ?>" href="<?php p($url->linkToRoute('reinhardterp.business.mobileProject',['id'=>(int)$project['id']])); ?>"><span class="erp-mobile-projecticon"><span class="erp-ui-icon erp-icon-project"></span></span><span><small><?php p($project['project_no'] ?? 'Projekt'); ?></small><b><?php p($project['title'] ?? ''); ?></b><em><?php p($project['status'] ?? ''); ?></em></span><i>›</i></a><?php endforeach; ?>
 </div><?php endif; ?></section>

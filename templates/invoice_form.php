@@ -19,7 +19,7 @@ $statusLabels=['draft'=>'Entwurf','open'=>'Offen','paid'=>'Bezahlt','cancelled'=
    <div class="erp-form-grid">
     <div><label>Kunde</label><select name="customerId" id="invoiceCustomerId" required class="erp-customer-select" data-quick-create-url="<?php p($url->linkToRoute('reinhardterp.customer.quickCreate'));?>"><?php foreach($_['customers'] as $c):?><option value="<?php p($c['id']);?>" <?php if($prefillCustomerId===(int)$c['id']):?>selected<?php endif;?>><?php p($c['name']);?></option><?php endforeach;?></select></div>
     <div><label>Projekt</label><select name="projectId" id="invoiceProjectId"><option value="">ohne Projekt</option><?php foreach($_['projects'] as $p):?><option value="<?php p($p['id']);?>" data-customer-id="<?php p($p['customer_id']??'');?>" <?php if($prefillProjectId===(int)$p['id']):?>selected<?php endif;?>><?php p($p['project_no'].' · '.$p['title']);?></option><?php endforeach;?></select></div>
-    <div><label>Sachbearbeiter</label><input name="clerkName" value="<?php p($_['defaultClerkName']??'');?>" placeholder="wird aus dem angemeldeten Benutzer übernommen"><small class="erp-muted">Kann für dieses Dokument manuell überschrieben werden.</small></div>
+    <div><label>Sachbearbeiter</label><input name="clerkName" value="<?php p($_['defaultClerkName']??'');?>"><small class="erp-muted">Kann für dieses Dokument manuell überschrieben werden.</small></div>
     <div><label>Rechnungsdatum</label><input type="date" name="invoiceDate" value="<?php p(date('Y-m-d'));?>" required></div>
     <div><label>Leistungsdatum</label><input type="date" name="serviceDate" value="<?php p(date('Y-m-d'));?>"></div>
     <div><label>Fällig am</label><input type="date" name="dueDate" id="invoiceDueDate" value="<?php p(date('Y-m-d',strtotime('+14 days')));?>"></div>
@@ -30,15 +30,15 @@ $statusLabels=['draft'=>'Entwurf','open'=>'Offen','paid'=>'Bezahlt','cancelled'=
 
 
    <div class="erp-form-grid">
-    <div class="erp-form-full"><label>Betreff</label><input name="subject" placeholder="z. B. Rechnung Fensterreparatur / Projekt Musterstraße"></div>
+    <div class="erp-form-full"><label>Betreff</label><input name="subject"></div>
    </div>
    <div>
     <label>Einleitungstext</label>
-    <textarea name="introText" rows="4" placeholder="Individueller Text oberhalb der Positionen"></textarea>
+    <textarea name="introText" rows="4"></textarea>
    </div>
    <div>
     <label>Schlusstext</label>
-    <textarea name="outroText" rows="4" placeholder="Individueller Text unterhalb der Summen"></textarea>
+    <textarea name="outroText" rows="4"></textarea>
    </div>
    <?php $billingCandidates=$_['billingCandidates']??[]; ?>
    <section class="erp-billing-assistant" id="billingAssistant" data-api-base="<?php p($url->linkToRoute('reinhardterp.business.billingCandidatesApi',['projectId'=>0]));?>" data-check-base="<?php p($url->linkToRoute('reinhardterp.business.billingCheck',['projectId'=>0]));?>">
@@ -64,7 +64,7 @@ $statusLabels=['draft'=>'Entwurf','open'=>'Offen','paid'=>'Bezahlt','cancelled'=
 
    <div class="erp-card erp-labor-cost-box">
     <h2>Arbeitskosten für Privatkunden</h2>
-    <div class="erp-form-grid"><div><label class="erp-help-target" data-betrio-help="invoice-35a">Arbeitskostenanteil netto</label><div class="erp-input-suffix"><input type="number" id="invoiceLaborCostNet" name="laborCostNet" min="0" step="0.01" value="" placeholder="0,00"><span>€</span></div><small class="erp-muted">Optional. Netto-Arbeitskosten eingeben. Bei einem Projekt schlägt Betrio offene Arbeitszeiten automatisch vor. Der Wert bleibt vor dem Speichern frei änderbar. Betrio berechnet die MwSt. automatisch; der Rechnungsbetrag wird dadurch nicht verändert.</small></div></div>
+    <div class="erp-form-grid"><div><label class="erp-help-target" data-betrio-help="invoice-35a">Arbeitskostenanteil netto</label><div class="erp-input-suffix"><input type="number" id="invoiceLaborCostNet" name="laborCostNet" min="0" step="0.01" value=""><span>€</span></div><small class="erp-muted">Optional. Netto-Arbeitskosten eingeben. Bei einem Projekt schlägt Betrio offene Arbeitszeiten automatisch vor. Der Wert bleibt vor dem Speichern frei änderbar. Betrio berechnet die MwSt. automatisch; der Rechnungsbetrag wird dadurch nicht verändert.</small></div></div>
    </div>
 
    <div class="erp-offer-bottom">

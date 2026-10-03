@@ -9,9 +9,9 @@
 <label>Projekt</label><select name="projectId" required><option value="">Projekt auswählen</option><?php foreach($_['projects'] as $p):?><option value="<?php p((string)$p['id']); ?>" <?php if((int)$p['id']===$selected)print_unescaped('selected');?>><?php p(trim(($p['project_no']??'').' · '.($p['title']??'')));?></option><?php endforeach;?></select>
 <label>Datum</label><input type="date" name="workDate" value="<?php p(date('Y-m-d')); ?>" required>
 <div class="erp-mob2-row"><div><label>Von</label><input type="time" name="startTime"></div><div><label>Bis</label><input type="time" name="endTime"></div></div>
-<div class="erp-mob2-row"><div><label>Pause (Min.)</label><input type="number" name="breakMinutes" min="0" value="0"></div><div><label>Stunden</label><input type="number" name="hours" min="0" step="0.25" placeholder="z. B. 7,5"></div></div>
-<label>Tätigkeit</label><textarea name="activity" required placeholder="Was wurde gemacht?"></textarea>
-<label>Notiz</label><textarea name="notes" placeholder="Optional"></textarea>
+<div class="erp-mob2-row"><div><label>Pause (Min.)</label><input type="number" name="breakMinutes" min="0" value="0"></div><div><label>Stunden</label><input type="number" name="hours" min="0" step="0.25"></div></div>
+<label>Tätigkeit</label><textarea name="activity" required></textarea>
+<label>Notiz</label><textarea name="notes"></textarea>
 <button class="erp-mob2-save" type="submit">Zeit speichern</button><div class="erp-mob2-note">Wenn Von/Bis ausgefüllt sind, kann Betrio die Stunden abzüglich Pause berechnen.</div>
 </form></main></div>
 <?php $mobileActive='time'; $mobileProjectId=(int)($_['projectId']??0); require __DIR__.'/_mobile_nav.php'; ?>

@@ -16,7 +16,7 @@ $search=(string)($_['search']??'');
 
 <form class="erp-project-search" method="get" action="<?php p($url->linkToRoute('reinhardterp.page.projects')); ?>">
  <?php if($isArchive): ?><input type="hidden" name="view" value="archive"><?php endif; ?>
- <input type="search" name="q" value="<?php p($search); ?>" placeholder="Projektnummer, Titel oder Status suchen …" aria-label="Projekte durchsuchen">
+ <input type="search" name="q" value="<?php p($search); ?>" aria-label="Projekte durchsuchen">
  <button class="button" type="submit">Suchen</button>
  <?php if($search!==''): ?><a class="button" href="<?php p($url->linkToRoute('reinhardterp.page.projects').($isArchive?'?view=archive':'')); ?>">Zurücksetzen</a><?php endif; ?>
 </form>

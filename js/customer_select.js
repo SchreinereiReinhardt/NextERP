@@ -29,7 +29,7 @@ function enhance(select){
  select.dataset.erpCustomerEnhanced='1';
  var wrap=document.createElement('div'); wrap.className='erp-customer-combobox';
  var row=document.createElement('div');row.className='erp-customer-search-row';
- var input=document.createElement('input'); input.type='search'; input.className='erp-customer-search'; input.autocomplete='off'; input.spellcheck=false; input.placeholder='Kunde suchen …'; input.setAttribute('aria-label','Kunde suchen');
+ var input=document.createElement('input'); input.type='search'; input.className='erp-customer-search'; input.autocomplete='off'; input.spellcheck=false; input; input.setAttribute('aria-label','Kunde suchen');
  var toggle=document.createElement('button');toggle.type='button';toggle.className='erp-customer-toggle';toggle.setAttribute('aria-label','Kundenliste öffnen');toggle.textContent='⌄';
  var list=document.createElement('div'); list.className='erp-customer-results'; list.hidden=true; list.setAttribute('role','listbox');
  select.parentNode.insertBefore(wrap,select); wrap.appendChild(row);row.appendChild(input);row.appendChild(toggle); wrap.appendChild(list); wrap.appendChild(select); select.classList.add('erp-customer-native');

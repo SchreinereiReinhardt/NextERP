@@ -163,6 +163,12 @@ return ['routes'=>[
  ['name'=>'business#advanceReminder','url'=>'/api/invoices/{id}/reminder','verb'=>'POST'],
 
  ['name'=>'business#inventory','url'=>'/inventory','verb'=>'GET'],
+ ['name'=>'business#inventoryAssistant','url'=>'/inventory/count','verb'=>'GET'],
+ ['name'=>'business#saveInventoryCount','url'=>'/inventory/count','verb'=>'POST'],
+ ['name'=>'business#inventoryPdf','url'=>'/inventory/inventory-list.pdf','verb'=>'GET'],
+ ['name'=>'business#inventoryPrint','url'=>'/inventory/inventory-list/print','verb'=>'GET'],
+ ['name'=>'business#datanormPreview','url'=>'/api/inventory/datanorm/preview','verb'=>'POST'],
+ ['name'=>'business#datanormImport','url'=>'/api/inventory/datanorm/import','verb'=>'POST'],
  ['name'=>'business#saveStockMovement','url'=>'/api/inventory/movements','verb'=>'POST'],
  ['name'=>'business#documentation','url'=>'/documentation','verb'=>'GET'],
  ['name'=>'business#whatsNew','url'=>'/whats-new','verb'=>'GET'],

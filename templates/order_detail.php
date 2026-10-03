@@ -8,8 +8,8 @@
 <form id="abschlagsrechnung" method="get" action="<?php p($url->linkToRoute('reinhardterp.business.invoiceForm'));?>" class="erp-form-grid">
 <input type="hidden" name="orderId" value="<?php p($o['id']);?>"><input type="hidden" name="invoiceType" value="advance">
 <div><label>Berechnung</label><select name="installmentMode" id="erp-installment-mode"><option value="amount">Fester Betrag</option><option value="percent">Prozent vom Auftragswert</option></select></div>
-<div id="erp-installment-amount"><label>Betrag netto</label><input type="number" name="installmentAmount" min="0.01" step="0.01" placeholder="z. B. 2500,00"></div>
-<div id="erp-installment-percent" class="erp-hidden"><label>Prozent</label><input type="number" name="installmentPercent" min="0.01" max="100" step="0.01" placeholder="z. B. 30"></div>
+<div id="erp-installment-amount"><label>Betrag netto</label><input type="number" name="installmentAmount" min="0.01" step="0.01"></div>
+<div id="erp-installment-percent" class="erp-hidden"><label>Prozent</label><input type="number" name="installmentPercent" min="0.01" max="100" step="0.01"></div>
 <div><label>&nbsp;</label><button class="button primary" type="submit">Abschlagsrechnung vorbereiten</button></div>
 </form>
 <script>
@@ -40,8 +40,7 @@ document.addEventListener('DOMContentLoaded',function(){
 			id="orderNoteContent"
 			name="content"
 			rows="6"
-			required
-			placeholder="Notiz zum Auftrag eingeben"></textarea>
+			required></textarea>
 
 		<button class="button primary" type="submit">Notiz speichern</button>
 	</form>

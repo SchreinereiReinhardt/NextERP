@@ -11,7 +11,7 @@ $isLinked = $customer && $customer->getNcContactId();
 <input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
 <?php if ($customer): ?><input type="hidden" name="id" value="<?php p($customer->getId()); ?>"><?php endif; ?>
 <div class="erp-form-grid">
-<div><label>Kundennummer</label><input name="customerNo" readonly value="<?php p($customer?->getCustomerNo() ?? ''); ?>" placeholder="wird automatisch vergeben"></div>
+<div><label>Kundennummer</label><input name="customerNo" readonly value="<?php p($customer?->getCustomerNo() ?? ''); ?>"></div>
 <div><label>Firma / Kundenname *</label><input name="name" required value="<?php p($customer?->getName() ?? ''); ?>"></div>
 <div><label>Ansprechpartner</label><input name="contactName" value="<?php p($customer?->getContactName() ?? ''); ?>"></div>
 <div><label>Telefon</label><input name="phone" inputmode="tel" autocomplete="tel" value="<?php p($customer?->getPhone() ?? ''); ?>"></div>
@@ -21,10 +21,10 @@ $isLinked = $customer && $customer->getNcContactId();
 <fieldset class="erp-address-fields">
 <legend>Adresse</legend>
 <div class="erp-form-grid">
-<div><label>Straße und Hausnummer</label><input name="street" autocomplete="street-address" value="<?php p($customer?->getStreet() ?? ''); ?>" placeholder="Korbacher Straße 300"></div>
-<div><label>Postleitzahl</label><input name="postalCode" autocomplete="postal-code" value="<?php p($customer?->getPostalCode() ?? ''); ?>" placeholder="34270"></div>
-<div><label>Ort</label><input name="city" autocomplete="address-level2" value="<?php p($customer?->getCity() ?? ''); ?>" placeholder="Schauenburg"></div>
-<div><label>Land</label><input name="country" autocomplete="country-name" value="<?php p($customer?->getCountry() ?? 'Deutschland'); ?>" placeholder="Deutschland"></div>
+<div><label>Straße und Hausnummer</label><input name="street" autocomplete="street-address" value="<?php p($customer?->getStreet() ?? ''); ?>"></div>
+<div><label>Postleitzahl</label><input name="postalCode" autocomplete="postal-code" value="<?php p($customer?->getPostalCode() ?? ''); ?>"></div>
+<div><label>Ort</label><input name="city" autocomplete="address-level2" value="<?php p($customer?->getCity() ?? ''); ?>"></div>
+<div><label>Land</label><input name="country" autocomplete="country-name" value="<?php p($customer?->getCountry() ?? 'Deutschland'); ?>"></div>
 </div>
 </fieldset>
 <section class="erp-card erp-space-top">
@@ -33,15 +33,15 @@ $isLinked = $customer && $customer->getNcContactId();
 <div class="erp-form-grid">
 <div><label>Kundentyp</label><select name="customerType"><?php $ct=$customer?->getCustomerType() ?: 'business'; ?><option value="private" <?= $ct==='private'?'selected':'' ?>>Privatkunde</option><option value="business" <?= $ct==='business'?'selected':'' ?>>Unternehmen</option><option value="public" <?= $ct==='public'?'selected':'' ?>>Öffentlicher Auftraggeber</option></select></div>
 <div><label>Bevorzugtes Rechnungsformat</label><select name="invoiceFormat"><?php $if=$customer?->getInvoiceFormat() ?: 'pdf'; ?><option value="pdf" <?= $if==='pdf'?'selected':'' ?>>PDF</option><option value="xrechnung" <?= $if==='xrechnung'?'selected':'' ?>>XRechnung</option><option value="zugferd" <?= $if==='zugferd'?'selected':'' ?>>ZUGFeRD</option></select></div>
-<div><label>Rechnungs-E-Mail</label><input type="email" name="invoiceEmail" value="<?php p($customer?->getInvoiceEmail() ?? ''); ?>" placeholder="rechnung@kunde.de"></div>
-<div><label>USt-IdNr.</label><input name="vatId" value="<?php p($customer?->getVatId() ?? ''); ?>" placeholder="DE123456789"></div>
+<div><label>Rechnungs-E-Mail</label><input type="email" name="invoiceEmail" value="<?php p($customer?->getInvoiceEmail() ?? ''); ?>"></div>
+<div><label>USt-IdNr.</label><input name="vatId" value="<?php p($customer?->getVatId() ?? ''); ?>"></div>
 <div><label>Steuernummer</label><input name="taxNo" value="<?php p($customer?->getTaxNo() ?? ''); ?>"></div>
-<div><label>Leitweg-ID</label><input name="leitwegId" value="<?php p($customer?->getLeitwegId() ?? ''); ?>" placeholder="z. B. 991-...-...-.."></div>
+<div><label>Leitweg-ID</label><input name="leitwegId" value="<?php p($customer?->getLeitwegId() ?? ''); ?>"></div>
 <div><label>Lieferantennummer beim Kunden</label><input name="supplierNo" value="<?php p($customer?->getSupplierNo() ?? ''); ?>"></div>
 <div><label>Käuferreferenz / Buyer Reference</label><input name="buyerReference" value="<?php p($customer?->getBuyerReference() ?? ''); ?>"></div>
 <div><label>Standard-Bestellreferenz</label><input name="purchaseOrderReference" value="<?php p($customer?->getPurchaseOrderReference() ?? ''); ?>"></div>
 <div><label>Kostenstelle</label><input name="costCenter" value="<?php p($customer?->getCostCenter() ?? ''); ?>"></div>
-<div><label>DATEV-Debitorenkonto</label><input name="datevDebtorAccount" inputmode="numeric" value="<?php p($customer?->getDatevDebtorAccount() ?? ''); ?>" placeholder="leer = automatisch"><small class="erp-muted">Optional. Überschreibt die automatische Debitorennummer für diesen Kunden.</small></div>
+<div><label>DATEV-Debitorenkonto</label><input name="datevDebtorAccount" inputmode="numeric" value="<?php p($customer?->getDatevDebtorAccount() ?? ''); ?>"><small class="erp-muted">Optional. Überschreibt die automatische Debitorennummer für diesen Kunden.</small></div>
 </div>
 </section>
 <label>Notizen</label><textarea name="notes" rows="4"><?php p($customer?->getNotes() ?? ''); ?></textarea>

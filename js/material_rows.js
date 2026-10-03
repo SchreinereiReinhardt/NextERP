@@ -14,10 +14,10 @@ function createRow(container) {
  const row = document.createElement('div');
  row.className = 'erp-material-entry-row';
  row.innerHTML = `
-  <div class="erp-material-search-cell"><label>Material suchen</label><input class="erp-material-search" list="erp-material-options" placeholder="Artikelnummer oder Bezeichnung"><input type="hidden" name="materialIds[]" class="erp-material-id"></div>
-  <div><label>Beschreibung</label><input name="materialDescriptions[]" class="erp-material-description" placeholder="Freie Position möglich"></div>
+  <div class="erp-material-search-cell"><label>Material suchen</label><input class="erp-material-search" list="erp-material-options"><input type="hidden" name="materialIds[]" class="erp-material-id"></div>
+  <div><label>Beschreibung</label><input name="materialDescriptions[]" class="erp-material-description"></div>
   <div><label>Menge</label><input type="number" name="materialQuantities[]" class="erp-material-quantity" step="0.001" min="0" value="0"></div>
-  <div><label>Einheit</label><input name="materialUnits[]" class="erp-material-unit" placeholder="Stk."></div>
+  <div><label>Einheit</label><input name="materialUnits[]" class="erp-material-unit"></div>
   <div><label>VK netto</label><input type="number" name="materialUnitPrices[]" class="erp-material-price" step="0.01" min="0" value="0"></div>
   <button type="button" class="button erp-material-remove" title="Materialzeile entfernen">×</button>`;
  container.appendChild(row);

@@ -1991,3 +1991,67 @@
 
 /* Betrio 2.9.0 – Projekt-Dateimanager & Dateiaktivitäten */
 .erp-project-folder-quick{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0 16px}.erp-project-folder-quick input{min-width:260px;flex:1}.erp-file-activity-page{max-width:1500px}.erp-file-activity-list{display:flex;flex-direction:column;border:1px solid var(--color-border);border-radius:10px;overflow:hidden}.erp-file-activity-row{display:grid;grid-template-columns:90px minmax(0,1fr) 180px;gap:14px;align-items:center;padding:11px 14px;border-bottom:1px solid var(--color-border);text-decoration:none;color:inherit}.erp-file-activity-row:last-child{border-bottom:0}.erp-file-activity-row:hover{background:var(--color-background-hover)}.erp-file-activity-row>span:nth-child(2){min-width:0}.erp-file-activity-row strong,.erp-file-activity-row small{display:block;overflow-wrap:anywhere}.erp-file-activity-row small{margin-top:3px;color:var(--color-text-maxcontrast)}.erp-file-activity-badge{font-size:12px;font-weight:700;text-align:center;padding:5px 8px;border-radius:999px;background:var(--color-background-hover)}.erp-file-activity-meta{text-align:right;font-size:12px;color:var(--color-text-maxcontrast)}@media(max-width:700px){.erp-file-activity-row{grid-template-columns:74px minmax(0,1fr)}.erp-file-activity-meta{grid-column:2;text-align:left}.erp-project-folder-quick input{min-width:180px}}
+
+/* Betrio 2.9.1 – unified compact list/workspace views */
+.erp-sales-overview-premium .erp-kpi-grid{
+  display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px!important;margin:0 0 16px!important
+}
+.erp-sales-overview-premium .erp-kpi-card{
+  display:flex!important;flex-direction:column;justify-content:center;min-width:0;min-height:96px!important;padding:16px 18px!important;text-decoration:none;color:var(--color-main-text)
+}
+.erp-sales-overview-premium .erp-kpi-card>span{font-size:12px;font-weight:700;color:var(--color-text-maxcontrast)}
+.erp-sales-overview-premium .erp-kpi-card>strong{display:block;margin:5px 0 3px!important;font-size:25px!important;line-height:1.05}
+.erp-sales-overview-premium .erp-kpi-card>small{font-size:11px;color:var(--color-text-maxcontrast)}
+.erp-sales-overview-premium .erp-grid-2{gap:14px!important}
+.erp-sales-overview-premium .erp-card{border-color:var(--betrio-line-soft);box-shadow:var(--betrio-shadow-soft)}
+
+.erp-projects-premium .erp-project-tabs{margin-bottom:10px!important}
+.erp-projects-premium .erp-project-search{padding:7px!important;margin-bottom:10px!important;gap:7px!important}
+.erp-projects-premium .erp-project-search input[type=search]{height:36px!important;min-height:36px!important}
+.erp-projects-premium .erp-project-search .button{min-height:36px!important;height:36px!important}
+.erp-projects-premium .erp-project-list{gap:8px!important}
+.erp-projects-premium .erp-project-row-main{grid-template-columns:38px minmax(190px,1.35fr) minmax(145px,.8fr) minmax(100px,.55fr) auto;gap:13px;padding:11px 14px!important}
+.erp-projects-premium .erp-project-row-icon{width:34px;height:34px;border-radius:9px}
+.erp-projects-premium .erp-project-row-title strong{font-size:15px}
+.erp-projects-premium .erp-project-row-actions{padding-right:12px;gap:6px}
+.erp-projects-premium .erp-project-row-actions .button{min-height:32px!important;height:32px!important;padding:0 12px!important}
+
+.erp-file-activity-page{max-width:none!important;padding-top:24px!important;padding-bottom:44px!important}
+.erp-file-activity-page>.erp-project-hero{min-height:92px;box-sizing:border-box;margin-bottom:14px!important;padding:19px 22px!important;border-radius:20px!important}
+.erp-file-activity-page>.erp-project-hero h1{font-size:28px!important;line-height:1.08;margin:3px 0 0!important}
+.erp-file-activity-page>.erp-project-hero p{margin:6px 0 0!important;font-size:12px!important}
+.erp-file-activity-page>.erp-card{padding:18px 20px!important;border-color:var(--betrio-line-soft)!important;box-shadow:var(--betrio-shadow-soft)!important}
+.erp-file-activity-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+.erp-file-activity-filter{min-height:32px!important;height:32px!important;padding:0 12px!important;border:1px solid var(--betrio-line-soft)!important;border-radius:999px!important;background:var(--color-main-background)!important;color:var(--color-main-text)!important;font-weight:650;cursor:pointer}
+.erp-file-activity-filter.is-active{background:var(--betrio-premium-blue-soft)!important;color:var(--color-primary-element)!important;border-color:color-mix(in srgb,var(--color-primary-element) 30%,var(--color-border))!important}
+.erp-file-activity-page .erp-file-activity-list{border-color:var(--betrio-line-soft);border-radius:14px;box-shadow:0 1px 2px rgba(15,23,42,.02)}
+.erp-file-activity-page .erp-file-activity-row{grid-template-columns:92px minmax(0,1fr) 190px;padding:10px 14px;gap:14px}
+.erp-file-activity-page .erp-file-activity-badge{padding:5px 9px}
+.erp-file-activity-page .erp-file-activity-row[data-action="file_created"] .erp-file-activity-badge{background:color-mix(in srgb,#2da44e 13%,var(--color-main-background));color:color-mix(in srgb,#2da44e 82%,var(--color-main-text))}
+.erp-file-activity-page .erp-file-activity-row[data-action="file_changed"] .erp-file-activity-badge{background:var(--betrio-premium-blue-soft);color:var(--color-primary-element)}
+.erp-file-activity-page .erp-file-activity-row[data-action="file_moved"] .erp-file-activity-badge{background:color-mix(in srgb,#bf8700 14%,var(--color-main-background));color:color-mix(in srgb,#8a6200 85%,var(--color-main-text))}
+.erp-file-activity-page .erp-file-activity-row[data-action="file_deleted"] .erp-file-activity-badge{background:color-mix(in srgb,#cf222e 10%,var(--color-main-background));color:color-mix(in srgb,#cf222e 82%,var(--color-main-text))}
+.erp-file-activity-empty-filter{padding:18px;text-align:center;color:var(--color-text-maxcontrast)}
+
+.erp-customers-premium>.erp-head{margin-bottom:14px!important}
+.erp-customers-premium .erp-customer-filter{padding:12px 14px!important;margin-bottom:10px!important;gap:8px!important}
+.erp-customers-premium .erp-customer-search-wrap input{height:36px!important;min-height:36px!important}
+.erp-customers-premium .erp-alpha-filter button{height:28px!important;min-width:28px!important}
+.erp-customers-premium .erp-customer-row{min-height:68px!important}
+.erp-customers-premium .erp-customer-row-main{padding-top:8px!important;padding-bottom:8px!important}
+.erp-customers-premium .erp-customer-row-actions .button{min-height:32px!important;height:32px!important}
+
+@media(max-width:1100px){
+ .erp-sales-overview-premium .erp-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .erp-projects-premium .erp-project-row-main{grid-template-columns:38px minmax(180px,1.2fr) minmax(130px,.8fr) auto}
+ .erp-projects-premium .erp-project-row-main .erp-project-row-meta:nth-of-type(2){display:none}
+}
+@media(max-width:700px){
+ .erp-sales-overview-premium .erp-kpi-grid{grid-template-columns:1fr!important}
+ .erp-sales-overview-premium .erp-kpi-card{min-height:82px!important}
+ .erp-file-activity-page .erp-file-activity-row{grid-template-columns:76px minmax(0,1fr)}
+ .erp-file-activity-page .erp-file-activity-meta{grid-column:2;text-align:left}
+}
+
+/* Betrio 2.9.1 – Inventurliste & DATANORM */
+.erp-head-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.erp-info-banner{margin:0 0 14px;padding:12px 14px;border-radius:12px;background:var(--color-background-hover,#f1f5f9);font-weight:600}.erp-modal-backdrop{position:fixed;inset:0;z-index:12000;background:rgba(15,23,42,.48);display:flex;align-items:center;justify-content:center;padding:20px}.erp-modal-backdrop[hidden]{display:none}.erp-modal-card{width:min(980px,100%);max-height:90vh;overflow:auto;background:var(--color-main-background,#fff);border-radius:16px;padding:22px;box-shadow:0 24px 70px rgba(0,0,0,.28)}.erp-modal-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:16px}.erp-modal-head h2{margin:0 0 4px}.erp-modal-head p{margin:0;color:var(--color-text-maxcontrast,#6b7280)}#datanorm-form>label{display:grid;gap:7px;font-weight:700}#datanorm-form input[type=file]{padding:12px;border:1px solid var(--color-border,#d8dee5);border-radius:10px}.erp-datanorm-actions{display:flex;gap:10px;margin:14px 0}.erp-datanorm-result{margin-top:14px}.erp-datanorm-summary{display:flex;gap:18px;align-items:center;padding:12px 14px;margin-bottom:12px;border-radius:10px;background:var(--color-background-hover,#f1f5f9)}@media(max-width:700px){.erp-head-actions{justify-content:flex-start}.erp-modal-card{padding:16px}.erp-modal-head{flex-direction:column}}

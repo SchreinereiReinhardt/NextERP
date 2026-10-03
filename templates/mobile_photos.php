@@ -23,7 +23,7 @@
 <input id="camera-file" class="camera-native-input" type="file" accept="image/*">
 <canvas id="camera-canvas" style="display:none"></canvas>
 <div id="camera-status" class="camera-status"></div>
-<div class="camera-note"><input id="camera-description" type="text" placeholder="Beschreibung optional, z. B. Fenster Küche"></div>
+<div class="camera-note"><input id="camera-description" type="text"></div>
 <button id="camera-save" class="camera-save" type="button">Foto zum Projekt speichern</button>
 <?php endif;?>
 <div class="photo-grid"><?php foreach($_['photos'] as $d):$path=(string)($d['path']??'');$name=(string)($d['name']??basename($path));?><a class="photo" href="<?php p($url->linkToRoute('reinhardterp.page.projectFile',['id'=>(int)$p['id'],'path'=>$path])); ?>"><div class="photo-preview">▧</div><b><?php p($name);?></b><small>Foto öffnen</small></a><?php endforeach;?></div></main></div>

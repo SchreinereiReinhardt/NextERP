@@ -56,8 +56,7 @@ $notes=trim((string)($c['notes']??''));
 			id="noteContent"
 			name="content"
 			rows="6"
-			required
-			placeholder="Notiz eingeben"></textarea>
+			required></textarea>
 
 		<button class="erp-mob2-save" type="submit">Notiz speichern</button>
 	</form>

@@ -28,7 +28,7 @@ foreach ($photos as $photo) {
 </head>
 <body>
 <div class="actions">
-<a class="erp-pdf-button" href="<?php p($pdfUrl); ?>">PDF herunterladen</a>
+<a class="erp-pdf-button" href="<?php p($pdfUrl); ?>">PDF herunterladen</a> <button class="erp-pdf-button" type="button" onclick="window.print()">🖨 Drucken</button>
 </div>
 <header class="doc-header">
     <div class="brand">

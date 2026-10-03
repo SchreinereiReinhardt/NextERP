@@ -36,8 +36,8 @@ $isArchive=!empty($_['archiveMode']);
  <input type="hidden" name="projectId" value="<?php p($selectedProjectId); ?>">
  <div class="erp-form-grid">
   <div><label>Datum</label><input type="date" name="reportDate" value="<?php p(date('Y-m-d')); ?>" required></div>
-  <div><label>Titel</label><input name="title" placeholder="z. B. Montage Küche" required></div>
-  <div class="erp-span-2"><label>Zusätzliche Tätigkeitsbeschreibung</label><textarea name="description" rows="6" placeholder="Nur Ergänzungen eintragen – die ausgewählten Zeiterfassungen werden als einzelne Tätigkeiten übernommen."></textarea></div>
+  <div><label>Titel</label><input name="title" required></div>
+  <div class="erp-span-2"><label>Zusätzliche Tätigkeitsbeschreibung</label><textarea name="description" rows="6"></textarea></div>
  </div>
 
  <section class="erp-time-import-box">

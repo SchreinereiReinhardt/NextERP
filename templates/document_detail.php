@@ -92,10 +92,7 @@ $recommendedCostCategory = (string)($_['recommendedCostCategory'] ?? 'material')
     <?php if (str_starts_with((string)$document['mime_type'], 'image/')): ?>
         <img class="erp-document-image-preview" src="<?php p($preview); ?>" alt="Dokumentvorschau">
     <?php elseif ((string)$document['mime_type'] === 'application/pdf' || str_ends_with(strtolower((string)$document['file_name']), '.pdf')): ?>
-        <div class="erp-document-pdf-image-wrap">
-            <img id="documentPdfPreview" class="erp-document-pdf-image" src="<?php p($previewImage); ?>" alt="Erste Seite des PDF-Dokuments">
-            <div id="documentPdfFallback" class="erp-document-no-preview is-hidden"><span>📄</span><p>Die PDF-Vorschau konnte nicht erzeugt werden.</p></div>
-        </div>
+        <iframe class="erp-document-pdf-preview" src="<?php p($preview); ?>#view=FitH" title="PDF-Dokumentvorschau"></iframe>
         <div class="erp-document-preview-actions"><a class="button primary" target="_blank" rel="noopener" href="<?php p($preview); ?>">PDF vollständig öffnen</a></div>
     <?php else: ?>
         <div class="erp-document-no-preview"><span>📄</span><p>Für diesen Dateityp ist keine eingebettete Vorschau verfügbar.</p><a class="button primary" target="_blank" rel="noopener" href="<?php p($preview); ?>">Datei öffnen</a></div>

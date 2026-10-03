@@ -22,7 +22,7 @@ $statusLabels=['draft'=>'Entwurf','open'=>'Offen','paid'=>'Bezahlt','cancelled'=
  </div>
  <div class="erp-card erp-document-list-card" id="invoiceOverview"><div class="erp-section-head"><div><h2>Rechnungsübersicht</h2><p class="erp-muted"><span id="invoiceVisibleCount"><?php p(count($_['invoices']));?></span> von <?php p(count($_['invoices']));?> Rechnungen / Entwürfen</p></div></div>
   <div class="erp-document-filterbar">
-   <div class="erp-document-search"><span aria-hidden="true">⌕</span><input type="search" id="invoiceSearch" placeholder="Rechnung, Kunde oder Auftrag suchen …" autocomplete="off"></div>
+   <div class="erp-document-search"><span aria-hidden="true">⌕</span><input type="search" id="invoiceSearch" autocomplete="off"></div>
    <select id="invoiceYear" aria-label="Jahr"><option value="">Alle Jahre</option><?php $invoiceYears=[];foreach($_['invoices'] as $row){$y=substr((string)($row['invoice_date']??''),0,4);if($y!=='')$invoiceYears[$y]=true;}krsort($invoiceYears);foreach(array_keys($invoiceYears) as $y):?><option value="<?php p($y);?>"><?php p($y);?></option><?php endforeach;?></select>
    <select id="invoiceMonth" aria-label="Monat"><option value="">Alle Monate</option><?php foreach([1=>'Januar',2=>'Februar',3=>'März',4=>'April',5=>'Mai',6=>'Juni',7=>'Juli',8=>'August',9=>'September',10=>'Oktober',11=>'November',12=>'Dezember'] as $m=>$label):?><option value="<?php p(str_pad((string)$m,2,'0',STR_PAD_LEFT));?>"><?php p($label);?></option><?php endforeach;?></select>
    <button type="button" class="button" id="invoiceShowAll">Alle anzeigen</button>

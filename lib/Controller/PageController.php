@@ -24,8 +24,9 @@ use OCA\ReinhardtERP\Service\PermissionService;
 use OCA\ReinhardtERP\Service\ActivityService;
 use OCA\ReinhardtERP\Service\NextcloudIntegrationService;
 use OCA\ReinhardtERP\Service\CollaborativeTagService;
+use OCA\ReinhardtERP\Service\PdfService;
 final class PageController extends Controller {
- public function __construct(string $appName,IRequest $request,private CustomerMapper $customers,private ProjectMapper $projects,private IUserSession $users,private IDBConnection $db,private PermissionService $permissions,private FolderService $folders,private IURLGenerator $url,private ActivityService $activities,private NextcloudIntegrationService $integration,private IUserManager $userManager,private IConfig $config,private CollaborativeTagService $collaborativeTags){parent::__construct($appName,$request);}
+ public function __construct(string $appName,IRequest $request,private CustomerMapper $customers,private ProjectMapper $projects,private IUserSession $users,private IDBConnection $db,private PermissionService $permissions,private FolderService $folders,private IURLGenerator $url,private ActivityService $activities,private NextcloudIntegrationService $integration,private IUserManager $userManager,private IConfig $config,private CollaborativeTagService $collaborativeTags,private PdfService $pdf){parent::__construct($appName,$request);}
  #[NoAdminRequired,NoCSRFRequired] public function pwaManifest():DataDisplayResponse{
   $start=$this->url->linkToRoute('reinhardterp.business.mobile').'?pwa=1&v=betrio';
   $scopeBase=$this->url->linkToRoute('reinhardterp.business.mobile');
@@ -127,7 +128,10 @@ final class PageController extends Controller {
   return new TemplateResponse($this->appName,'file_activities',['activities'=>$items]);
  }
  #[NoAdminRequired,NoCSRFRequired] public function projectForm(?int $id=null,?int $customerId=null):TemplateResponse{$this->permissions->assertProjectManager();$project=$id?$this->projects->find($id):null;return new TemplateResponse($this->appName,'project_form',['project'=>$project,'customers'=>$this->customers->findAllActive(),'selectedCustomerId'=>$project?->getCustomerId()??$customerId]);}
- #[NoAdminRequired,NoCSRFRequired] public function projectDetail(int $id):TemplateResponse{
+ #[NoAdminRequired,NoCSRFRequired] public function projectEvaluationPdf(int $id):DataDownloadResponse{
+  $this->permissions->assertProjectAccess($id);$p=$this->queryProject($id);$times=$this->queryTimes($id);$reports=$this->queryReportsByProject($id);$costs=$this->projectCosts($id,$p,$times);$perf=$this->projectPerformance($id,$p,$times,$reports,$this->queryProjectSuppliers($id));$money=static fn($v):string=>number_format((float)$v,2,',','.').' €';$rows=[['Auftrags-/Projektwert',$money($perf['projectValue']??$costs['projectValue']??0)],['Soll-Kosten',$money($perf['plannedCosts']??0)],['Ist-Kosten',$money($perf['actualCosts']??0)],['Arbeitswert',$money($costs['laborValue']??0)],['Materialwert',$money($costs['materialValue']??0)],['Ist-Stunden',number_format((float)($costs['hours']??0),2,',','.').' h'],['Rest / Deckung',$money($costs['remaining']??0)],['Abrechnungsfortschritt',number_format((float)($perf['billingProgress']??0),0,',','.').' %']];$pdf=$this->pdf->createEvaluation('Projekt-Nachkalkulation',trim((string)($p['project_no']??'').' '.(string)($p['title']??'')),[],['Kennzahl','Wert'],$rows,[150,90]);return new DataDownloadResponse($pdf,'Betrio_Nachkalkulation_'.preg_replace('/[^A-Za-z0-9._-]+/','_',((string)($p['project_no']??$id))).'.pdf','application/pdf');
+ }
+ #[NoAdminRequired,NoCSRFRequired] public function projectDetail(int $id,int $pdf=0):TemplateResponse|DataDownloadResponse{if($pdf===1)return $this->projectEvaluationPdf($id);
   $this->permissions->assertProjectAccess($id);
   $p=$this->queryProject($id);
   $reports=$this->queryReportsByProject($id);

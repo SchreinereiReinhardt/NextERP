@@ -14,7 +14,7 @@ $linked = $_['linkedContacts'] ?? [];
 <?php else: ?>
 <form method="post" action="<?php p($url->linkToRoute('reinhardterp.integration.importCustomers')); ?>" id="customerImportForm">
 <input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
-<div class="erp-import-toolbar"><input id="contactImportSearch" type="search" placeholder="Kontakte durchsuchen …"><button type="button" class="button" id="selectVisibleContacts">Sichtbare auswählen</button><button class="button primary">Ausgewählte Kunden importieren</button></div>
+<div class="erp-import-toolbar"><input id="contactImportSearch" type="search"><button type="button" class="button" id="selectVisibleContacts">Sichtbare auswählen</button><button class="button primary">Ausgewählte Kunden importieren</button></div>
 <div class="erp-import-list" id="contactImportList">
 <?php foreach ($_['contacts'] as $contact): $key=$contact['addressBookKey'].'::'.$contact['id']; $already=isset($linked[$key]); ?>
 <label class="erp-import-contact <?php p($already ? 'is-linked' : ''); ?>" data-search="<?php p(mb_strtolower($contact['label'].' '.$contact['fullName'].' '.$contact['organisation'].' '.$contact['email'].' '.$contact['phone'].' '.$contact['addressBookName'])); ?>">

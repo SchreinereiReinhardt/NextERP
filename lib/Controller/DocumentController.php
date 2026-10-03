@@ -4,6 +4,7 @@ namespace OCA\ReinhardtERP\Controller;
 use OCA\ReinhardtERP\Service\DocumentInboxService;
 use OCA\ReinhardtERP\Service\FolderService;
 use OCA\ReinhardtERP\Service\PermissionService;
+use OCA\ReinhardtERP\Service\PdfService;
 use OCA\ReinhardtERP\Service\DocumentRuleService;
 use OCA\ReinhardtERP\Service\DocumentOfferImportService;
 use OCA\ReinhardtERP\Service\DocumentPdfOfferExtractorService;
@@ -12,6 +13,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\DataDisplayResponse;
+use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\NotFoundResponse;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Http\TemplateResponse;
@@ -19,9 +21,9 @@ use OCP\IDBConnection;
 use OCP\IRequest;
 use OCP\IURLGenerator;
 final class DocumentController extends Controller {
- public function __construct(string $appName,IRequest $request,private DocumentInboxService $documents,private FolderService $folders,private PermissionService $permissions,private IDBConnection $db,private IURLGenerator $url,private DocumentRuleService $rules,private DocumentOfferImportService $offerImport,private DocumentPdfOfferExtractorService $offerExtractor,private FinTSProvider $fints){parent::__construct($appName,$request);}
+ public function __construct(string $appName,IRequest $request,private DocumentInboxService $documents,private FolderService $folders,private PermissionService $permissions,private IDBConnection $db,private IURLGenerator $url,private DocumentRuleService $rules,private DocumentOfferImportService $offerImport,private DocumentPdfOfferExtractorService $offerExtractor,private FinTSProvider $fints,private PdfService $pdf){parent::__construct($appName,$request);}
  #[NoAdminRequired,NoCSRFRequired] public function index(string $status='all',string $type='all',string $q='',string $processing='all',string $year='',string $month='',?int $supplierId=null,?int $customerId=null,?int $projectId=null,string $view='overview'):TemplateResponse{$this->permissions->assert('documents');$this->documents->ensureStructure();return new TemplateResponse($this->appName,'document_inbox',['documents'=>$this->documents->rows($status,$type,$q,$processing,$year,$month,(int)$supplierId,(int)$customerId,(int)$projectId),'counts'=>$this->documents->counts(),'status'=>$status,'type'=>$type,'q'=>$q,'processing'=>$processing,'year'=>$year,'month'=>$month,'supplierId'=>(int)$supplierId,'customerId'=>(int)$customerId,'projectId'=>(int)$projectId,'view'=>$view,'suppliers'=>$this->documents->lookupRows('re_erp_suppliers','name'),'customers'=>$this->documents->lookupRows('re_erp_customers','name'),'projects'=>$this->documents->lookupRows('re_erp_projects','project_no'),'scanInfo'=>$this->documents->scanInfo(),'rules'=>$this->rules->all(),'message'=>(string)$this->request->getParam('message',''),'error'=>(string)$this->request->getParam('error','')]);}
- #[NoAdminRequired,NoCSRFRequired] public function finance(string $type='all',string $q='',string $year='',string $month='',?int $supplierId=null,?int $customerId=null,?int $projectId=null,string $metricPeriod='year'):TemplateResponse{
+ #[NoAdminRequired,NoCSRFRequired] public function finance(string $type='all',string $q='',string $year='',string $month='',?int $supplierId=null,?int $customerId=null,?int $projectId=null,string $metricPeriod='year',int $pdf=0):TemplateResponse|DataDownloadResponse{if($pdf===1)return $this->financePdf($metricPeriod);
   $this->permissions->assert('documents');
   $this->documents->ensureStructure();
   $filters=['type'=>$type,'q'=>$q,'year'=>$year,'month'=>$month,'supplier_id'=>$supplierId,'customer_id'=>$customerId,'project_id'=>$projectId];
@@ -38,6 +40,9 @@ final class DocumentController extends Controller {
    'message'=>(string)$this->request->getParam('message',''),
    'error'=>(string)$this->request->getParam('error',''),
   ]);
+ }
+ #[NoAdminRequired,NoCSRFRequired] public function financePdf(string $metricPeriod='year'):DataDownloadResponse{
+  $this->permissions->assert('documents');$fd=$this->financeDashboard($metricPeriod);$money=static fn($v):string=>number_format((float)$v,2,',','.').' €';$rows=[];foreach(($fd['openRows']??[]) as $r)$rows[]=[(string)($r['invoice_no']??''),(string)($r['customer_name']??''),!empty($r['due_date'])?date('d.m.Y',strtotime((string)$r['due_date'])):'', $money($r['paid_amount']??0),$money($r['open_amount']??0)];$pdf=$this->pdf->createEvaluation('Finanzüberblick',(string)($fd['from']??'').' – '.(string)($fd['to']??''),['Fakturiert brutto'=>$money($fd['gross']??0),'Zahlungseingänge'=>$money($fd['payments']??0),'Offen'=>$money($fd['open']??0)],['Rechnung','Kunde','Fällig','Bezahlt','Offen'],$rows,[40,85,35,45,45]);return new DataDownloadResponse($pdf,'Betrio_Finanzueberblick.pdf','application/pdf');
  }
  #[NoAdminRequired,NoCSRFRequired] public function bankStatements(string $q='',string $year='',string $month=''):TemplateResponse{
   $this->permissions->assert('documents');$this->documents->ensureStructure();
@@ -94,11 +99,14 @@ final class DocumentController extends Controller {
   $qb=$this->db->getQueryBuilder();$qb->update('re_erp_cash_entries')->set('cancelled_at',$qb->createNamedParameter(date('Y-m-d H:i:s')))->set('cancel_reason',$qb->createNamedParameter(trim($reason)))->where($qb->expr()->eq('id',$qb->createNamedParameter($id)))->andWhere($qb->expr()->isNull('cancelled_at'))->executeStatement();
   return new RedirectResponse($this->url->linkToRoute('reinhardterp.document.cashbook',['message'=>'Kassenbuchung storniert; der ursprüngliche Eintrag bleibt nachvollziehbar erhalten.']));
  }
- #[NoAdminRequired,NoCSRFRequired] public function taxes(string $q='',string $year='',string $month=''):TemplateResponse{
+ #[NoAdminRequired,NoCSRFRequired] public function taxes(string $q='',string $year='',string $month='',int $pdf=0):TemplateResponse|DataDownloadResponse{if($pdf===1)return $this->taxesPdf($year,$month);
   $this->permissions->assert('documents');$this->documents->ensureStructure();$year=preg_match('/^\d{4}$/',$year)?$year:date('Y');$from=$year.'-01-01';$to=$year.'-12-31';if(preg_match('/^(0[1-9]|1[0-2])$/',$month)){$from=$year.'-'.$month.'-01';$to=date('Y-m-t',strtotime($from));}
   $qb=$this->db->getQueryBuilder();$qb->select('invoice_type','status','net_amount','gross_amount','vat_rate','finalized_at')->from('re_erp_invoices')->where($qb->expr()->gte('invoice_date',$qb->createNamedParameter($from)))->andWhere($qb->expr()->lte('invoice_date',$qb->createNamedParameter($to)))->andWhere($qb->expr()->isNotNull('finalized_at'));$rows=$qb->executeQuery()->fetchAll();
   $tax=['net'=>0.0,'gross'=>0.0,'vat'=>0.0,'rates'=>['19'=>0.0,'7'=>0.0,'0'=>0.0],'count'=>0];foreach($rows as $r){if(($r['status']??'')==='cancelled')continue;$sign=(($r['invoice_type']??'')==='credit')?-1:1;$net=$sign*(float)$r['net_amount'];$gross=$sign*(float)$r['gross_amount'];$vat=$gross-$net;$tax['net']+=$net;$tax['gross']+=$gross;$tax['vat']+=$vat;$rate=(float)($r['vat_rate']??0);$key=$rate>=18.5?'19':($rate>=6.5?'7':'0');$tax['rates'][$key]+=$vat;$tax['count']++;}
   $filters=['type'=>'tax','q'=>$q,'year'=>$year,'month'=>$month];$docs=$this->documents->financeRows($filters);return new TemplateResponse($this->appName,'finance_taxes',['documents'=>$docs,'count'=>count($docs),'tax'=>$tax,'year'=>$year,'month'=>$month,'from'=>$from,'to'=>$to,'message'=>(string)$this->request->getParam('message',''),'error'=>(string)$this->request->getParam('error','')]);
+ }
+ #[NoAdminRequired,NoCSRFRequired] public function taxesPdf(string $year='',string $month=''):DataDownloadResponse{
+  $this->permissions->assert('documents');$year=preg_match('/^\d{4}$/',$year)?$year:date('Y');$from=$year.'-01-01';$to=$year.'-12-31';if(preg_match('/^(0[1-9]|1[0-2])$/',$month)){$from=$year.'-'.$month.'-01';$to=date('Y-m-t',strtotime($from));}$qb=$this->db->getQueryBuilder();$qb->select('invoice_no','invoice_date','invoice_type','status','net_amount','gross_amount','vat_rate')->from('re_erp_invoices')->where($qb->expr()->gte('invoice_date',$qb->createNamedParameter($from)))->andWhere($qb->expr()->lte('invoice_date',$qb->createNamedParameter($to)))->andWhere($qb->expr()->isNotNull('finalized_at'));$data=$qb->executeQuery()->fetchAll();$out=[];$net=0.0;$gross=0.0;$vat=0.0;foreach($data as $r){if(($r['status']??'')==='cancelled')continue;$sign=(($r['invoice_type']??'')==='credit')?-1:1;$n=$sign*(float)$r['net_amount'];$g=$sign*(float)$r['gross_amount'];$v=$g-$n;$net+=$n;$gross+=$g;$vat+=$v;$out[]=[(string)($r['invoice_no']??''),date('d.m.Y',strtotime((string)$r['invoice_date'])),number_format((float)($r['vat_rate']??0),1,',','.').' %',number_format($n,2,',','.').' €',number_format($v,2,',','.').' €',number_format($g,2,',','.').' €'];}$pdf=$this->pdf->createEvaluation('Steuerauswertung',date('d.m.Y',strtotime($from)).' bis '.date('d.m.Y',strtotime($to)),['Netto'=>number_format($net,2,',','.').' €','USt.'=>number_format($vat,2,',','.').' €','Brutto'=>number_format($gross,2,',','.').' €'],['Rechnung','Datum','USt.','Netto','USt.-Betrag','Brutto'],$out,[55,35,30,45,45,45]);return new DataDownloadResponse($pdf,'Betrio_Steuerauswertung_'.$year.($month!==''?'_'.$month:'').'.pdf','application/pdf');
  }
  private function financeSection(string $template,string $type,string $q,string $year,string $month):TemplateResponse{
   $this->permissions->assert('documents');
