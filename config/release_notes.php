@@ -1,5 +1,13 @@
 <?php
 return [
+ '2.9.7'=>[
+  'title'=>'Was ist neu in Betrio 2.9.7?',
+  'intro'=>'Dieses Wartungsrelease korrigiert die Darstellung von Betrio im Nextcloud App Store.',
+  'items'=>[
+   'Store-Screenshots werden jetzt schema-konform in den App-Metadaten eingebunden',
+   'App-Store-Metadaten für die Veröffentlichung korrigiert',
+  ],
+ ],
  '2.9.6'=>[
   'title'=>'Was ist neu in Betrio 2.9.6?',
   'intro'=>'Dieses Release bündelt die neuen Lager-, Inventur-, DATANORM- und PDF-Funktionen für den offiziellen Store-Stand.',
