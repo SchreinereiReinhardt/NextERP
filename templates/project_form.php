@@ -3,8 +3,8 @@ require __DIR__.'/_nav.php';
 use OCP\IURLGenerator;
 $url=\OC::$server->get(IURLGenerator::class);
 $p=$_['project'];
-$statuses=['Anfrage','Angebot','Auftrag','Fertigung','Montage','Abnahme','Abrechnung','Abgeschlossen'];
-$currentStatus=(string)($p?->getStatus()??'Anfrage');
+$phases=$_['projectPhases']??[];$statuses=array_values(array_map(static fn($x)=>(string)$x['name'],$phases));
+$currentStatus=(string)($p?->getStatus()??($statuses[0]??'Anfrage'));if($currentStatus!==''&&!in_array($currentStatus,$statuses,true))array_unshift($statuses,$currentStatus);
 ?>
 <div id="app-content"><div class="erp-page erp-form-page"><h1><?php p($p?'Projekt bearbeiten':'Neues Projekt'); ?></h1>
 <form method="post" action="<?php p($url->linkToRoute('reinhardterp.project.save')); ?>">

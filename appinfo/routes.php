@@ -42,6 +42,9 @@ return ['routes'=>[
  ['name'=>'project#saveAssignments','url'=>'/api/projects/{id}/assignments','verb'=>'POST'],
  ['name'=>'project#saveSupplierCockpit','url'=>'/api/projects/{id}/suppliers','verb'=>'POST'],
  ['name'=>'project#deleteSupplierCockpit','url'=>'/api/projects/{id}/suppliers/{rowId}/delete','verb'=>'POST','requirements'=>['rowId'=>'\d+']],
+ ['name'=>'project#addPurchaseItem','url'=>'/api/projects/{id}/suppliers/{rowId}/items','verb'=>'POST','requirements'=>['rowId'=>'\d+']],
+ ['name'=>'project#receivePurchaseItem','url'=>'/api/projects/{id}/purchase-items/{itemId}/receive','verb'=>'POST','requirements'=>['itemId'=>'\d+']],
+ ['name'=>'project#deletePurchaseItem','url'=>'/api/projects/{id}/purchase-items/{itemId}/delete','verb'=>'POST','requirements'=>['itemId'=>'\d+']],
  ['name'=>'page#projectFile','url'=>'/projects/{id}/file','verb'=>'GET'],
  ['name'=>'page#projectExplorer','url'=>'/projects/{id}/explorer','verb'=>'GET'],
  ['name'=>'page#createProjectFolder','url'=>'/api/projects/{id}/folders','verb'=>'POST'],
@@ -116,6 +119,7 @@ return ['routes'=>[
  ['name'=>'integration#syncCalendar','url'=>'/api/calendar/sync','verb'=>'POST'],
  ['name'=>'integration#repair','url'=>'/api/integration/repair','verb'=>'POST'],
  ['name'=>'module#saveHourlyRate','url'=>'/api/settings/hourly-rates','verb'=>'POST'],
+ ['name'=>'module#saveProjectPhase','url'=>'/api/settings/project-phases','verb'=>'POST'],
 
  ['name'=>'business#crm','url'=>'/crm','verb'=>'GET'],
  ['name'=>'business#saveCommunication','url'=>'/api/crm/communications','verb'=>'POST'],

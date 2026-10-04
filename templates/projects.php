@@ -24,7 +24,7 @@ $search=(string)($_['search']??'');
 <?php if(!$_['projects']): ?>
 <div class="erp-card erp-empty"><?php p($search!==''?'Keine passenden Projekte gefunden.':($isArchive?'Das Projektarchiv ist leer.':'Noch keine Projekte vorhanden.')); ?></div>
 <?php else: ?>
-<div class="erp-project-list">
+<div class="erp-project-list" data-betrio-page-container=".erp-project-row">
 <?php foreach($_['projects'] as $p):
 $detail=$url->linkToRoute('reinhardterp.page.projectDetail',['id'=>$p->getId()]);
 $status=trim((string)$p->getStatus()) ?: 'offen';

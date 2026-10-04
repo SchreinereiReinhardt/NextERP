@@ -7,17 +7,45 @@
   const tbody = document.getElementById('inventory-table-body');
   const empty = document.getElementById('inventory-empty');
   let filter = '';
-  const run = () => {
+  let currentPage = 1;
+  const pageSizeSelect = document.getElementById('inventory-page-size');
+  const pageInfo = document.getElementById('inventory-page-info');
+  const pages = document.getElementById('inventory-pages');
+  const renderPages = (visibleRows) => {
+    const pageSize = parseInt(pageSizeSelect?.value || '25', 10);
+    const totalPages = Math.max(1, Math.ceil(visibleRows.length / pageSize));
+    currentPage = Math.min(currentPage, totalPages);
+    visibleRows.forEach((r, i) => { const hide = i < (currentPage - 1) * pageSize || i >= currentPage * pageSize; r.hidden = hide; r.classList.toggle('is-hidden', hide); });
+    if (pageInfo) {
+      const from = visibleRows.length ? (currentPage - 1) * pageSize + 1 : 0;
+      const to = Math.min(currentPage * pageSize, visibleRows.length);
+      pageInfo.textContent = `${from}–${to} von ${visibleRows.length}`;
+    }
+    if (pages) {
+      pages.innerHTML = '';
+      const add = (label, page, active = false, disabled = false) => {
+        const b = document.createElement('button'); b.type='button'; b.className='button' + (active ? ' primary' : ''); b.textContent=label; b.disabled=disabled;
+        b.addEventListener('click',()=>{ currentPage=page; run(false); }); pages.appendChild(b);
+      };
+      add('‹', Math.max(1,currentPage-1), false, currentPage===1);
+      const candidates=[]; for(let i=1;i<=totalPages;i++){ if(i===1||i===totalPages||Math.abs(i-currentPage)<=2)candidates.push(i); }
+      let prev=0; candidates.forEach(i=>{ if(prev && i-prev>1){const span=document.createElement('span');span.textContent='…';pages.appendChild(span);} add(String(i),i,i===currentPage);prev=i; });
+      add('›', Math.min(totalPages,currentPage+1), false, currentPage===totalPages);
+    }
+  };
+  const run = (resetPage = true) => {
     const term = (q?.value || '').trim().toLowerCase();
-    let n = 0;
+    if (resetPage) currentPage = 1;
+    const visibleRows = [];
     rows.forEach(r => {
       const supplier = supplierFilter?.value || '';
       const show = (!term || r.dataset.search.includes(term)) && (!filter || r.dataset.stock === filter) && (!supplier || r.dataset.supplierId === supplier);
       r.hidden = !show;
-      if (show) n++;
+      r.classList.toggle('is-hidden', !show);
+      if (show) visibleRows.push(r);
     });
-    if (count) count.textContent = `${n} Treffer`;
-    if (empty) empty.hidden = n !== 0;
+    if (count) count.textContent = `${visibleRows.length} Treffer`;
+    if (empty) empty.hidden = visibleRows.length !== 0;
     const mode = sortSelect?.value || 'name';
     const sorted = [...rows].sort((a,b) => {
       if (mode === 'stock-asc' || mode === 'stock-desc') { const d=(parseFloat(a.dataset.stockValue||'0')-parseFloat(b.dataset.stockValue||'0')); return mode==='stock-desc'?-d:d; }
@@ -25,10 +53,13 @@
       return (a.dataset[key]||'').localeCompare(b.dataset[key]||'', 'de', {numeric:true, sensitivity:'base'});
     });
     sorted.forEach(r => tbody?.appendChild(r));
+    const orderedVisible = sorted.filter(r => visibleRows.includes(r));
+    renderPages(orderedVisible);
   };
   q?.addEventListener('input', run);
   supplierFilter?.addEventListener('change', run);
   sortSelect?.addEventListener('change', run);
+  pageSizeSelect?.addEventListener('change', () => run(true));
   document.querySelectorAll('.inventory-filter').forEach(b => b.addEventListener('click', () => {
     filter = b.dataset.filter || '';
     document.querySelectorAll('.inventory-filter').forEach(x => x.classList.toggle('active', x === b));
@@ -41,6 +72,10 @@
   const ek = document.getElementById('movement-purchase-price');
   const markup = document.getElementById('movement-sale-markup');
   const preview = document.getElementById('movement-sale-preview');
+  const destination = document.getElementById('movement-destination');
+  const customer = document.getElementById('movement-customer');
+  const project = document.getElementById('movement-project');
+  const destinationHint = document.getElementById('movement-destination-hint');
 
   const syncPrice = (loadEk = false) => {
     const opt = select?.selectedOptions?.[0];
@@ -49,12 +84,22 @@
     const pct = parseFloat(markup?.value || '0');
     if (preview) preview.textContent = `Berechneter VK: ${(base * (1 + pct / 100)).toFixed(2).replace('.', ',')} € netto`;
   };
+  const syncDestination = () => {
+    const isIn = type?.value === 'in';
+    const direct = isIn && destination?.value === 'project';
+    document.querySelectorAll('.erp-stock-destination-field').forEach(el => el.hidden = !isIn);
+    const projectMovement = ['out','return'].includes(type?.value || '');
+    document.querySelectorAll('.erp-stock-customer-field,.erp-stock-project-field').forEach(el => el.hidden = !direct && !projectMovement);
+    if (destinationHint) destinationHint.hidden = !direct;
+    if (project) project.required = direct || projectMovement;
+  };
   const syncMovement = () => {
     const isIn = type?.value === 'in';
     document.querySelectorAll('.erp-stock-price-field').forEach(el => el.hidden = !isIn);
     if (ek) ek.disabled = !isIn;
     if (markup) markup.disabled = !isIn;
     if (isIn) syncPrice(true);
+    syncDestination();
   };
   search?.addEventListener('input', () => {
     const t = search.value.trim().toLowerCase();
@@ -69,7 +114,11 @@
   ek?.addEventListener('input', () => syncPrice(false));
   markup?.addEventListener('input', () => syncPrice(false));
   type?.addEventListener('change', syncMovement);
+  destination?.addEventListener('change', syncDestination);
+  customer?.addEventListener('change',()=>{if(!project)return;const cid=customer.value;[...project.options].forEach(o=>{if(!o.value)return;o.hidden=!!cid&&o.dataset.customerId!==cid;});if(project.selectedOptions[0]?.hidden)project.value='';});
+  project?.addEventListener('change',()=>{const cid=project.selectedOptions[0]?.dataset.customerId||'';if(cid&&customer)customer.value=cid;});
   syncMovement();
+  run(true);
 })();
 
 (() => {

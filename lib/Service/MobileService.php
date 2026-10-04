@@ -27,6 +27,7 @@ final class MobileService {
   private CollaborativeTagService $collaborativeTags,
   private WorkingTimeService $workingTime,
   private AttendanceService $attendance,
+  private ProjectPhaseService $projectPhases,
  ){}
  public function status():array{return ['app'=>'betrio','appId'=>'reinhardterp','apiVersion'=>1,'serverVersion'=>$this->version(),'loginAvailable'=>true];}
  public function login(string $username,string $password,?string $deviceName=null):array{
@@ -58,7 +59,7 @@ final class MobileService {
   return ['tokenId'=>(int)$row['id'],'uid'=>$user->getUID(),'user'=>$this->userPayload($user),'role'=>$this->role($user->getUID()),'permissions'=>$this->permissions($user->getUID())];
  }
  public function logout(int $tokenId):void{$this->revokeById($tokenId);}
- public function bootstrap(string $uid):array{return ['user'=>$this->userPayload($this->requiredUser($uid)),'role'=>$this->role($uid),'permissions'=>$this->permissions($uid),'documentTypes'=>['offer','order','incoming_invoice','outgoing_invoice','delivery_note','credit_note','bank_statement','report','drawing','photo','other'],'projectStates'=>['anfrage','angebot','auftrag','fertigung','montage','abnahme','abrechnung','abgeschlossen'],'materialGroups'=>$this->simpleList('re_erp_material_groups','id','name','active'),'serverVersion'=>$this->version(),'apiVersion'=>1];}
+ public function bootstrap(string $uid):array{return ['user'=>$this->userPayload($this->requiredUser($uid)),'role'=>$this->role($uid),'permissions'=>$this->permissions($uid),'documentTypes'=>['offer','order','incoming_invoice','outgoing_invoice','delivery_note','credit_note','bank_statement','report','drawing','photo','other'],'projectStates'=>array_map(static fn(string $s):string=>mb_strtolower($s),$this->projectPhases->names(true)),'materialGroups'=>$this->simpleList('re_erp_material_groups','id','name','active'),'serverVersion'=>$this->version(),'apiVersion'=>1];}
  public function dashboard(string $uid):array{
   $today=date('Y-m-d');
   return ['projectsToday'=>$this->countProjectsToday($uid,$today),'tasks'=>$this->countFutureEvents($today),'documents'=>$this->countWhere('re_erp_documents','status','new'),'reportsOpen'=>$this->countOpenReports($uid),'todayHours'=>$this->todayHours($uid,$today),'appointments'=>$this->appointments($today,8),'recentProjects'=>$this->projects($uid,8)];
@@ -135,7 +136,7 @@ final class MobileService {
   $this->assertMasterDataWrite($uid);
   $customerId=(int)($data['customerId']??0);$title=trim((string)($data['title']??''));
   if($customerId<=0||$title==='')throw new \InvalidArgumentException('Kunde und Projektname sind erforderlich.');
-  $allowed=['Anfrage','Angebot','Auftrag','Fertigung','Montage','Abnahme','Abrechnung','Abgeschlossen'];$status=(string)($data['status']??'Anfrage');if(!in_array($status,$allowed,true))$status='Anfrage';
+  $allowed=$this->projectPhases->names(true);$status=(string)($data['status']??($allowed[0]??'Anfrage'));if(!in_array($status,$allowed,true))$status=$allowed[0]??'Anfrage';
   $cq=$this->db->getQueryBuilder();$cq->select('*')->from('re_erp_customers')->where($cq->expr()->eq('id',$cq->createNamedParameter($customerId)));$customer=$cq->executeQuery()->fetch();if(!$customer)throw new \InvalidArgumentException('Kunde wurde nicht gefunden.');
   $projectNo=$this->numbers->next('project');$customerFolder=(string)($customer['folder_path']??'');if($customerFolder==='')$customerFolder=$this->folders->ensureCustomerFolderForUser($uid,(string)$customer['customer_no'],(string)$customer['name']);
   $projectFolder=$this->folders->ensureProjectFolderForUser($uid,$customerFolder,$projectNo,$title);$now=date('Y-m-d H:i:s');
@@ -169,8 +170,8 @@ final class MobileService {
 
   $title=trim((string)($data['title']??$project['title']??''));
   if($title==='')throw new \InvalidArgumentException('Projektname ist erforderlich.');
-  $allowed=['Anfrage','Angebot','Auftrag','Fertigung','Montage','Abnahme','Abrechnung','Abgeschlossen'];
-  $status=trim((string)($data['status']??$project['status']??'Anfrage'));
+  $allowed=$this->projectPhases->names(true);
+  $status=trim((string)($data['status']??$project['status']??($allowed[0]??'Anfrage')));
   if(!in_array($status,$allowed,true))throw new \InvalidArgumentException('Ungültiger Projektstatus.');
 
   $startDate=$this->dateOrNull($data['startDate']??($project['start_date']??null));
@@ -906,7 +907,7 @@ final class MobileService {
  private function appointments(string $today,int $limit):array{$q=$this->db->getQueryBuilder();$q->select('*')->from('re_erp_team_events')->where($q->expr()->gte('start_at',$q->createNamedParameter($today.' 00:00:00')))->andWhere($q->expr()->eq('is_deleted',$q->createNamedParameter(0)))->orderBy('start_at','ASC')->setMaxResults($limit);return $q->executeQuery()->fetchAll();}
  private function projectSummary(array $r):array{$address=trim(implode(' ',array_filter([(string)($r['street']??''),(string)($r['postal_code']??''),(string)($r['city']??'')])));return ['id'=>(int)$r['id'],'projectNo'=>(string)$r['project_no'],'projectName'=>(string)$r['title'],'customer'=>(string)($r['customer_name']??''),'customerId'=>(int)$r['customer_id'],'status'=>(string)$r['status'],'startDate'=>$r['start_date']??null,'dueDate'=>$r['due_date']??null,'address'=>$address,'contactName'=>(string)($r['contact_name']??''),'phone'=>(string)($r['customer_mobile']??$r['customer_phone']??$r['mobile']??$r['phone']??''),'email'=>(string)($r['customer_email']??$r['email']??''),'color'=>$this->statusColor((string)$r['status']),'progress'=>$this->statusProgress((string)$r['status'])];}
  private function statusColor(string $s):string{return match(strtolower($s)){'anfrage'=>'#607d8b','angebot'=>'#1976d2','auftrag'=>'#5e35b1','fertigung'=>'#fb8c00','montage'=>'#00897b','abnahme'=>'#43a047','abrechnung'=>'#7cb342','abgeschlossen'=>'#2e7d32',default=>'#546e7a'};}
- private function statusProgress(string $s):int{return match(strtolower($s)){'anfrage'=>10,'angebot'=>20,'auftrag'=>35,'fertigung'=>55,'montage'=>75,'abnahme'=>85,'abrechnung'=>95,'abgeschlossen'=>100,default=>5};}
+ private function statusProgress(string $s):int{$names=$this->projectPhases->names(true);if($names===[])return 0;$idx=false;foreach($names as $i=>$name)if(strcasecmp($name,$s)===0){$idx=$i;break;}if($idx===false)return 0;return count($names)===1?100:(int)round(($idx/(count($names)-1))*100);}
  private function assertProjectAccess(string $uid,int $id):void{if($id<=0)throw new \InvalidArgumentException('Projekt fehlt.');$role=$this->role($uid);if(in_array($role,['administrator','admin','office','manager'],true)){if(!$this->projectRow($id))throw new \RuntimeException('Projekt nicht gefunden.');return;}$q=$this->db->getQueryBuilder();$q->select('id')->from('re_erp_project_users')->where($q->expr()->eq('project_id',$q->createNamedParameter($id)))->andWhere($q->expr()->eq('user_id',$q->createNamedParameter($uid)));if(!$q->executeQuery()->fetchOne())throw new \RuntimeException('Keine Berechtigung für dieses Projekt.');}
  private function projectRow(int $id):array{$q=$this->db->getQueryBuilder();$q->select('*')->from('re_erp_projects')->where($q->expr()->eq('id',$q->createNamedParameter($id)));$r=$q->executeQuery()->fetch();if(!$r)throw new \RuntimeException('Projekt nicht gefunden.');return $r;}
  private function mobileDocumentRow(array $row,int $projectId):array{

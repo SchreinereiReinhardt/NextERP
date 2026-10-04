@@ -15,6 +15,7 @@ require __DIR__ . '/_nav.php';
             <nav class="erp-settings-shortcuts" aria-label="Einstellungen Schnellzugriff">
                 <a class="erp-settings-shortcut" href="#settings-company"><strong>Firmendaten</strong><span>Briefkopf, Logo & Bankdaten</span></a>
                 <a class="erp-settings-shortcut" href="#settings-numbers"><strong>Rechnungen & Nummernkreise</strong><span>Nummern & Zahlungsbedingungen</span></a>
+                <a class="erp-settings-shortcut" href="#settings-phases"><strong>Projektphasen</strong><span>Ablauf & Meilensteine</span></a>
                 <a class="erp-settings-shortcut" href="#settings-rates"><strong>Stundensätze</strong><span>Verrechnung & interne Kosten</span></a>
                 <a class="erp-settings-shortcut" href="#settings-datev"><strong>DATEV</strong><span>Kontierung & Exportbasis</span></a>
                 <a class="erp-settings-shortcut" href="#settings-calendar"><strong>Kalender</strong><span>Nextcloud-Synchronisation</span></a>
@@ -128,6 +129,17 @@ require __DIR__ . '/_nav.php';
 					<?php if (empty($_['calendars'])): ?><div class="erp-notice">Es wurden keine Nextcloud-Kalender gefunden. Prüfe, ob die Kalender-App und der DAV-Hintergrunddienst aktiv sind.</div><?php endif; ?>
 					<button class="button primary" type="submit">Kalenderauswahl speichern</button>
 				</form>
+			</section>
+
+
+			<section class="erp-card erp-wide erp-settings-target" id="settings-phases">
+				<h2>Projektphasen &amp; Meilensteine</h2>
+				<p class="erp-muted">Lege den Projektablauf für deinen Betrieb fest. Reihenfolge und Bezeichnungen erscheinen direkt in der Projektakte. Bestehende Projekte behalten ihren aktuellen Status.</p>
+				<div class="erp-table"><table><thead><tr><th>Reihenfolge</th><th>Bezeichnung</th><th>Aktiv</th><th>Kalkulation fixieren</th><th>Projektabschluss</th><th></th></tr></thead><tbody>
+				<?php foreach(($_['projectPhases']??[]) as $phase):$phaseForm='erp-phase-'.(int)$phase['id'];?><tr><td><input form="<?php p($phaseForm);?>" type="number" name="sortOrder" min="0" step="10" value="<?php p((string)$phase['sort_order']); ?>" style="width:85px"></td><td><input form="<?php p($phaseForm);?>" name="name" required maxlength="100" value="<?php p($phase['name']); ?>"></td><td><select form="<?php p($phaseForm);?>" name="active"><option value="1" <?php if(!empty($phase['active'])):?>selected<?php endif;?>>Ja</option><option value="0" <?php if(empty($phase['active'])):?>selected<?php endif;?>>Nein</option></select></td><td><select form="<?php p($phaseForm);?>" name="freezeCalculation"><option value="0" <?php if(empty($phase['freeze_calculation'])):?>selected<?php endif;?>>Nein</option><option value="1" <?php if(!empty($phase['freeze_calculation'])):?>selected<?php endif;?>>Ja</option></select></td><td><select form="<?php p($phaseForm);?>" name="closesProject"><option value="0" <?php if(empty($phase['closes_project'])):?>selected<?php endif;?>>Nein</option><option value="1" <?php if(!empty($phase['closes_project'])):?>selected<?php endif;?>>Ja</option></select></td><td><form id="<?php p($phaseForm);?>" method="post" action="<?php p($url->linkToRoute('reinhardterp.module.saveProjectPhase')); ?>"><input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>"><input type="hidden" name="id" value="<?php p((string)$phase['id']); ?>"><button class="button" type="submit">Speichern</button></form></td></tr><?php endforeach;?>
+				</tbody></table></div>
+				<form class="erp-settings-form" method="post" action="<?php p($url->linkToRoute('reinhardterp.module.saveProjectPhase')); ?>"><input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>"><h3>Neue Projektphase</h3><div class="erp-form-grid"><div><label>Bezeichnung</label><input name="name" required maxlength="100" placeholder="z. B. Planung"></div><div><label>Reihenfolge</label><input type="number" name="sortOrder" min="0" step="10" value="90"></div><div><label>Status</label><select name="active"><option value="1">Aktiv</option><option value="0">Inaktiv</option></select></div><div><label>Kalkulation fixieren</label><select name="freezeCalculation"><option value="0">Nein</option><option value="1">Ja</option></select></div><div><label>Projektabschluss</label><select name="closesProject"><option value="0">Nein</option><option value="1">Ja</option></select></div></div><div class="erp-actions"><button class="button primary" type="submit">Projektphase anlegen</button></div></form>
+				<p class="erp-muted"><strong>Kalkulation fixieren</strong> friert beim Erreichen dieser Phase den Soll-Kalkulationsstand ein. <strong>Projektabschluss</strong> aktiviert beim Wechsel die Abschlussprüfung.</p>
 			</section>
 
 			<section class="erp-card erp-wide erp-settings-target" id="settings-rates">

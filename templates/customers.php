@@ -42,7 +42,7 @@ script('reinhardterp', 'customers');
     <div class="erp-filter-summary"><strong id="erpCustomerVisibleCount"><?php p(count($_['customers'])); ?></strong> von <?php p(count($_['customers'])); ?> Kunden sichtbar</div>
 </section>
 
-<div class="erp-customer-list" id="erpCustomerGrid">
+<div class="erp-customer-list" id="erpCustomerGrid" data-betrio-page-container=".erp-customer-card">
 <div class="erp-customer-list-head" aria-hidden="true">
     <span>Kunde</span><span>Ansprechpartner</span><span>Kontakt</span><span>Nextcloud</span><span></span>
 </div>

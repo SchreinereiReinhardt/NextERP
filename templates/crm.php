@@ -137,7 +137,7 @@ $tabUrl = static function(string $tab) use ($url): string {
         <section class="erp-card">
             <div class="erp-section-head"><div><h2>Kommunikationshistorie</h2><p class="erp-muted">Die letzten 100 dokumentierten Kundenkontakte.</p></div><a class="button primary" href="<?php p($tabUrl('new')); ?>">+ Kontakt dokumentieren</a></div>
             <?php if (!$communications): ?><p class="erp-muted">Noch keine Kommunikation dokumentiert.</p><?php endif; ?>
-            <div class="erp-crm-history">
+            <div class="erp-crm-history" data-betrio-page-container=".erp-crm-history-row">
                 <?php foreach($communications as $r): ?>
                     <article class="erp-crm-history-row">
                         <div class="erp-crm-type-icon"><?php p($typeIcons[$r['type']] ?? '•'); ?></div>

@@ -1,5 +1,34 @@
 <?php
 return [
+ '2.10.18'=>[
+  'title'=>'Was ist neu in Betrio 2.10.18?',
+  'intro'=>'Dieses Release erweitert den Material- und Beschaffungsablauf im Projekt und macht Projektsteuerung und Nachkalkulation flexibler.',
+  'items'=>[
+   'Bestellungen können mit einzelnen Materialpositionen direkt im Projekt geführt werden',
+   'Wareneingänge lassen sich wahlweise ins Lager oder direkt auf das Projekt buchen',
+   'Teil- und Restlieferungen werden über bestellte und bereits gelieferte Mengen nachvollziehbar',
+   'Projektbezogene Materialbuchungen fließen mit ihren Kosten in die Nachkalkulation ein',
+   'Projektphasen und Meilensteine können in den Einstellungen individuell angelegt und sortiert werden',
+   'Projektphasen können die Kalkulation fixieren oder einen Projektabschluss kennzeichnen',
+   'Projektcontrolling und Nachkalkulation wurden auf Netto-Auftragswert, Ist-Kosten und interne Personalkosten ausgerichtet',
+   'Dokumentation für Lieferanten, Wareneingang, Projektcontrolling und Projektabschluss erweitert',
+  ],
+ ],
+ '2.10.0'=>[
+  'title'=>'Was ist neu in Betrio 2.10.0?',
+  'intro'=>'Die Zeiterfassung ist jetzt stärker auf den täglichen Ablauf im Handwerk ausgerichtet.',
+  'items'=>[
+   'Manuelle Zeiterfassung steht als schnellster Weg direkt oben und ist standardmäßig geöffnet',
+   'Projekt-Timer bleibt direkt daneben verfügbar',
+   'Einstempeln, Pause und Feierabend sind direkt bei der Zeiterfassung erreichbar',
+   'Gebuchte Zeiten sind unmittelbar bei der Erfassung sichtbar',
+   'Material aus Zeitbuchungen erscheint jetzt auch in der Projektakte und im Abrechnungsassistenten',
+   'Projektmaterial aus der Zeiterfassung fließt in die Nachkalkulation ein',
+   'Wareneingänge können ins Lager oder direkt zu Kunde und Projekt gebucht werden',
+   'Lagerbewegungen werden in einem nachvollziehbaren Buchungsjournal protokolliert',
+   'Dashboard-Schnellerfassung für Zeit und Material bringt die häufigsten Tagesbuchungen direkt nach vorn',
+  ],
+ ],
  '2.9.10'=>[
   'title'=>'Was ist neu in Betrio 2.9.10?',
   'intro'=>'Dieses Update verbessert die Stabilität der digitalen Projektakte.',

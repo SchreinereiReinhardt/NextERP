@@ -131,7 +131,7 @@ final class PdfService {
 
  public function createCommercialDocument(string $type,array $doc,?array $customer,?array $project,array $items,?array $logo=null,array $company=[]):string{
   require_once __DIR__.'/../tfpdf/tfpdf.php';
-  $pdf=new \tFPDF('P','mm','A4');$pdf->SetMargins(15,12,15);$pdf->SetAutoPageBreak(true,22);$pdf->AddPage();
+  $pdf=new \tFPDF('P','mm','A4');$pdf->AliasNbPages();$pdf->SetMargins(15,12,15);$pdf->SetAutoPageBreak(true,22);$pdf->AddPage();
   $label=match($type){'offer'=>$this->tr('Angebot','Quote'),'delivery'=>$this->tr('Lieferschein','Delivery note'),'advance'=>$this->tr('Abschlagsrechnung','Advance invoice'),'final'=>$this->tr('Schlussrechnung','Final invoice'),'credit'=>$this->tr('Gutschrift','Credit note'),default=>$this->tr('Rechnung','Invoice')};
   $number=$type==='offer'?(string)($doc['offer_no']??''):($type==='delivery'?(string)($doc['delivery_no']??''):(string)(($doc['status']??'')==='draft'?$this->tr('ENTWURF','DRAFT'):($doc['invoice_no']??'')));
   $date=(string)($type==='offer'?($doc['offer_date']??date('Y-m-d')):($type==='delivery'?($doc['delivery_date']??date('Y-m-d')):($doc['invoice_date']??date('Y-m-d'))));
@@ -144,6 +144,9 @@ final class PdfService {
   $pdf->SetX($metaX);$pdf->SetTextColor(30,30,30);$pdf->SetFont('Helvetica','B',8.5);$pdf->Cell($metaLabelW,4,$this->text($this->tr('Sachbearbeiter/-in:','Clerk:')),0,0);$pdf->SetFont('Helvetica','',8.5);$pdf->Cell(50,4,$this->text((string)($doc['clerk_name']??$company['owner']??'')),0,1);
   $pdf->SetX($metaX);$pdf->SetFont('Helvetica','B',8.5);$pdf->Cell($metaLabelW,4,$this->text($this->tr('Datum:','Date:')),0,0);$pdf->SetFont('Helvetica','',8.5);$pdf->Cell(50,4,$this->text($this->deDate($date)),0,1);
   $pdf->SetX($metaX);$pdf->SetFont('Helvetica','B',8.5);$pdf->Cell($metaLabelW,4,$this->text($this->tr($label.'-Nr.:',$label.' no.:')),0,0);$pdf->SetFont('Helvetica','',8.5);$pdf->Cell(50,4,$this->text($number),0,1);
+  $customerNo=trim((string)($customer['customer_no']??''));
+  if($customerNo!==''){$pdf->SetX($metaX);$pdf->SetFont('Helvetica','B',8.5);$pdf->Cell($metaLabelW,4,$this->text($this->tr('Kunden-Nr.:','Customer no.:')),0,0);$pdf->SetFont('Helvetica','',8.5);$pdf->Cell(50,4,$this->text($customerNo),0,1);}
+  $pdf->SetX($metaX);$pdf->SetFont('Helvetica','B',8.5);$pdf->Cell($metaLabelW,4,$this->text($this->tr('Seite:','Page:')),0,0);$pdf->SetFont('Helvetica','',8.5);$pdf->Cell(50,4,$this->text((string)$pdf->PageNo().' / {nb}'),0,1);
 
   $pdf->SetXY(15,67);$pdf->SetFont('Helvetica','',9.5);$pdf->SetTextColor(20,20,20);
   $name=(string)($customer['name']??'');if($name!=='')$pdf->Cell(95,5,$this->text($name),0,1);
@@ -195,8 +198,8 @@ final class PdfService {
   $storedNet=(float)($doc['net_amount']??$net);$gross=(float)($doc['gross_amount']??$storedNet);$vat=(float)($doc['vat_rate']??19);$tax=$gross-$storedNet;
   if($pdf->GetY()>235)$pdf->AddPage();
   $pdf->Ln(4);$x=122;$w1=42;$w2=31;
-  $pdf->SetFont('Helvetica','',9);$pdf->SetX($x);$pdf->Cell($w1,5,$this->text('Summe'),0,0);$pdf->Cell($w2,5,$this->text(number_format($storedNet,2,',','.').' EUR'),0,1,'R');
-  $taxMode=(string)($doc['tax_mode']??'standard19');if($taxMode==='small_business'||$taxMode==='reverse_charge_13b'){$pdf->SetX($x);$pdf->Cell($w1,5,$this->text($this->tr('Umsatzsteuer','VAT')),0,0);$pdf->Cell($w2,5,$this->text('0,00 EUR'),0,1,'R');}else{$pdf->SetX($x);$pdf->Cell($w1,5,$this->text('Mehrwertsteuer '.number_format($vat,0,',','.').'%'),0,0);$pdf->Cell($w2,5,$this->text(number_format($tax,2,',','.').' EUR'),0,1,'R');}
+  $pdf->SetFont('Helvetica','',9);$pdf->SetX($x);$pdf->Cell($w1,5,$this->text($this->tr('Nettosumme','Net total')),0,0);$pdf->Cell($w2,5,$this->text(number_format($storedNet,2,',','.').' EUR'),0,1,'R');
+  $taxMode=(string)($doc['tax_mode']??'standard19');if($taxMode==='small_business'||$taxMode==='reverse_charge_13b'){$pdf->SetX($x);$pdf->Cell($w1,5,$this->text($this->tr('Umsatzsteuer','VAT')),0,0);$pdf->Cell($w2,5,$this->text('0,00 EUR'),0,1,'R');}else{$pdf->SetX($x);$pdf->Cell($w1,5,$this->text('Mehrwertsteuer '.number_format($vat,0,',','.').'%'),0,0);$pdf->Cell($w2,5,$this->text(number_format($tax,2,',','.').' EUR'),0,1,'R');$pdf->SetX($x);$pdf->SetFont('Helvetica','',6.8);$pdf->SetTextColor(90,90,90);$pdf->Cell($w1+$w2,3.8,$this->text('auf '.number_format($storedNet,2,',','.').' EUR netto'),0,1,'R');$pdf->SetTextColor(25,25,25);$pdf->SetFont('Helvetica','',9);}
   $pdf->SetFont('Helvetica','B',10.5);$pdf->SetX($x);$pdf->Cell($w1,7,$this->text($this->tr('Gesamtbetrag','Total amount')),0,0);$pdf->Cell($w2,7,$this->text(number_format($gross,2,',','.').' EUR'),0,1,'R');
 
   if($type==='final'&&(float)($doc['advance_gross_amount']??0)>0){
@@ -249,9 +252,6 @@ final class PdfService {
   if($logo&&isset($logo['content'],$logo['extension'])){
    $tmp=tempnam(sys_get_temp_dir(),'erp-commercial-logo-');if($tmp!==false){file_put_contents($tmp,$logo['content']);try{$type=strtoupper(($logo['extension']??'png')==='jpg'?'JPG':($logo['extension']??'PNG'));$pdf->Image($tmp,15,11,$compact?52:70,0,$type);}catch(\Throwable){}@unlink($tmp);}
   }else{$pdf->SetXY(15,12);$pdf->SetFont('Helvetica','B',14);$pdf->Cell(80,7,$this->text((string)($company['name']??'Betrio')),0,1);}
-  $pdf->SetXY(118,11);$pdf->SetFont('Helvetica','B',8.5);$pdf->SetTextColor(35,35,35);$pdf->Cell(77,4,$this->text((string)($company['name']??'')),0,1,'L');
-  $pdf->SetX(118);$pdf->SetFont('Helvetica','',7.7);
-  foreach([(string)($company['street']??''),trim((string)($company['zip']??'').' '.(string)($company['city']??'')),((string)($company['phone']??''))!==''?'Telefon: '.(string)$company['phone']:'',((string)($company['mobile']??''))!==''?'Mobil: '.(string)$company['mobile']:'',((string)($company['email']??''))!==''?'Mail: '.(string)$company['email']:'',((string)($company['website']??''))!==''?'Web: '.(string)$company['website']:''] as $row)if(trim($row)!==''){$pdf->SetX(118);$pdf->Cell(77,3.8,$this->text($row),0,1);}
  }
  private function commercialTableHeader(\tFPDF $pdf):void{
   $pdf->SetFillColor(245,245,245);$pdf->SetFont('Helvetica','B',7.6);$pdf->SetTextColor(25,25,25);
@@ -260,57 +260,43 @@ final class PdfService {
  }
  private function commercialFooter(\tFPDF $pdf,array $company):void{
   $pdf->SetAutoPageBreak(false);
-  $y=264;
-  $pdf->SetY($y);
-  $pdf->SetDrawColor(160,160,160);
-  $pdf->Line(15,$y,195,$y);
-  $pdf->SetY($y+2);
-  $pdf->SetTextColor(80,80,80);
-
-  $x1=15;$x2=62;$x3=103;$x4=149;
-  $w1=45;$w2=39;$w3=44;$w4=46;
-
-  $pdf->SetFont('Helvetica','B',6.6);
-  $pdf->SetX($x1);$pdf->Cell($w1,3.5,$this->text((string)($company['name']??'')),0,0);
-  $pdf->SetX($x2);$pdf->Cell($w2,3.5,$this->text($this->tr('Steuerdaten','Tax information')),0,0);
-  $pdf->SetX($x3);$pdf->Cell($w3,3.5,$this->text($this->tr('Bankverbindung 1','Bank details 1')),0,0);
-  $pdf->SetX($x4);$pdf->Cell($w4,3.5,$this->text($this->tr('Bankverbindung 2','Bank details 2')),0,1);
-
-  $pdf->SetFont('Helvetica','',6.2);
+  $y=264;$pdf->SetY($y);$pdf->SetDrawColor(160,160,160);$pdf->Line(15,$y,195,$y);$pdf->SetY($y+2);$pdf->SetTextColor(80,80,80);
 
   $left=[
    (string)($company['street']??''),
    trim((string)($company['zip']??'').' '.(string)($company['city']??'')),
    !empty($company['phone'])?'Tel. '.$company['phone']:'',
    (string)($company['email']??''),
-   (string)($company['website']??'')
+   (string)($company['website']??''),
+   !empty($company['registerCourt'])?'Registergericht: '.$company['registerCourt']:'',
+   !empty($company['registerNo'])?'Reg.-Nr.: '.$company['registerNo']:'',
   ];
-
+  $left=array_values(array_filter($left,static fn($v)=>trim((string)$v)!==''));
   $tax=[
-   !empty($company['taxNo'])?'St.-Nr. '.$company['taxNo']:'',
-   !empty($company['vatId'])?'USt-IdNr. '.$company['vatId']:'',
-   !empty($company['registerCourt'])?'Registergericht '.$company['registerCourt']:'',
-   !empty($company['registerNo'])?'Reg.-Nr. '.$company['registerNo']:''
+   !empty($company['taxNo'])?'Steuernummer: '.$company['taxNo']:'',
+   !empty($company['vatId'])?'USt-IdNr.: '.$company['vatId']:'',
+  ];
+  $tax=array_values(array_filter($tax,static fn($v)=>trim((string)$v)!==''));
+  $bank1=[(string)($company['bank1_name']??''),!empty($company['bank1_iban'])?'IBAN '.$company['bank1_iban']:'',!empty($company['bank1_bic'])?'BIC '.$company['bank1_bic']:''];
+  $bank2=[(string)($company['bank2_name']??''),!empty($company['bank2_iban'])?'IBAN '.$company['bank2_iban']:'',!empty($company['bank2_bic'])?'BIC '.$company['bank2_bic']:''];
+
+  // Vier gleichmäßige Blöcke: Firmendaten, Steuerdaten und beide Bankverbindungen.
+  $cols=[
+   [15,43,(string)($company['name']??''),$left],
+   [61,43,$this->tr('Steuerdaten','Tax details'),$tax],
+   [107,43,$this->tr('Bankverbindung 1','Bank details 1'),$bank1],
+   [153,42,$this->tr('Bankverbindung 2','Bank details 2'),$bank2],
   ];
 
-  $bank1=[
-   (string)($company['bank1_name']??''),
-   !empty($company['bank1_iban'])?'IBAN '.$company['bank1_iban']:'',
-   !empty($company['bank1_bic'])?'BIC '.$company['bank1_bic']:''
-  ];
-
-  $bank2=[
-   (string)($company['bank2_name']??''),
-   !empty($company['bank2_iban'])?'IBAN '.$company['bank2_iban']:'',
-   !empty($company['bank2_bic'])?'BIC '.$company['bank2_bic']:''
-  ];
-
-  for($i=0;$i<5;$i++){
-   $pdf->SetX($x1);$pdf->Cell($w1,3.2,$this->text((string)($left[$i]??'')),0,0);
-   $pdf->SetX($x2);$pdf->Cell($w2,3.2,$this->text((string)($tax[$i]??'')),0,0);
-   $pdf->SetX($x3);$pdf->Cell($w3,3.2,$this->text((string)($bank1[$i]??'')),0,0);
-   $pdf->SetX($x4);$pdf->Cell($w4,3.2,$this->text((string)($bank2[$i]??'')),0,1);
+  $pdf->SetFont('Helvetica','B',6.6);
+  foreach($cols as [$cx,$cw,$title,$rows]){$pdf->SetX($cx);$pdf->Cell($cw,3.5,$this->text($title),0,0);}
+  $pdf->Ln();$pdf->SetFont('Helvetica','',6.2);
+  $maxRows=max(array_map(static fn($col)=>count($col[3]),$cols));
+  for($i=0;$i<$maxRows;$i++){
+   foreach($cols as [$cx,$cw,$title,$rows]){$pdf->SetX($cx);$pdf->Cell($cw,3.2,$this->text((string)($rows[$i]??'')),0,0);}
+   $pdf->Ln();
   }
+  $pdf->SetTextColor(25,25,25);
  }
  public function createEvaluation(string $title,string $subtitle,array $summary,array $headers,array $rows,array $widths=[]):string{
   require_once __DIR__.'/../tfpdf/tfpdf.php';

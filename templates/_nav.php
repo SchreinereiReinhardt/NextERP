@@ -11,6 +11,7 @@ Util::addScript('reinhardterp', 'command_palette');
 Util::addScript('reinhardterp', 'context_help');
 Util::addScript('reinhardterp', 'customer_select');
 Util::addScript('reinhardterp', 'whats_new');
+Util::addScript('reinhardterp', 'list_pagination');
 $currentPath = (string)($_SERVER['REQUEST_URI'] ?? '');
 
 $groups = [

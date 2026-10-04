@@ -12,6 +12,10 @@ $roleLabel=$roleNames[$role]??'Betrio';
 <?php if(($can['projects']??false) && in_array($role,['admin','office','manager'],true)): ?><a class="button" href="<?=p($url->linkToRoute('reinhardterp.page.projectForm'))?>">+ Projekt</a><?php endif; ?>
 <?php if($can['reports']??false): ?><a class="button" href="<?=p($url->linkToRoute('reinhardterp.module.reports'))?>">+ Rapport</a><?php endif; ?>
 </div></div>
+<section class="erp-card erp-daily-actions"><div class="erp-section-head"><div><h2>Schnellerfassung</h2><p class="erp-muted">Die wichtigsten Buchungen für den Arbeitstag direkt starten.</p></div></div><div class="erp-daily-actions-grid">
+<?php if($can['time']??false): ?><a class="erp-daily-action erp-daily-action-primary" href="<?=p($url->linkToRoute('reinhardterp.module.workdays'))?>#zeit-erfassen"><span class="erp-ui-icon erp-icon-time"></span><span><strong>Zeit erfassen</strong><small>Projektzeit und verbautes Material buchen</small></span><b>›</b></a><?php endif; ?>
+<?php if($can['inventory']??false): ?><a class="erp-daily-action" href="<?=p($url->linkToRoute('reinhardterp.business.inventory'))?>#material-buchen"><span class="erp-ui-icon erp-icon-material"></span><span><strong>Material buchen</strong><small>Wareneingang, Lager oder direkt aufs Projekt</small></span><b>›</b></a><?php endif; ?>
+</div></section>
 <div class="erp-kpis erp-dashboard-kpis">
 <?php if($can['customers']??false): ?><a class="erp-kpi-card" href="<?=p($url->linkToRoute('reinhardterp.page.customers'))?>"><span class="erp-kpi-icon"><i class="erp-ui-icon erp-icon-customer"></i></span><span>Kunden</span><strong><?=p($customerCount)?></strong><small>Kundenakten</small></a><?php endif; ?>
 <a class="erp-kpi-card" href="<?=p($url->linkToRoute('reinhardterp.page.projects'))?>"><span class="erp-kpi-icon"><i class="erp-ui-icon erp-icon-project"></i></span><span><?=p(in_array($role,['employee','time'],true)?'Meine Projekte':'Aktive Projekte')?></span><strong><?=p($projectCount)?></strong><small>Projektübersicht</small></a>
