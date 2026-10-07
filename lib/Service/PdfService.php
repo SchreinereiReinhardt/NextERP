@@ -131,16 +131,20 @@ final class PdfService {
 
  public function createCommercialDocument(string $type,array $doc,?array $customer,?array $project,array $items,?array $logo=null,array $company=[]):string{
   require_once __DIR__.'/../tfpdf/tfpdf.php';
-  $pdf=new \tFPDF('P','mm','A4');$pdf->AliasNbPages();$pdf->SetMargins(15,12,15);$pdf->SetAutoPageBreak(true,22);$pdf->AddPage();
-  $label=match($type){'offer'=>$this->tr('Angebot','Quote'),'delivery'=>$this->tr('Lieferschein','Delivery note'),'advance'=>$this->tr('Abschlagsrechnung','Advance invoice'),'final'=>$this->tr('Schlussrechnung','Final invoice'),'credit'=>$this->tr('Gutschrift','Credit note'),default=>$this->tr('Rechnung','Invoice')};
-  $number=$type==='offer'?(string)($doc['offer_no']??''):($type==='delivery'?(string)($doc['delivery_no']??''):(string)(($doc['status']??'')==='draft'?$this->tr('ENTWURF','DRAFT'):($doc['invoice_no']??'')));
-  $date=(string)($type==='offer'?($doc['offer_date']??date('Y-m-d')):($type==='delivery'?($doc['delivery_date']??date('Y-m-d')):($doc['invoice_date']??date('Y-m-d'))));
+  $pdf=new \tFPDF('P','mm','A4');$pdf->AliasNbPages();$pdf->SetMargins(15,12,15);$pdf->SetAutoPageBreak(true,38);$pdf->AddPage();
+  $label=match($type){'offer'=>$this->tr('Angebot','Quote'),'order'=>$this->tr('Auftrag','Order'),'delivery'=>$this->tr('Lieferschein','Delivery note'),'advance'=>$this->tr('Abschlagsrechnung','Advance invoice'),'final'=>$this->tr('Schlussrechnung','Final invoice'),'credit'=>$this->tr('Gutschrift','Credit note'),default=>$this->tr('Rechnung','Invoice')};
+  $number=$type==='offer'?(string)($doc['offer_no']??''):($type==='order'?(string)($doc['order_no']??''):($type==='delivery'?(string)($doc['delivery_no']??''):(string)(($doc['status']??'')==='draft'?$this->tr('ENTWURF','DRAFT'):($doc['invoice_no']??''))));
+  $date=(string)($type==='offer'?($doc['offer_date']??date('Y-m-d')):($type==='order'?($doc['order_date']??date('Y-m-d')):($type==='delivery'?($doc['delivery_date']??date('Y-m-d')):($doc['invoice_date']??date('Y-m-d')))));
   $this->commercialHeader($pdf,$company,$logo);
 
+  // DIN 5008 Form B: the address field is fixed independently of logo/content.
+  // Window area: x=20 mm, y=45 mm, width=85 mm, height=45 mm.
+  // The first 5 mm are reserved for the sender/return information, followed by
+  // the 40 mm recipient address zone. This keeps the address in a DIN-long window envelope.
   $sender=trim(implode(' - ',array_filter([(string)($company['name']??''),(string)($company['street']??''),trim((string)($company['zip']??'').' '.(string)($company['city']??''))])));
-  $pdf->SetY(58);$pdf->SetTextColor(90,90,90);$pdf->SetFont('Helvetica','',6.8);$pdf->Cell(103,4,$this->text($sender),0,0);
-  // Keep clerk, date and document number in one exact vertical block.
-  $metaX=118;$metaLabelW=28;
+  $pdf->SetXY(20,45);$pdf->SetTextColor(90,90,90);$pdf->SetFont('Helvetica','',6.2);$pdf->Cell(85,4,$this->text($sender),0,0);
+  // Keep clerk, date and document number in one exact vertical block next to the address field.
+  $metaX=118;$metaLabelW=28;$pdf->SetY(45);
   $pdf->SetX($metaX);$pdf->SetTextColor(30,30,30);$pdf->SetFont('Helvetica','B',8.5);$pdf->Cell($metaLabelW,4,$this->text($this->tr('Sachbearbeiter/-in:','Clerk:')),0,0);$pdf->SetFont('Helvetica','',8.5);$pdf->Cell(50,4,$this->text((string)($doc['clerk_name']??$company['owner']??'')),0,1);
   $pdf->SetX($metaX);$pdf->SetFont('Helvetica','B',8.5);$pdf->Cell($metaLabelW,4,$this->text($this->tr('Datum:','Date:')),0,0);$pdf->SetFont('Helvetica','',8.5);$pdf->Cell(50,4,$this->text($this->deDate($date)),0,1);
   $pdf->SetX($metaX);$pdf->SetFont('Helvetica','B',8.5);$pdf->Cell($metaLabelW,4,$this->text($this->tr($label.'-Nr.:',$label.' no.:')),0,0);$pdf->SetFont('Helvetica','',8.5);$pdf->Cell(50,4,$this->text($number),0,1);
@@ -148,15 +152,18 @@ final class PdfService {
   if($customerNo!==''){$pdf->SetX($metaX);$pdf->SetFont('Helvetica','B',8.5);$pdf->Cell($metaLabelW,4,$this->text($this->tr('Kunden-Nr.:','Customer no.:')),0,0);$pdf->SetFont('Helvetica','',8.5);$pdf->Cell(50,4,$this->text($customerNo),0,1);}
   $pdf->SetX($metaX);$pdf->SetFont('Helvetica','B',8.5);$pdf->Cell($metaLabelW,4,$this->text($this->tr('Seite:','Page:')),0,0);$pdf->SetFont('Helvetica','',8.5);$pdf->Cell(50,4,$this->text((string)$pdf->PageNo().' / {nb}'),0,1);
 
-  $pdf->SetXY(15,67);$pdf->SetFont('Helvetica','',9.5);$pdf->SetTextColor(20,20,20);
-  $name=(string)($customer['name']??'');if($name!=='')$pdf->Cell(95,5,$this->text($name),0,1);
+  // Recipient address: fixed DIN 5008 Form B position. Never let preceding
+  // content move this block vertically; it must remain visible in the envelope window.
+  $pdf->SetXY(20,51);$pdf->SetFont('Helvetica','',9.5);$pdf->SetTextColor(20,20,20);
+  $name=(string)($customer['name']??'');if($name!==''){$pdf->SetX(20);$pdf->Cell(85,4.7,$this->text($name),0,1);}
   $address=$this->plain((string)($customer['address']??''));
-  if($address!==''){$pdf->SetX(15);$pdf->MultiCell(90,4.7,$this->text($address));}
+  if($address!==''){$pdf->SetX(20);$pdf->MultiCell(85,4.7,$this->text($address));}
   else{
-   foreach([(string)($customer['street']??''),trim((string)($customer['zip']??'').' '.(string)($customer['city']??''))] as $row)if(trim($row)!==''){$pdf->SetX(15);$pdf->Cell(90,4.7,$this->text($row),0,1);}
+   foreach([(string)($customer['street']??''),trim((string)($customer['zip']??'').' '.(string)($customer['city']??''))] as $row)if(trim($row)!==''){$pdf->SetX(20);$pdf->Cell(85,4.7,$this->text($row),0,1);}
   }
 
-  $pdf->SetY(max(96,$pdf->GetY()+5));$pdf->SetFont('Helvetica','B',17);$pdf->Cell(0,9,$this->text($label),0,1);
+  // Document content starts below the complete 45 mm address field.
+  $pdf->SetY(96);$pdf->SetX(15);$pdf->SetFont('Helvetica','B',17);$pdf->Cell(0,9,$this->text($label),0,1);
   $subject=trim((string)($doc['subject']??''));
   if($subject!==''){$pdf->SetFont('Helvetica','B',10);$pdf->MultiCell(0,5,$this->text($this->plain($subject)));$pdf->Ln(1);}
 
@@ -181,22 +188,57 @@ final class PdfService {
    $alt=!empty($item['is_alternative']);$line=(float)($item['total_price']??0);if(!$alt)$net+=$line;
    $desc=$this->plain((string)($item['description']??''));
    if($alt)$desc="Alternativposition\n".$desc;
-   $lines=max(1,substr_count(wordwrap($desc,52,"\n",true),"\n")+1);$h=max(7,min(28,$lines*4.2));
-   if($pdf->GetY()+$h>270){$pdf->AddPage();$this->commercialHeader($pdf,$company,$logo,true);$pdf->SetY(48);if($type==='delivery'){$pdf->SetFillColor(245,245,245);$pdf->SetFont('Helvetica','B',7.6);foreach([[$this->tr('Pos.','Item'),14,'L'],[$this->tr('Menge','Quantity'),28,'R'],[$this->tr('Einheit','Unit'),28,'L'],[$this->tr('Bezeichnung','Description'),110,'L']] as [$hh,$ww,$aa])$pdf->Cell($ww,6,$this->text($hh),0,0,$aa,true);$pdf->Ln();}else{$this->commercialTableHeader($pdf);}}
-   $y=$pdf->GetY();$pdf->SetFont('Helvetica','',8);
-   if($type==='delivery'){
-    $pdf->Cell(14,$h,$this->text((string)($idx+1)),0,0,'L');$pdf->Cell(28,$h,$this->text(number_format((float)($item['quantity']??0),2,',','.')),0,0,'R');$pdf->Cell(28,$h,$this->text((string)($item['unit']??'')),0,0,'L');$pdf->SetXY(85,$y);$pdf->MultiCell(110,4.2,$this->text($desc),0,'L');
-   }else{
-    $pdf->Cell(9,$h,$this->text((string)($idx+1)),0,0,'L');$pdf->Cell(17,$h,$this->text(number_format((float)($item['quantity']??0),2,',','.')),0,0,'R');$pdf->Cell(16,$h,$this->text((string)($item['unit']??'')),0,0,'L');$pdf->SetXY(57,$y);$pdf->MultiCell(74,4.2,$this->text($desc),0,'L');$pdf->SetXY(131,$y);$pdf->Cell(28,$h,$this->text(number_format((float)($item['unit_price']??0),2,',','.').' EUR'),0,0,'R');$pdf->Cell(36,$h,$this->text(number_format($line,2,',','.').' EUR'),0,1,'R');
+
+   // Render long positions in real page-sized chunks. This keeps the price on the
+   // same page as the end of the description instead of moving it to a page alone.
+   $descX=$type==='delivery'?85.0:44.0;$descW=$type==='delivery'?110.0:95.0;$lineH=4.2;$contentBottom=257.0;
+   // Wrapping and rendering must use exactly the same font. Otherwise FPDF can
+   // create an additional visual line that our height calculation did not reserve.
+   $pdf->SetFont('Helvetica','',8);
+   $wrapped=$this->commercialWrapLines($pdf,$desc,$descW);
+   if($wrapped===[])$wrapped=[''];
+   $offset=0;$firstChunk=true;$totalLines=count($wrapped);
+   while($offset<$totalLines){
+    $available=$contentBottom-$pdf->GetY();
+    $maxLines=(int)floor($available/$lineH);
+    if($maxLines<1){$this->commercialContinuationPage($pdf,$type,$company,$logo);continue;}
+    // Never start a new position in the last few lines of a page. A position must
+    // begin with its number/quantity/unit and a useful part of the description.
+    // Long positions may then continue normally on the following page.
+    $remaining=$totalLines-$offset;
+    $minStartLines=min(5,$remaining);
+    if($firstChunk && $maxLines<$minStartLines){$this->commercialContinuationPage($pdf,$type,$company,$logo);continue;}
+    $take=min($maxLines,$remaining);
+    $chunk=array_slice($wrapped,$offset,$take);$h=max(7.0,count($chunk)*$lineH);$y=$pdf->GetY();
+    $pdf->SetFont('Helvetica','',8);
+    if($type==='delivery'){
+     $pdf->Cell(14,$h,$firstChunk?$this->text((string)($idx+1)):'',0,0,'L');
+     $pdf->Cell(28,$h,$firstChunk?$this->text(number_format((float)($item['quantity']??0),2,',','.')):'',0,0,'R');
+     $pdf->Cell(28,$h,$firstChunk?$this->text((string)($item['unit']??'')):'',0,0,'L');
+     $pdf->SetXY($descX,$y);foreach($chunk as $chunkLine){$pdf->SetX($descX);$pdf->Cell($descW,$lineH,$this->text($chunkLine),0,1,'L');}
+    }else{
+     $pdf->Cell(7,$h,$firstChunk?$this->text((string)($idx+1)):'',0,0,'L');
+     $pdf->Cell(12,$h,$firstChunk?$this->text(number_format((float)($item['quantity']??0),2,',','.')):'',0,0,'R');
+     $pdf->Cell(10,$h,$firstChunk?$this->text((string)($item['unit']??'')):'',0,0,'L');
+     $pdf->SetXY($descX,$y);foreach($chunk as $chunkLine){$pdf->SetX($descX);$pdf->Cell($descW,$lineH,$this->text($chunkLine),0,1,'L');}
+     // Prices belong to the final description chunk only.
+     if($offset+$take >= $totalLines){
+      $pdf->SetXY(139,$y);$pdf->Cell(27,$h,$this->text(number_format((float)($item['unit_price']??0),2,',','.').' EUR'),0,0,'R');
+      $pdf->Cell(29,$h,$this->text(number_format($line,2,',','.').' EUR'),0,1,'R');
+     }
+    }
+    $pdf->SetY(max($pdf->GetY(),$y+$h));$offset+=$take;$firstChunk=false;
+    if($offset<$totalLines)$this->commercialContinuationPage($pdf,$type,$company,$logo);
    }
-   if($pdf->GetY()<$y+$h)$pdf->SetY($y+$h);
-   $pdf->SetDrawColor(225,225,225);$pdf->Line(15,$pdf->GetY(),195,$pdf->GetY());
-   $this->commercialItemImage($pdf,$item,$company,$logo);
+   // Separator belongs to the completed position, with a small optical gap.
+   // Using the final rendered Y position prevents the line from crossing text.
+   $pdf->SetY($pdf->GetY()+0.6);$pdf->SetDrawColor(225,225,225);$pdf->Line(15,$pdf->GetY(),195,$pdf->GetY());$pdf->SetY($pdf->GetY()+0.8);
+   $this->commercialItemImage($pdf,$item,$company,$logo,$type);
   }
 
   if($type!=='delivery'){
   $storedNet=(float)($doc['net_amount']??$net);$gross=(float)($doc['gross_amount']??$storedNet);$vat=(float)($doc['vat_rate']??19);$tax=$gross-$storedNet;
-  if($pdf->GetY()>235)$pdf->AddPage();
+  if($pdf->GetY()+28>258){$this->commercialContinuationPage($pdf,$type,$company,$logo,false);}
   $pdf->Ln(4);$x=122;$w1=42;$w2=31;
   $pdf->SetFont('Helvetica','',9);$pdf->SetX($x);$pdf->Cell($w1,5,$this->text($this->tr('Nettosumme','Net total')),0,0);$pdf->Cell($w2,5,$this->text(number_format($storedNet,2,',','.').' EUR'),0,1,'R');
   $taxMode=(string)($doc['tax_mode']??'standard19');if($taxMode==='small_business'||$taxMode==='reverse_charge_13b'){$pdf->SetX($x);$pdf->Cell($w1,5,$this->text($this->tr('Umsatzsteuer','VAT')),0,0);$pdf->Cell($w2,5,$this->text('0,00 EUR'),0,1,'R');}else{$pdf->SetX($x);$pdf->Cell($w1,5,$this->text('Mehrwertsteuer '.number_format($vat,0,',','.').'%'),0,0);$pdf->Cell($w2,5,$this->text(number_format($tax,2,',','.').' EUR'),0,1,'R');$pdf->SetX($x);$pdf->SetFont('Helvetica','',6.8);$pdf->SetTextColor(90,90,90);$pdf->Cell($w1+$w2,3.8,$this->text('auf '.number_format($storedNet,2,',','.').' EUR netto'),0,1,'R');$pdf->SetTextColor(25,25,25);$pdf->SetFont('Helvetica','',9);}
@@ -212,7 +254,10 @@ final class PdfService {
   $taxNote=$this->plain((string)($doc['tax_note']??''));if($taxNote!==''){$pdf->Ln(6);$pdf->SetFont('Helvetica','B',8.7);$pdf->MultiCell(0,4.7,$this->text($taxNote));}$notes=$this->plain((string)($doc['notes']??''));if($notes!==''){$pdf->Ln(6);$pdf->SetFont('Helvetica','',8.7);$pdf->MultiCell(0,4.7,$this->text($notes));}
   if($type==='offer'){
    $outro=trim((string)($doc['outro_text']??''));if($outro==='')$outro=trim((string)($company['default_offer_outro']??''));if($outro==='')$outro='Wir hoffen, dass unser Angebot Ihnen zusagt und verbleiben mit freundlichen Gruessen';
-   $pdf->Ln(8);$pdf->SetFont('Helvetica','',9);$pdf->MultiCell(0,5,$this->text($this->plain($outro)));$pdf->Ln(4);$pdf->Cell(0,5,$this->text((string)($company['owner']??'')),0,1);
+   if($pdf->GetY()>226){$pdf->AddPage();$this->commercialHeader($pdf,$company,$logo,true);$pdf->SetY(48);}
+   $pdf->Ln(8);$pdf->SetFont('Helvetica','',9);$pdf->MultiCell(0,5,$this->text($this->plain($outro)));
+   if($pdf->GetY()>246){$pdf->AddPage();$this->commercialHeader($pdf,$company,$logo,true);$pdf->SetY(48);}
+   $pdf->Ln(4);$pdf->Cell(0,5,$this->text((string)($company['owner']??'')),0,1);
   }
   if($type!=='offer' && ($doc['invoice_type']??'')==='final' && !empty($doc['previous_installments'])){
    $pdf->Ln(5);$pdf->SetFont('Helvetica','B',9);$pdf->Cell(0,5,$this->text($this->tr('Bereits berechnete Abschlaege','Previous advance invoices')),0,1);
@@ -233,29 +278,74 @@ final class PdfService {
   }
   if($type!=='offer'){
    $outro=trim((string)($doc['outro_text']??''));
-   if($outro!==''){$pdf->Ln(7);$pdf->SetFont('Helvetica','',8.7);$pdf->MultiCell(0,4.7,$this->text($this->plain($outro)));}
+   if($outro!==''){if($pdf->GetY()>230){$pdf->AddPage();$this->commercialHeader($pdf,$company,$logo,true);$pdf->SetY(48);}$pdf->Ln(7);$pdf->SetFont('Helvetica','',8.7);$pdf->MultiCell(0,4.7,$this->text($this->plain($outro)));}
   }
   }
   $this->commercialFooter($pdf,$company);
   return $pdf->Output('S');
  }
- private function commercialItemImage(\tFPDF $pdf,array $item,array $company,?array $logo):void{
+ private function commercialContinuationPage(\tFPDF $pdf,string $type,array $company,?array $logo,bool $withTableHeader=true):void{
+  $pdf->AddPage();$this->commercialHeader($pdf,$company,$logo,true);$pdf->SetY(15);
+  if(!$withTableHeader)return;
+  if($type==='delivery'){
+   $pdf->SetFillColor(245,245,245);$pdf->SetFont('Helvetica','B',7.6);$pdf->SetTextColor(25,25,25);
+   foreach([[$this->tr('Pos.','Item'),14,'L'],[$this->tr('Menge','Quantity'),28,'R'],[$this->tr('Einheit','Unit'),28,'L'],[$this->tr('Bezeichnung','Description'),110,'L']] as [$h,$w,$a])$pdf->Cell($w,6,$this->text($h),0,0,$a,true);
+   $pdf->Ln();
+  }else{$this->commercialTableHeader($pdf);}
+ }
+ private function commercialWrapLines(\tFPDF $pdf,string $text,float $width):array{
+  $result=[];$paragraphs=preg_split('/\R/u',$text)?:[''];
+  foreach($paragraphs as $paragraph){
+   $paragraph=trim($paragraph);
+   if($paragraph===''){if($result!==[])$result[]='';continue;}
+   $words=preg_split('/\s+/u',$paragraph)?:[];$line='';
+   foreach($words as $word){
+    $candidate=$line===''?$word:$line.' '.$word;
+    if($pdf->GetStringWidth($this->text($candidate))<=$width-1.2){$line=$candidate;continue;}
+    if($line!==''){$result[]=$line;$line='';}
+    // Very long tokens are split safely so they cannot overflow the column.
+    $token='';
+    foreach(preg_split('//u',$word,-1,PREG_SPLIT_NO_EMPTY)?:[] as $char){
+     if($token!==''&&$pdf->GetStringWidth($this->text($token.$char))>$width-1.2){$result[]=$token;$token=$char;}else{$token.=$char;}
+    }
+    $line=$token;
+   }
+   if($line!=='')$result[]=$line;
+  }
+  return $result;
+ }
+ private function commercialItemImage(\tFPDF $pdf,array $item,array $company,?array $logo,string $type='invoice'):void{
   $encoded=(string)($item['image_data']??'');$mime=strtolower((string)($item['image_mime']??''));if($encoded===''||!in_array($mime,['image/jpeg','image/png'],true))return;
   $raw=base64_decode($encoded,true);if($raw===false)return;$info=@getimagesizefromstring($raw);if($info===false)return;
   $type=$mime==='image/png'?'PNG':'JPG';$maxW=72.0;$maxH=45.0;$ratio=((int)$info[0]>0&&(int)$info[1]>0)?(int)$info[0]/(int)$info[1]:1.0;$w=$maxW;$h=$w/max(.01,$ratio);if($h>$maxH){$h=$maxH;$w=$h*$ratio;}
-  if($pdf->GetY()+$h+8>258){$pdf->AddPage();$this->commercialHeader($pdf,$company,$logo,true);$pdf->SetY(48);$this->commercialTableHeader($pdf);}
+  if($pdf->GetY()+$h+8>258){$this->commercialContinuationPage($pdf,$type,$company,$logo);}
   $tmp=tempnam(sys_get_temp_dir(),'erp-item-');if($tmp===false)return;
-  try{file_put_contents($tmp,$raw);$y=$pdf->GetY()+3;$pdf->Image($tmp,57,$y,$w,$h,$type);$pdf->SetY($y+$h+3);$pdf->SetFont('Helvetica','',6.8);$pdf->SetTextColor(105,105,105);$name=trim((string)($item['image_name']??''));if($name!==''){$pdf->SetX(57);$pdf->Cell(74,3.5,$this->text($name),0,1);} $pdf->SetTextColor(25,25,25);$pdf->SetDrawColor(225,225,225);$pdf->Line(15,$pdf->GetY(),195,$pdf->GetY());}catch(\Throwable){}finally{@unlink($tmp);}
+  $imageX=$type==='delivery'?85.0:52.0;$imageColW=$type==='delivery'?110.0:84.0;
+  try{file_put_contents($tmp,$raw);$y=$pdf->GetY()+3;$pdf->Image($tmp,$imageX,$y,$w,$h,$type);$pdf->SetY($y+$h+3);$pdf->SetFont('Helvetica','',6.8);$pdf->SetTextColor(105,105,105);$name=trim((string)($item['image_name']??''));if($name!==''){$pdf->SetX($imageX);$pdf->Cell($imageColW,3.5,$this->text($name),0,1);} $pdf->SetTextColor(25,25,25);$pdf->SetDrawColor(225,225,225);$pdf->Line(15,$pdf->GetY(),195,$pdf->GetY());}catch(\Throwable){}finally{@unlink($tmp);}
  }
 
  private function commercialHeader(\tFPDF $pdf,array $company,?array $logo,bool $compact=false):void{
+  // Continuation pages intentionally have no logo; this leaves more room for document content.
+  if($compact)return;
   if($logo&&isset($logo['content'],$logo['extension'])){
-   $tmp=tempnam(sys_get_temp_dir(),'erp-commercial-logo-');if($tmp!==false){file_put_contents($tmp,$logo['content']);try{$type=strtoupper(($logo['extension']??'png')==='jpg'?'JPG':($logo['extension']??'PNG'));$pdf->Image($tmp,15,11,$compact?52:70,0,$type);}catch(\Throwable){}@unlink($tmp);}
+   $tmp=tempnam(sys_get_temp_dir(),'erp-commercial-logo-');
+   if($tmp!==false){
+    file_put_contents($tmp,$logo['content']);
+    try{
+     $type=strtoupper(($logo['extension']??'png')==='jpg'?'JPG':($logo['extension']??'PNG'));
+     // Give the logo a clearly defined header area without allowing tall logos
+     // to intrude into the DIN address field below.
+     $maxW=155.0;$maxH=31.0;$w=$maxW;$h=0.0;
+     $info=@getimagesizefromstring((string)$logo['content']);
+     if(is_array($info)&&(int)$info[0]>0&&(int)$info[1]>0){$ratio=(int)$info[0]/(int)$info[1];$h=$w/max(.01,$ratio);if($h>$maxH){$h=$maxH;$w=$h*$ratio;}}
+     $pdf->Image($tmp,15,8,$w,$h>0?$h:0,$type);
+    }catch(\Throwable){}@unlink($tmp);
+   }
   }else{$pdf->SetXY(15,12);$pdf->SetFont('Helvetica','B',14);$pdf->Cell(80,7,$this->text((string)($company['name']??'Betrio')),0,1);}
  }
  private function commercialTableHeader(\tFPDF $pdf):void{
   $pdf->SetFillColor(245,245,245);$pdf->SetFont('Helvetica','B',7.6);$pdf->SetTextColor(25,25,25);
-  foreach([[$this->tr('Pos.','Item'),9,'L'],[$this->tr('Anzahl','Qty.'),17,'R'],[$this->tr('Einheit','Unit'),16,'L'],[$this->tr('Bezeichnung','Description'),74,'L'],[$this->tr('Einzelpreis','Unit price'),28,'R'],[$this->tr('Gesamtpreis','Total price'),36,'R']] as [$h,$w,$a])$pdf->Cell($w,6,$this->text($h),0,0,$a,true);
+  foreach([[$this->tr('Pos.','Item'),7,'L'],[$this->tr('Anzahl','Qty.'),12,'R'],[$this->tr('Einheit','Unit'),10,'L'],[$this->tr('Bezeichnung','Description'),95,'L'],[$this->tr('Einzelpreis','Unit price'),27,'R'],[$this->tr('Gesamtpreis','Total price'),29,'R']] as [$h,$w,$a])$pdf->Cell($w,6,$this->text($h),0,0,$a,true);
   $pdf->Ln();$pdf->SetDrawColor(60,60,60);$pdf->Line(15,$pdf->GetY(),195,$pdf->GetY());
  }
  private function commercialFooter(\tFPDF $pdf,array $company):void{

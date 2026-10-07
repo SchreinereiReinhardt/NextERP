@@ -1,5 +1,29 @@
 <?php
 return [
+ '2.10.22'=>[
+  'title'=>'Was ist neu in Betrio 2.10.22?',
+  'intro'=>'Dieses Update verbessert den Angebots- und Auftragsablauf sowie die PDF-Ausgabe im täglichen Einsatz.',
+  'items'=>[
+   'Wiederverwendbare Textbausteine für Angebotspositionen können gespeichert, bearbeitet und direkt in neue Positionen übernommen werden',
+   'Angebote, Aufträge, Lieferscheine und Rechnungen unterstützen lange Positionen und mehrseitige PDF-Ausgaben zuverlässiger',
+   'Tabellenköpfe, Positionspreise und Summenblöcke werden bei Seitenumbrüchen übersichtlicher dargestellt',
+   'Stornierte Aufträge können gelöscht werden, sofern keine verknüpften Rechnungen oder Lieferscheine das Löschen verhindern',
+   'Netto-Auftragswerte werden zuverlässiger in die Projektkalkulation übernommen',
+   'Checklisten speichern zusätzlich den Erledigt-Zeitpunkt und bereiten damit die mobile Synchronisation vor',
+  ],
+ ],
+ '2.10.19'=>[
+  'title'=>'Was ist neu in Betrio 2.10.19?',
+  'intro'=>'Dieses Update verbessert Angebot, Auftrag, Projektkalkulation und Checklisten im täglichen Einsatz.',
+  'items'=>[
+   'Netto-Auftragswerte werden beim Übergang vom Angebot zum Auftrag zuverlässiger in die Projektkalkulation übernommen',
+   'Stornierte Aufträge blockieren das Löschen des zugehörigen Angebots nicht mehr',
+   'Lange Angebotspositionen erhalten im PDF ausreichend Platz und werden nicht mehr auf eine feste Zeilenhöhe zusammengedrückt',
+   'Checklisten speichern zusätzlich den Zeitpunkt, an dem ein Punkt erledigt wurde',
+   'Mobile Checklisten-API liefert den Erledigt-Zeitpunkt für den bidirektionalen Sync',
+   'Angebotspositionen können künftig aus wiederverwendbaren Textbausteinen übernommen werden',
+  ],
+ ],
  '2.10.18'=>[
   'title'=>'Was ist neu in Betrio 2.10.18?',
   'intro'=>'Dieses Release erweitert den Material- und Beschaffungsablauf im Projekt und macht Projektsteuerung und Nachkalkulation flexibler.',

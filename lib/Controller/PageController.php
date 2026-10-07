@@ -206,6 +206,7 @@ final class PageController extends Controller {
    'created_by'=>$qb->createNamedParameter($this->users->getUser()?->getUID()??''),
    'created_at'=>$qb->createNamedParameter($now),
    'updated_at'=>$qb->createNamedParameter($now),
+   'completed_at'=>$qb->createNamedParameter(null),
   ])->executeStatement();
   return new RedirectResponse($this->url->linkToRoute('reinhardterp.page.projectDetail',['id'=>$id]).'#checklist');
  }
@@ -222,6 +223,7 @@ final class PageController extends Controller {
   $u->update('re_erp_checklist')
    ->set('done',$u->createNamedParameter($done))
    ->set('updated_at',$u->createNamedParameter(date('Y-m-d H:i:s')))
+   ->set('completed_at',$u->createNamedParameter($done===1?date('Y-m-d H:i:s'):null))
    ->where($u->expr()->eq('id',$u->createNamedParameter($itemId)))
    ->andWhere($u->expr()->eq('project_id',$u->createNamedParameter($id)))
    ->executeStatement();

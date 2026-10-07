@@ -218,7 +218,7 @@ $abLabels=['open'=>'Offen','received'=>'Erhalten'];
       <input type="hidden" name="requesttoken" value="<?=p(\OCP\Util::callRegister())?>">
       <button type="submit" class="erp-checklist-toggle" title="<?=$done?'Wieder öffnen':'Erledigen'?>" aria-label="<?=$done?'Wieder öffnen':'Erledigen'?>"><?=$done?'✓':''?></button>
      </form>
-     <div class="erp-checklist-text"><span><?=p((string)$item['text'])?></span><?php if(!empty($item['created_by'])):?><small><?=p((string)$item['created_by'])?></small><?php endif;?></div>
+     <div class="erp-checklist-text"><span><?=p((string)$item['text'])?></span><small><?php if(!empty($item['created_by'])):?><?=p((string)$item['created_by'])?><?php endif;?><?php if($done&&!empty($item['completed_at'])):?> · erledigt <?=p(date('d.m.Y H:i',strtotime((string)$item['completed_at'])))?><?php endif;?></small></div>
      <form method="post" action="<?=p($url->linkToRoute('reinhardterp.page.deleteProjectChecklistItem',['id'=>$project['id'],'itemId'=>(int)$item['id']]))?>" onsubmit="return confirm('Diesen Checklistenpunkt wirklich löschen?');">
       <input type="hidden" name="requesttoken" value="<?=p(\OCP\Util::callRegister())?>">
       <button class="erp-checklist-delete" type="submit" title="Löschen" aria-label="Löschen">×</button>
