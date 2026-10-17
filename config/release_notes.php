@@ -1,5 +1,120 @@
 <?php
 return [
+    '2.14.20' => [
+        'title' => 'Betrio Community & Pro',
+        'intro' => 'Betrio 2.14 bündelt das neue Community-/Pro-Modell und erweitert elektronische Rechnungen, Kundenverwaltung und Import.',
+        'items' => [
+            'Community bleibt kostenlos nutzbar; zusätzliche professionelle Funktionen werden mit einer gültigen Betrio-Pro-Lizenz freigeschaltet.',
+            'ZUGFeRD / Factur-X: hybride PDF/A-3-Rechnungen mit eingebetteten EN16931-Rechnungsdaten als Betrio-Pro-Funktion.',
+            'XRechnung für strukturierte elektronische Rechnungen erweitert und validiert.',
+            'CSV-Kundenimport in Betrio Pro mit automatischer Spaltenerkennung, manueller Feldzuordnung, Vorschau und Dublettenprüfung.',
+            'Kundenstammdaten für Privatkunden, Unternehmen und öffentliche Auftraggeber um Anrede, Titel, Vorname, Nachname, Firma, Ansprechpartner und Adresszusatz erweitert.',
+            'Kundensuche über Firma, Vorname, Nachname, Ansprechpartner und Kundennummer verbessert.',
+            'Kunden können abhängig von vorhandenen Geschäftsvorgängen gelöscht oder personenbezogene Stammdaten anonymisiert werden.',
+            'Dokumentwährungen werden als ISO-4217-Währung am jeweiligen Vorgang geführt; es erfolgt keine automatische Währungsumrechnung.',
+            'Betrio-Pro-Lizenzen können direkt in Betrio aktiviert und verwaltet werden; die Vertrags- und Kündigungsverwaltung ist direkt erreichbar.',
+            'Ein Wechsel der Edition oder das Ende einer Pro-Lizenz löscht keine vorhandenen Kunden, Projekte oder Belege.',
+        ],
+    ],
+    '2.14.19' => [
+        'title' => 'Betrio Pro direkt kündigen',
+        'items' => [
+            'Unter Lizenz / Pro führt ein eigener Button direkt zur Online-Kündigung.',
+            'Pro bleibt bis zum Ende des bezahlten Zeitraums aktiv; vorhandene Betrio-Daten bleiben erhalten.',
+        ],
+    ],
+ '2.14.0'=>[
+  'title'=>'Was ist neu in Betrio 2.14.0?',
+  'intro'=>'Community, Legacy und Pro sind jetzt vollständig in einer einzigen signierbaren Nextcloud-App vereint.',
+  'items'=>[
+   'Alle Community- und Pro-Funktionen werden gemeinsam mit der Betrio-App ausgeliefert',
+   'Kassel-NET überträgt nur noch Lizenzstatus und Berechtigungsinformationen – keinen ausführbaren Programmcode',
+   'Die separate Companion-App reinhardterp_pro und der externe Pro-Paket-Installer entfallen',
+   'Eine gültige Pro-Lizenz schaltet die bereits installierten Pro-Funktionen serverseitig frei',
+   'Legacy-Bestandsschutz und Community-Limits bleiben unverändert',
+  ],
+ ],
+ '2.13.14'=>[
+  'title'=>'Was ist neu in Betrio 2.13.14?',
+  'intro'=>'Die Pro-Installation folgt jetzt einem ausdrücklich bestätigten, Nextcloud-freundlicheren Ablauf.',
+  'items'=>[
+   'Eine gültige Pro-Lizenz wird zuerst geprüft, ohne im Hintergrund ein Companion-Modul zu installieren',
+   'Ein verfügbares passendes Pro-Modul wird auf der Lizenzseite angezeigt und erst nach Klick durch einen Administrator installiert oder aktualisiert',
+   'Automatische Pro-Installation beim App-Start und per Hintergrundjob wurde entfernt',
+   'Private Nextcloud-Serverzugriffe wurden auf öffentliche OCP-Schnittstellen umgestellt',
+   'Legacy-, Community- und No-Kill-Switch-Regeln bleiben unverändert',
+  ],
+ ],
+ '2.13.13'=>[
+  'title'=>'Was ist neu in Betrio 2.13.13?',
+  'intro'=>'Der Lizenzstatus zeigt den Zeitpunkt der letzten Prüfung jetzt verständlich in deutscher Ortszeit.',
+  'items'=>[
+   'Die letzte Lizenzprüfung wird als Datum und Uhrzeit statt als technischem ISO-Zeitstempel angezeigt',
+   'Die Anzeige verwendet Europe/Berlin und berücksichtigt Sommer- und Winterzeit',
+  ],
+ ],
+ '2.13.12'=>[
+  'title'=>'Was ist neu in Betrio 2.13.12?',
+  'intro'=>'Die Lizenz-/Pro-Seite ist wieder vollständig scrollbar und beschreibt den Legacy-Projektbestand korrekt.',
+  'items'=>[
+   'Die Lizenz-/Pro-Seite verwendet wieder den normalen scrollbaren Nextcloud-Inhaltsbereich',
+   'Das Eingabefeld zur Pro-Aktivierung bleibt auch bei kleineren Fensterhöhen erreichbar',
+   'Legacy wird korrekt als maximal 2 zusätzliche aktive Projekte gleichzeitig beschrieben',
+   'Archivieren eines Legacy-Projekts gibt wieder einen Projektplatz frei',
+   '5 neue Angebote und 5 neue Rechnungen nach der Migration bleiben unverändert',
+  ],
+ ],
+ '2.13.11'=>[
+  'title'=>'Was ist neu in Betrio 2.13.11?',
+  'intro'=>'Legacy-Projekte verwenden jetzt freie Projektplätze statt eines einmaligen Erstellungszählers.',
+  'items'=>[
+   'Legacy kann maximal 2 zusätzliche aktive Projekte gleichzeitig führen',
+   'Archivierte Legacy-Projekte belegen keinen Platz; durch Archivieren wird sofort wieder ein Projektplatz frei',
+   'Wird ein nach der Legacy-Migration angelegtes Projekt wiederhergestellt, muss ein freier Projektplatz vorhanden sein',
+   'Projekte aus dem Bestand vor der Legacy-Migration bleiben vom 2-Projekte-Limit ausgenommen',
+   'Die Kontingente von 5 neuen Angeboten und 5 neuen Rechnungen bleiben unverändert',
+  ],
+ ],
+ '2.13.10'=>[
+  'title'=>'Was ist neu in Betrio 2.13.10?',
+  'intro'=>'Erreichte Legacy-Kontingente werden jetzt sauber in Betrio angezeigt statt einen internen Serverfehler auszulösen.',
+  'items'=>[
+   'Das dritte neue Projekt nach der Legacy-Migration wird kontrolliert abgewiesen und zeigt den Bestandsschutz-Hinweis',
+   'Dasselbe Verhalten gilt für das sechste neue Angebot und die sechste neue Rechnung',
+   'Die bestehende Legacy-Zählerlogik bleibt unverändert: 2 Projekte, 5 Angebote und 5 Rechnungen nach der Migration',
+   'Der Hinweis führt weiterhin direkt zu https://kassel-net.de/betrio/',
+  ],
+ ],
+ '2.13.9'=>[
+  'title'=>'Was ist neu in Betrio 2.13.9?',
+  'intro'=>'Der Legacy-Bestandsschutz erkennt jetzt auch frühere Pro-Markierungen ohne vorhandene Lizenz korrekt.',
+  'items'=>[
+   'Eine bestehende Installation mit altem Pro-Status, aber ohne gespeicherten Lizenzschlüssel und ohne passendes Pro-Modul, wird automatisch als Legacy / Bestandsschutz erkannt',
+   'Eine vorhandene gültige Pro-Lizenz bleibt Pro; ein vorübergehend fehlendes Pro-Modul allein führt nicht zur Legacy-Umstellung',
+   'Legacy behält vollständigen Zugriff auf vorhandene Daten und erhält weiterhin 2 neue Projekte, 5 neue Angebote und 5 neue Rechnungen nach der Migration',
+   'Die Lizenzseite zeigt für Legacy die eigenen Bestandsschutz-Kontingente statt der Community-Limits',
+  ],
+ ],
+ '2.13.8'=>[
+  'title'=>'Was ist neu in Betrio 2.13.8?',
+  'intro'=>'Legacy-Bestandsschutz und der Wechsel zu Betrio Pro sind jetzt klar geregelt.',
+  'items'=>[
+   'Legacy-Installationen behalten vollständigen Zugriff auf alle vorhandenen Daten',
+   'Nach dem Update stehen Legacy-Installationen noch 2 neue Projekte, 5 neue Angebote und 5 neue Rechnungen zur Verfügung',
+   'Die Legacy-Kontingente starten erst mit diesem Update; vorhandene Projekte, Angebote und Rechnungen werden nicht angerechnet',
+   'Betrio Pro hebt die Legacy- und Community-Mengenbegrenzungen auf',
+   'Die Lizenzseite verlinkt direkt auf https://kassel-net.de/betrio/',
+   'Interne Test-Umschaltung und alte Test-Release-Hinweise wurden aus dem Produktivstand entfernt',
+  ],
+ ],
+ '2.10.25'=>[
+  'title'=>'Was ist neu in Betrio 2.10.25?',
+  'items'=>[
+   'Steuerbüro-Export nach Jahr und Monat direkt aus Finanzen.',
+   'Buchhaltungsbelege und Belegübersicht gemeinsam als ZIP exportieren.',
+   'ZIP-Erstellung ohne php-zip, ZipArchive oder externe Serverprogramme für bessere Managed-Nextcloud-Kompatibilität.',
+  ],
+ ],
  '2.10.22'=>[
   'title'=>'Was ist neu in Betrio 2.10.22?',
   'intro'=>'Dieses Update verbessert den Angebots- und Auftragsablauf sowie die PDF-Ausgabe im täglichen Einsatz.',

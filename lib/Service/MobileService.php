@@ -28,6 +28,7 @@ final class MobileService {
   private WorkingTimeService $workingTime,
   private AttendanceService $attendance,
   private ProjectPhaseService $projectPhases,
+  private EditionService $edition,
  ){}
  public function status():array{return ['app'=>'betrio','appId'=>'reinhardterp','apiVersion'=>1,'serverVersion'=>$this->version(),'loginAvailable'=>true];}
  public function login(string $username,string $password,?string $deviceName=null):array{
@@ -133,7 +134,7 @@ final class MobileService {
  }
 
  public function createProject(string $uid,array $data):array{
-  $this->assertMasterDataWrite($uid);
+  $this->assertMasterDataWrite($uid);$this->edition->assertCanCreateProject();
   $customerId=(int)($data['customerId']??0);$title=trim((string)($data['title']??''));
   if($customerId<=0||$title==='')throw new \InvalidArgumentException('Kunde und Projektname sind erforderlich.');
   $allowed=$this->projectPhases->names(true);$status=(string)($data['status']??($allowed[0]??'Anfrage'));if(!in_array($status,$allowed,true))$status=$allowed[0]??'Anfrage';
@@ -214,12 +215,12 @@ final class MobileService {
   $this->assertProjectAccess($uid,$projectId);$text=trim((string)($data['text']??''));if($text==='')throw new \InvalidArgumentException('Bitte einen Checklistenpunkt eingeben.');
   $clientId=trim((string)($data['clientId']??''));
   if($clientId!==''){$q=$this->db->getQueryBuilder();$q->select('*')->from('re_erp_checklist')->where($q->expr()->eq('project_id',$q->createNamedParameter($projectId)))->andWhere($q->expr()->eq('client_id',$q->createNamedParameter($clientId)));$old=$q->executeQuery()->fetch();if($old)return ['id'=>(int)$old['id'],'projectId'=>$projectId,'text'=>(string)$old['text'],'done'=>(bool)$old['done'],'clientId'=>(string)$old['client_id']];}
-  $now=date('Y-m-d H:i:s');$q=$this->db->getQueryBuilder();$q->insert('re_erp_checklist')->values(['project_id'=>$q->createNamedParameter($projectId),'text'=>$q->createNamedParameter($text),'done'=>$q->createNamedParameter(!empty($data['done'])?1:0),'client_id'=>$q->createNamedParameter($clientId!==''?$clientId:null),'created_by'=>$q->createNamedParameter($uid),'created_at'=>$q->createNamedParameter($now),'updated_at'=>$q->createNamedParameter($now),'completed_at'=>$q->createNamedParameter(!empty($data['done'])?$now:null)])->executeStatement();
+  $now=(new \DateTimeImmutable('now',new \DateTimeZone('Europe/Berlin')))->format('Y-m-d H:i:s');$q=$this->db->getQueryBuilder();$q->insert('re_erp_checklist')->values(['project_id'=>$q->createNamedParameter($projectId),'text'=>$q->createNamedParameter($text),'done'=>$q->createNamedParameter(!empty($data['done'])?1:0),'client_id'=>$q->createNamedParameter($clientId!==''?$clientId:null),'created_by'=>$q->createNamedParameter($uid),'created_at'=>$q->createNamedParameter($now),'updated_at'=>$q->createNamedParameter($now),'completed_at'=>$q->createNamedParameter(!empty($data['done'])?$now:null)])->executeStatement();
   return ['id'=>(int)$this->db->lastInsertId('re_erp_checklist'),'projectId'=>$projectId,'text'=>$text,'done'=>!empty($data['done']),'clientId'=>$clientId,'createdBy'=>$uid,'createdAt'=>$now,'updatedAt'=>$now,'completedAt'=>!empty($data['done'])?$now:''];
  }
  public function updateChecklistItem(string $uid,int $projectId,int $itemId,array $data):array{
   $this->assertProjectAccess($uid,$projectId);$q=$this->db->getQueryBuilder();$q->select('*')->from('re_erp_checklist')->where($q->expr()->eq('id',$q->createNamedParameter($itemId)))->andWhere($q->expr()->eq('project_id',$q->createNamedParameter($projectId)));$row=$q->executeQuery()->fetch();if(!$row)throw new \RuntimeException('Checklistenpunkt nicht gefunden.');
-  $text=array_key_exists('text',$data)?trim((string)$data['text']):(string)$row['text'];if($text==='')throw new \InvalidArgumentException('Checklistenpunkt darf nicht leer sein.');$done=array_key_exists('done',$data)?!empty($data['done']):(bool)$row['done'];$now=date('Y-m-d H:i:s');
+  $text=array_key_exists('text',$data)?trim((string)$data['text']):(string)$row['text'];if($text==='')throw new \InvalidArgumentException('Checklistenpunkt darf nicht leer sein.');$done=array_key_exists('done',$data)?!empty($data['done']):(bool)$row['done'];$now=(new \DateTimeImmutable('now',new \DateTimeZone('Europe/Berlin')))->format('Y-m-d H:i:s');
   $completedAt=$done?((!empty($row['done'])&&!empty($row['completed_at']))?(string)$row['completed_at']:$now):null;$u=$this->db->getQueryBuilder();$u->update('re_erp_checklist')->set('text',$u->createNamedParameter($text))->set('done',$u->createNamedParameter($done?1:0))->set('updated_at',$u->createNamedParameter($now))->set('completed_at',$u->createNamedParameter($completedAt))->where($u->expr()->eq('id',$u->createNamedParameter($itemId)))->andWhere($u->expr()->eq('project_id',$u->createNamedParameter($projectId)))->executeStatement();return ['id'=>$itemId,'projectId'=>$projectId,'text'=>$text,'done'=>$done,'updatedAt'=>$now,'completedAt'=>(string)($completedAt??'')];
  }
  public function deleteChecklistItem(string $uid,int $projectId,int $itemId):array{
@@ -601,7 +602,7 @@ final class MobileService {
    return ['id'=>(int)$row['id'],'workDate'=>(string)$row['work_date'],'userId'=>(string)$row['user_id'],'displayName'=>$user instanceof IUser?$user->getDisplayName():(string)$row['user_id'],'hours'=>(float)$row['hours'],'activity'=>(string)$row['activity'],'materialCount'=>(int)($material[0]??0),'materialTotal'=>(float)($material[1]??0)];
   },$rows);
  }
- public function createReport(string $uid,array $data):array{
+ public function createReport(string $uid,array $data):array{$this->edition->assertCanCreateReport();
   $clientId=$this->clientId($data);
   return $this->idempotent($uid,'report',$clientId,fn()=> $this->createReportRaw($uid,$data));
  }

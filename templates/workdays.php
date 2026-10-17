@@ -1,7 +1,7 @@
 <?php
 require __DIR__.'/_nav.php';
 use OCP\IURLGenerator;
-$url=\OC::$server->get(IURLGenerator::class);
+$url=\OCP\Server::get(IURLGenerator::class);
 \OCP\Util::addScript('reinhardterp','material_rows');
 \OCP\Util::addScript('reinhardterp','workdays_ux');
 $prev=date('Y-m-d',strtotime($_['weekStart'].' -7 days'));

@@ -14,6 +14,7 @@ require __DIR__ . '/_nav.php';
 
             <nav class="erp-settings-shortcuts" aria-label="Einstellungen Schnellzugriff">
                 <a class="erp-settings-shortcut" href="#settings-company"><strong>Firmendaten</strong><span>Briefkopf, Logo & Bankdaten</span></a>
+                <a class="erp-settings-shortcut" href="#settings-tax-currency"><strong>Steuern & Währung</strong><span>Standardwerte für neue Belege</span></a>
                 <a class="erp-settings-shortcut" href="#settings-numbers"><strong>Rechnungen & Nummernkreise</strong><span>Nummern & Zahlungsbedingungen</span></a>
                 <a class="erp-settings-shortcut" href="#settings-phases"><strong>Projektphasen</strong><span>Ablauf & Meilensteine</span></a>
                 <a class="erp-settings-shortcut" href="#settings-rates"><strong>Stundensätze</strong><span>Verrechnung & interne Kosten</span></a>
@@ -55,6 +56,14 @@ require __DIR__ . '/_nav.php';
             </div>
             <?php if (!empty($_['logoDataUri'])): ?><img class="erp-settings-logo-preview" src="<?php p($_['logoDataUri']); ?>" alt="Firmenlogo"><?php endif; ?>
         </div>
+        <fieldset class="erp-card erp-document-settings erp-settings-target" id="settings-tax-currency">
+ <legend><strong>Steuern &amp; Währung</strong></legend>
+ <p class="erp-muted">Diese Werte werden bei neuen Rechnungen vorbelegt. Bereits gespeicherte Belege behalten ihre eigene Besteuerungsart und Währung.</p>
+ <div class="erp-form-grid">
+  <div><label>Standardwährung</label><input name="default_currency" value="<?php p($_['defaultCurrency']??'EUR');?>" maxlength="3" list="settingsCurrencies" required><datalist id="settingsCurrencies"><option value="EUR"><option value="CHF"><option value="USD"><option value="GBP"><option value="DKK"><option value="NOK"><option value="SEK"><option value="PLN"><option value="CZK"></datalist><small class="erp-muted">ISO 4217, z. B. EUR oder CHF. Keine automatische Kursumrechnung.</small></div>
+  <div><label>Standard-Besteuerungsart</label><?php $dtm=$_['defaultTaxMode']??'standard19';?><select name="default_tax_mode"><option value="standard19" <?php if($dtm==='standard19'):?>selected<?php endif;?>>19 % MwSt.</option><option value="standard7" <?php if($dtm==='standard7'):?>selected<?php endif;?>>7 % MwSt.</option><option value="small_business" <?php if($dtm==='small_business'):?>selected<?php endif;?>>Kleinunternehmer § 19 UStG</option><option value="reverse_charge_13b" <?php if($dtm==='reverse_charge_13b'):?>selected<?php endif;?>>Bauleistung § 13b</option></select><small class="erp-muted">Wird bei neuen Rechnungen vorbelegt und kann im Beleg geändert werden.</small></div>
+ </div>
+</fieldset>
         <fieldset class="erp-card erp-document-settings erp-number-settings erp-settings-target" id="settings-numbers">
  <legend><strong>Nummernkreise</strong></legend>
  <p class="erp-muted erp-number-settings-intro">Bestehende Nummern bleiben unverändert. Hier legst du nur fest, wie neue Nummern weiterlaufen.</p>
@@ -165,7 +174,7 @@ require __DIR__ . '/_nav.php';
 
 			<section class="erp-card erp-wide erp-settings-target" id="settings-datev">
 				<h2>DATEV</h2>
-				<p class="erp-muted">Kontierung für den Export von Ausgangsrechnungen. Bitte die Konten einmal mit dem Steuerbüro abstimmen.</p>
+				<p class="erp-muted">Kontierung für den Export von Ausgangs- und Eingangsrechnungen. Bitte die Konten einmal mit dem Steuerbüro abstimmen.</p>
 				<?php if (!empty($_['datevSaved'])): ?><div class="erp-notice"><strong>✓ DATEV-Einstellungen gespeichert.</strong></div><?php endif; ?>
 				<?php if (!empty($_['datevReset'])): ?><div class="erp-notice"><strong>✓ DATEV Berater- und Mandantennummer wurden geleert.</strong></div><?php endif; ?>
 				<?php if (!empty($_['datevError'])): ?><div class="erp-notice"><strong><?php p($_['datevError']); ?></strong></div><?php endif; ?>
@@ -173,7 +182,7 @@ require __DIR__ . '/_nav.php';
 					<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
 				<div class="erp-form-grid">
 					<div><label>Kontenrahmen</label><select name="datev_skr"><option value="03" <?php if(($_['datevSettings']['skr']??'03')==='03'):?>selected<?php endif;?>>SKR 03</option><option value="04" <?php if(($_['datevSettings']['skr']??'03')==='04'):?>selected<?php endif;?>>SKR 04</option></select></div>
-					<div><label>Debitorenbasis</label><input name="datev_debtor_base" inputmode="numeric" value="<?php p($_['datevSettings']['debtor_base']??'10000');?>"><small class="erp-muted">Kundennummer = Basis + interne Kunden-ID</small></div>
+					<div><label>Debitorenbasis</label><input name="datev_debtor_base" inputmode="numeric" value="<?php p($_['datevSettings']['debtor_base']??'10000');?>"><small class="erp-muted">Kundennummer = Basis + interne Kunden-ID</small></div><div><label>Kreditorenbasis</label><input name="datev_creditor_base" inputmode="numeric" value="<?php p($_['datevSettings']['creditor_base']??'70000');?>"><small class="erp-muted">Lieferant = Basis + interne Lieferanten-ID</small></div>
 					<div><label>DATEV Beraternummer</label><input name="datev_consultant_no" inputmode="numeric" value="<?php p($_['datevSettings']['consultant_no']??'');?>"></div>
 					<div><label>DATEV Mandantennummer</label><input name="datev_client_no" inputmode="numeric" value="<?php p($_['datevSettings']['client_no']??'');?>"></div>
 					<div><label>Sachkontenlänge</label><input name="datev_account_length" inputmode="numeric" value="<?php p($_['datevSettings']['account_length']??'4');?>" min="4" max="8"></div>
@@ -181,6 +190,7 @@ require __DIR__ . '/_nav.php';
 					<div><label>Erlöskonto 19 %</label><input name="datev_revenue19" inputmode="numeric" value="<?php p($_['datevSettings']['revenue19']??'8400');?>"></div>
 					<div><label>Erlöskonto 7 %</label><input name="datev_revenue7" inputmode="numeric" value="<?php p($_['datevSettings']['revenue7']??'8300');?>"></div>
 					<div><label>Erlöskonto 0 %</label><input name="datev_revenue0" inputmode="numeric" value="<?php p($_['datevSettings']['revenue0']??'8120');?>"></div>
+					<div><label>Aufwand Material</label><input name="datev_expense_material" inputmode="numeric" value="<?php p($_['datevSettings']['expense_material']??'3400');?>"></div><div><label>Aufwand Fremdleistung</label><input name="datev_expense_external_service" inputmode="numeric" value="<?php p($_['datevSettings']['expense_external_service']??'3100');?>"></div><div><label>Aufwand Maschine / Gerät</label><input name="datev_expense_machine" inputmode="numeric" value="<?php p($_['datevSettings']['expense_machine']??'4900');?>"></div><div><label>Aufwand Fahrt / Transport</label><input name="datev_expense_travel" inputmode="numeric" value="<?php p($_['datevSettings']['expense_travel']??'4660');?>"></div><div><label>Aufwand Sonstiges</label><input name="datev_expense_other" inputmode="numeric" value="<?php p($_['datevSettings']['expense_other']??'4980');?>"></div>
 				</div>
 				<div class="erp-actions"><button class="button primary" type="submit">DATEV-Einstellungen speichern</button></div>
 				</form>

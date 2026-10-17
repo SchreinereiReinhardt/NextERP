@@ -1,5 +1,5 @@
 <?php
-$url=\OC::$server->get(\OCP\IURLGenerator::class);
+$url=\OCP\Server::get(\OCP\IURLGenerator::class);
 $typeLabel=(string)($_['sectionLabel']??'Belege');
 $route=(string)($_['sectionRoute']??'reinhardterp.document.finance');
 ?>

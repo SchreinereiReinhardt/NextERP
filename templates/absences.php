@@ -1,7 +1,7 @@
 <?php
 require __DIR__.'/_nav.php';
 use OCP\IURLGenerator;
-$url=\OC::$server->get(IURLGenerator::class);
+$url=\OCP\Server::get(IURLGenerator::class);
 $labels=['vacation'=>'Urlaub','sick'=>'Krankheit','training'=>'Schulung / Berufsschule','other'=>'Sonstige Abwesenheit'];
 $statusLabels=['pending'=>'Beantragt','approved'=>'Genehmigt','rejected'=>'Abgelehnt'];
 ?>

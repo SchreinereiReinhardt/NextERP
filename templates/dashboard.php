@@ -1,7 +1,7 @@
 <?php
 style('reinhardterp','style');
 script('reinhardterp','dashboard');
-$url=\OC::$server->get(\OCP\IURLGenerator::class);
+$url=\OCP\Server::get(\OCP\IURLGenerator::class);
 $can=$can??[];
 $roleNames=['admin'=>'Administration','office'=>'Büro','manager'=>'Projektleitung','employee'=>'Monteur','time'=>'Zeiterfassung'];
 $roleLabel=$roleNames[$role]??'Betrio';

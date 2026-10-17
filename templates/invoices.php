@@ -12,7 +12,7 @@ $statusLabels=['draft'=>'Entwurf','open'=>'Offen','paid'=>'Bezahlt','cancelled'=
  <div class="erp-head"><div><span class="erp-eyebrow">FINANZEN</span><h1>Rechnungen</h1><p class="erp-sub">Rechnungen und Entwürfe suchen, filtern und öffnen.</p></div><div class="erp-actions"><a class="button primary" href="<?php p($url->linkToRoute('reinhardterp.business.invoiceForm'));?>">+ Neue Rechnung</a></div></div>
 
  <div class="erp-card erp-space-bottom">
-  <div class="erp-section-head"><div><h2 class="erp-help-target" data-betrio-help="datev">DATEV Export</h2><p class="erp-muted">Finalisierte Ausgangsrechnungen und Gutschriften als Buchungsdaten-CSV für die Übergabe an die Buchhaltung. Kontierung vor dem ersten Produktiveinsatz mit dem Steuerbüro abstimmen.</p></div></div>
+  <div class="erp-section-head"><div><h2 class="erp-help-target" data-betrio-help="datev">DATEV Export</h2><p class="erp-muted">Finalisierte Ausgangsrechnungen sowie zugeordnete Eingangsrechnungen als Buchungsdaten-CSV für die Übergabe an die Buchhaltung. Kontierung vor dem ersten Produktiveinsatz mit dem Steuerbüro abstimmen.</p></div></div>
   <form method="get" action="<?php p($url->linkToRoute('reinhardterp.business.datevExport'));?>" class="erp-form-grid erp-form-inset">
    <div><label>Von</label><input type="date" name="from" value="<?php p(date('Y-m-01'));?>" required></div>
    <div><label>Bis</label><input type="date" name="to" value="<?php p(date('Y-m-t'));?>" required></div>

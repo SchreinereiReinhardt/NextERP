@@ -13,7 +13,9 @@ final class XRechnungService {
         $doc = new \DOMDocument('1.0', 'UTF-8');
         $doc->formatOutput = true;
 
-        $root = $doc->createElementNS('urn:oasis:names:specification:ubl:schema:xsd:Invoice-2', 'Invoice');
+        $isCredit = (string)($invoice['invoice_type'] ?? 'invoice') === 'credit';
+        $rootNs = $isCredit ? 'urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2' : 'urn:oasis:names:specification:ubl:schema:xsd:Invoice-2';
+        $root = $doc->createElementNS($rootNs, $isCredit ? 'CreditNote' : 'Invoice');
         $root->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:cac', 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2');
         $root->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:cbc', 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2');
         $doc->appendChild($root);
@@ -45,8 +47,9 @@ final class XRechnungService {
         $this->cbc($doc,$root,'ID',(string)$invoice['invoice_no']);
         $this->cbc($doc,$root,'IssueDate',(string)$invoice['invoice_date']);
         if (!empty($invoice['due_date'])) $this->cbc($doc,$root,'DueDate',(string)$invoice['due_date']);
-        $this->cbc($doc,$root,'InvoiceTypeCode','380');
-        $this->cbc($doc,$root,'DocumentCurrencyCode','EUR');
+        $this->cbc($doc,$root,$isCredit ? 'CreditNoteTypeCode' : 'InvoiceTypeCode',$isCredit ? '381' : '380');
+        $currency=$this->currency($invoice);
+        $this->cbc($doc,$root,'DocumentCurrencyCode',$currency);
 
         $buyerReference = trim((string)($customer['leitweg_id'] ?? ''));
         if ($buyerReference === '') $buyerReference = trim((string)($customer['buyer_reference'] ?? ''));
@@ -101,7 +104,8 @@ final class XRechnungService {
             $buyerEndpoint->setAttribute('schemeID','EM');
         }
         $buyerName = $this->cac($doc,$buyerParty,'PartyName');
-        $this->cbc($doc,$buyerName,'Name',(string)$customer['name']);
+        $buyerPartyName=CustomerAddressService::partyName($customer);
+        $this->cbc($doc,$buyerName,'Name',$buyerPartyName);
         $this->address($doc,$buyerParty,$customer);
         if (!empty($customer['vat_id'])) {
             $buyerTax = $this->cac($doc,$buyerParty,'PartyTaxScheme');
@@ -110,7 +114,7 @@ final class XRechnungService {
             $this->cbc($doc,$buyerTaxScheme,'ID','VAT');
         }
         $buyerLegal = $this->cac($doc,$buyerParty,'PartyLegalEntity');
-        $this->cbc($doc,$buyerLegal,'RegistrationName',(string)$customer['name']);
+        $this->cbc($doc,$buyerLegal,'RegistrationName',$buyerPartyName);
 
         if (!empty($invoice['service_date'])) {
             $delivery = $this->cac($doc,$root,'Delivery');
@@ -136,6 +140,7 @@ final class XRechnungService {
         $vatRate = (float)($invoice['vat_rate'] ?? 19);
         $taxMode=(string)($invoice['tax_mode']??'standard19');
         $taxCategory=$taxMode==='reverse_charge_13b'?'AE':($taxMode==='small_business'?'E':($vatRate>0?'S':'Z'));
+        if ($taxCategory === 'AE' || $taxCategory === 'E') $vatRate = 0.0;
         $taxReason=$taxMode==='reverse_charge_13b'?'Steuerschuldnerschaft des Leistungsempfängers':($taxMode==='small_business'?'Steuerbefreiung für Kleinunternehmer gemäß § 19 UStG':'');
         $net = round((float)$invoice['net_amount'],2);
         $gross = round((float)$invoice['gross_amount'],2);
@@ -143,10 +148,10 @@ final class XRechnungService {
 
         $taxTotal = $this->cac($doc,$root,'TaxTotal');
         $tax = $this->cbc($doc,$taxTotal,'TaxAmount',$this->money($taxAmount));
-        $tax->setAttribute('currencyID','EUR');
+        $tax->setAttribute('currencyID',$currency);
         $sub = $this->cac($doc,$taxTotal,'TaxSubtotal');
-        $taxable = $this->cbc($doc,$sub,'TaxableAmount',$this->money($net)); $taxable->setAttribute('currencyID','EUR');
-        $subTax = $this->cbc($doc,$sub,'TaxAmount',$this->money($taxAmount)); $subTax->setAttribute('currencyID','EUR');
+        $taxable = $this->cbc($doc,$sub,'TaxableAmount',$this->money($net)); $taxable->setAttribute('currencyID',$currency);
+        $subTax = $this->cbc($doc,$sub,'TaxAmount',$this->money($taxAmount)); $subTax->setAttribute('currencyID',$currency);
         $cat = $this->cac($doc,$sub,'TaxCategory');
         $this->cbc($doc,$cat,'ID',$taxCategory);
         $this->cbc($doc,$cat,'Percent',$this->decimal($vatRate));
@@ -155,19 +160,19 @@ final class XRechnungService {
 
         $legal = $this->cac($doc,$root,'LegalMonetaryTotal');
         foreach (['LineExtensionAmount'=>$net,'TaxExclusiveAmount'=>$net,'TaxInclusiveAmount'=>$gross,'PayableAmount'=>$gross] as $tag=>$value) {
-            $n=$this->cbc($doc,$legal,$tag,$this->money($value)); $n->setAttribute('currencyID','EUR');
+            $n=$this->cbc($doc,$legal,$tag,$this->money($value)); $n->setAttribute('currencyID',$currency);
         }
 
         $pos=0;
         foreach ($items as $item) {
             if (!empty($item['is_alternative'])) continue;
             $pos++;
-            $line = $this->cac($doc,$root,'InvoiceLine');
+            $line = $this->cac($doc,$root,$isCredit ? 'CreditNoteLine' : 'InvoiceLine');
             $this->cbc($doc,$line,'ID',(string)$pos);
-            $qty = $this->cbc($doc,$line,'InvoicedQuantity',$this->decimal((float)$item['quantity']));
+            $qty = $this->cbc($doc,$line,$isCredit ? 'CreditedQuantity' : 'InvoicedQuantity',$this->decimal((float)$item['quantity']));
             $qty->setAttribute('unitCode',$this->unitCode((string)($item['unit'] ?? 'Stk.')));
             $amount = $this->cbc($doc,$line,'LineExtensionAmount',$this->money((float)$item['total_price']));
-            $amount->setAttribute('currencyID','EUR');
+            $amount->setAttribute('currencyID',$currency);
             $product = $this->cac($doc,$line,'Item');
             $this->cbc($doc,$product,'Name',$this->plain((string)$item['description']));
             $classified = $this->cac($doc,$product,'ClassifiedTaxCategory');
@@ -177,7 +182,7 @@ final class XRechnungService {
             $lineTax = $this->cac($doc,$classified,'TaxScheme'); $this->cbc($doc,$lineTax,'ID','VAT');
             $price = $this->cac($doc,$line,'Price');
             $priceAmount = $this->cbc($doc,$price,'PriceAmount',$this->money((float)$item['unit_price']));
-            $priceAmount->setAttribute('currencyID','EUR');
+            $priceAmount->setAttribute('currencyID',$currency);
         }
 
         return $doc->saveXML() ?: '';
@@ -217,8 +222,11 @@ final class XRechnungService {
         $street=(string)($data['street']??'');
         $zip=(string)($data['postal_code']??($data['zip']??''));
         $city=(string)($data['city']??'');
-        $country=(string)($data['country']??'DE');
+        $country=trim((string)($data['country']??''));
+        if ($country === '') $country='DE';
         if (trim($street) !== '') $this->cbc($doc,$a,'StreetName',$street);
+        $addition=trim((string)($data['address_addition']??''));
+        if ($addition !== '') { $line=$this->cac($doc,$a,'AddressLine'); $this->cbc($doc,$line,'Line',$addition); }
         if (trim($city) !== '') $this->cbc($doc,$a,'CityName',$city);
         if (trim($zip) !== '') $this->cbc($doc,$a,'PostalZone',$zip);
         if (trim($country) !== '') {
@@ -233,6 +241,10 @@ final class XRechnungService {
     private function unitCode(string $unit):string {
         $u=mb_strtolower(trim($unit));
         return match($u){'std','h','stunde','stunden'=>'HUR','m','meter'=>'MTR','m²','m2','qm'=>'MTK','m³','m3'=>'MTQ','kg'=>'KGM','l','liter'=>'LTR',default=>'C62'};
+    }
+    private function currency(array $invoice):string {
+        $currency=strtoupper(trim((string)($invoice['currency']??'EUR')));
+        return preg_match('/^[A-Z]{3}$/',$currency)?$currency:'EUR';
     }
     private function plain(string $v):string {
         $v=preg_replace('#<br\\s*/?>#i',"\n",$v)??$v;

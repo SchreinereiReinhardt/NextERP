@@ -1,0 +1,23 @@
+horstoeko\zugferd\entities\extended\ram\LineTradeSettlementType:
+    properties:
+        applicableTradeTax:
+            -
+                Valid: null
+        billingSpecifiedPeriod:
+            -
+                Valid: null
+        specifiedTradeAllowanceCharge:
+            -
+                Valid: null
+        specifiedTradeSettlementLineMonetarySummation:
+            -
+                Valid: null
+        invoiceReferencedDocument:
+            -
+                Valid: null
+        additionalReferencedDocument:
+            -
+                Valid: null
+        receivableSpecifiedTradeAccountingAccount:
+            -
+                Valid: null

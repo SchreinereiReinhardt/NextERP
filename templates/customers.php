@@ -3,10 +3,10 @@ require __DIR__ . '/_nav.php';
 use OCP\IURLGenerator;
 use OCP\App\IAppManager;
 
-$url = \OC::$server->get(IURLGenerator::class);
+$url = \OCP\Server::get(IURLGenerator::class);
 $mailEnabled = false;
 try {
-    $mailEnabled = \OC::$server->get(IAppManager::class)->isEnabledForUser('mail');
+    $mailEnabled = \OCP\Server::get(IAppManager::class)->isEnabledForUser('mail');
 } catch (\Throwable $e) {
     $mailEnabled = false;
 }
@@ -17,9 +17,7 @@ script('reinhardterp', 'customers');
     <div><h1>Kunden</h1><p class="erp-sub">Kundenakten und Nextcloud Kontakte gemeinsam verwalten.</p></div>
     <div class="erp-actions">
         <a class="button primary" href="<?php p($url->linkToRoute('reinhardterp.page.customerForm')); ?>">+ Neuer Kunde</a>
-        <?php if (!empty($_['contactsEnabled'])): ?>
-            <a class="button" href="<?php p($url->linkToRoute('reinhardterp.integration.customerImport')); ?>">↓ Aus Nextcloud importieren</a>
-        <?php endif; ?>
+        <a class="button" href="<?php p($url->linkToRoute('reinhardterp.integration.customerImport')); ?>">↓ Kunden importieren</a>
     </div>
 </div>
 <?php if (!empty($_['message'])): ?><div class="erp-notice"><?php p($_['message']); ?></div><?php endif; ?>
@@ -51,7 +49,7 @@ script('reinhardterp', 'customers');
     $initial = mb_strtoupper(mb_substr($name, 0, 1));
     $alpha = preg_match('/^[A-ZÄÖÜ]$/u', $initial) ? strtr($initial, ['Ä'=>'A','Ö'=>'O','Ü'=>'U']) : '#';
     $search = mb_strtolower(implode(' ', array_filter([
-        $c->getCustomerNo(), $name, $c->getContactName(), $c->getPhone(), $c->getMobile(), $c->getEmail()
+        $c->getCustomerNo(), $name, $c->getTitle(), $c->getFirstName(), $c->getLastName(), trim((string)$c->getFirstName().' '.(string)$c->getLastName()), $c->getContactName(), $c->getPhone(), $c->getMobile(), $c->getEmail()
     ])));
     $email = trim((string)$c->getEmail());
     $mailHref = '';

@@ -208,6 +208,8 @@ final class DocumentInboxService {
             'net_amount' => $this->nullableFloat($data['net_amount'] ?? null),
             'vat_amount' => $this->nullableFloat($data['vat_amount'] ?? null),
             'gross_amount' => $this->nullableFloat($data['gross_amount'] ?? null),
+            'datev_vat_rate' => $this->nullableFloat($data['datev_vat_rate'] ?? null),
+            'datev_expense_account' => $this->nullableString($data['datev_expense_account'] ?? null),
             'currency' => strtoupper(substr(trim((string)($data['currency'] ?? 'EUR')) ?: 'EUR', 0, 3)),
             'notes' => $this->nullableString($data['notes'] ?? null),
             'cost_category' => $this->nullableString($data['cost_category'] ?? null),
@@ -393,43 +395,6 @@ final class DocumentInboxService {
             if(isset($counts[$effective]))$counts[$effective]++;
         }
         return $counts;
-    }
-
-    public function financeExport(array $filters=[]): array {
-        if(!class_exists(\ZipArchive::class)){throw new \RuntimeException('PHP-Erweiterung zip fehlt. Bitte php-zip installieren.');}
-        $rows=$this->financeRows($filters);
-        if($rows===[]){throw new \RuntimeException('Für die gewählten Filter sind keine Belege vorhanden.');}
-        $tmp=tempnam(sys_get_temp_dir(),'nexterp_fin_');
-        if($tmp===false){throw new \RuntimeException('Temporäre Exportdatei konnte nicht erstellt werden.');}
-        $zip=new \ZipArchive();
-        if($zip->open($tmp,\ZipArchive::OVERWRITE)!==true){@unlink($tmp);throw new \RuntimeException('ZIP-Export konnte nicht erstellt werden.');}
-        $labels=['incoming_invoice'=>'Eingangsrechnungen','outgoing_invoice'=>'Ausgangsrechnungen','bank_statement'=>'Kontoauszuege','cash'=>'Kasse','tax'=>'Steuern','credit_note'=>'Gutschriften','accounting_other'=>'Sonstige_Belege'];
-        $csv=fopen('php://temp','w+');
-        fwrite($csv,"\xEF\xBB\xBF");
-        fputcsv($csv,['Belegart','Belegdatum','Belegnummer','Lieferant','Kunde','Projekt','Netto','MwSt','Brutto','Waehrung','Datei'],';');
-        foreach($rows as $row){
-            $actual=(string)($row['document_type']??'unassigned');
-            $type=$actual!=='unassigned'?$actual:(string)($row['suggested_type']??'unassigned');
-            $folder=$labels[$type]??'Sonstige_Belege';
-            $path=(string)($row['file_path']??'');
-            try{$file=$this->folders->readFile($path);$content=(string)($file['content']??'');}catch(\Throwable){continue;}
-            $name=basename((string)($row['file_name']??$row['original_name']??'Beleg.pdf'));
-            $zip->addFromString($folder.'/'.$name,$content);
-            fputcsv($csv,[
-                $folder,(string)($row['document_date']??$row['suggested_document_date']??''),
-                (string)($row['document_no']??$row['suggested_document_no']??''),
-                (string)($row['supplier_name']??''),(string)($row['customer_name']??''),
-                trim((string)($row['project_no']??'').' '.(string)($row['project_title']??'')),
-                (string)($row['net_amount']??''),(string)($row['vat_amount']??''),(string)($row['gross_amount']??''),
-                (string)($row['currency']??'EUR'),$name
-            ],';');
-        }
-        rewind($csv);$zip->addFromString('Beleguebersicht.csv',(string)stream_get_contents($csv));fclose($csv);
-        $zip->close();$content=(string)file_get_contents($tmp);@unlink($tmp);
-        $period=(string)($filters['year']??'');
-        if($period==='')$period='Auswahl';
-        if((string)($filters['month']??'')!=='')$period.='-'.str_pad((string)$filters['month'],2,'0',STR_PAD_LEFT);
-        return ['name'=>'Betrio-Steuerbuero-'.$this->safe($period).'.zip','content'=>$content];
     }
 
     private function extractDocumentText(array $document): string {

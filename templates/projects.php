@@ -1,7 +1,7 @@
 <?php
 require __DIR__.'/_nav.php';
 use OCP\IURLGenerator;
-$url=\OC::$server->get(IURLGenerator::class);
+$url=\OCP\Server::get(IURLGenerator::class);
 $view=$_['view']??'active';
 $isArchive=$view==='archive';
 $search=(string)($_['search']??'');

@@ -1,6 +1,6 @@
 <?php
 require __DIR__.'/_nav.php';
-$url=\OC::$server->get(\OCP\IURLGenerator::class);
+$url=\OCP\Server::get(\OCP\IURLGenerator::class);
 \OCP\Util::addScript('reinhardterp','finance');
 $filesBase=$url->linkToRoute('files.view.index');
 $types=[

@@ -39,7 +39,7 @@ function enhance(select){
  function close(){list.hidden=true; active=-1;}
  function choose(opt){select.value=opt.value; input.value=opt.text.trim(); close(); select.dispatchEvent(new Event('change',{bubbles:true}));}
  function render(forceAll){
-   var q=forceAll?'':norm(input.value.trim()), matches=opts.filter(function(o){return !q || norm(o.text).indexOf(q)!==-1;}).slice(0,40);
+   var q=forceAll?'':norm(input.value.trim()), matches=opts.filter(function(o){var hay=(o.dataset.search||'')+' '+o.text;return !q || norm(hay).indexOf(q)!==-1;}).slice(0,40);
    list.innerHTML=''; active=-1;
    matches.forEach(function(o){var b=document.createElement('button');b.type='button';b.className='erp-customer-option';b.setAttribute('role','option');b.textContent=o.text.trim();b.addEventListener('mousedown',function(e){e.preventDefault();choose(o);});list.appendChild(b);});
    if(!matches.length){var empty=document.createElement('div');empty.className='erp-customer-empty';empty.textContent='Kein Kunde gefunden';list.appendChild(empty);}

@@ -47,5 +47,6 @@ final class Application extends App implements IBootstrap {
         $context->injectFn(static function (IJobList $jobs): void {
             $jobs->add(DocumentInboxScanJob::class);
         });
+
     }
 }

@@ -1,7 +1,7 @@
 <?php
 require __DIR__ . '/_nav.php';
 use OCP\IURLGenerator;
-$url = \OC::$server->get(IURLGenerator::class);
+$url = \OCP\Server::get(IURLGenerator::class);
 $customer = $_['customer'];
 $isLinked = $customer && $customer->getNcContactId();
 ?>
@@ -12,7 +12,12 @@ $isLinked = $customer && $customer->getNcContactId();
 <?php if ($customer): ?><input type="hidden" name="id" value="<?php p($customer->getId()); ?>"><?php endif; ?>
 <div class="erp-form-grid">
 <div><label>Kundennummer</label><input name="customerNo" readonly value="<?php p($customer?->getCustomerNo() ?? ''); ?>"></div>
-<div><label>Firma / Kundenname *</label><input name="name" required value="<?php p($customer?->getName() ?? ''); ?>"></div>
+<div><label>Kundentyp</label><select name="customerType" id="customerType"><?php $ct=$customer?->getCustomerType() ?: 'business'; ?><option value="private" <?= $ct==='private'?'selected':'' ?>>Privatkunde</option><option value="business" <?= $ct==='business'?'selected':'' ?>>Unternehmen</option><option value="public" <?= $ct==='public'?'selected':'' ?>>Öffentlicher Auftraggeber</option></select></div>
+<div id="customerCompanyNameWrap"><label>Firma / Kundenname *</label><input id="customerCompanyName" name="name" value="<?php p($customer?->getName() ?? ''); ?>"><small class="erp-muted">Bei Unternehmen und öffentlichen Auftraggebern erforderlich. Bestehende Kundennamen bleiben unverändert.</small></div>
+<div><label>Anrede</label><select name="salutation"><option value="">Keine</option><?php $sal=$customer?->getSalutation() ?? ''; foreach(['Herr','Frau','Divers'] as $v): ?><option value="<?php p($v); ?>" <?= $sal===$v?'selected':'' ?>><?php p($v); ?></option><?php endforeach; ?></select></div>
+<div><label>Titel</label><input name="title" placeholder="z. B. Dr., Prof. Dr." value="<?php p($customer?->getTitle() ?? ''); ?>"></div>
+<div><label>Vorname</label><input name="firstName" autocomplete="given-name" value="<?php p($customer?->getFirstName() ?? ''); ?>"></div>
+<div><label>Nachname</label><input name="lastName" autocomplete="family-name" value="<?php p($customer?->getLastName() ?? ''); ?>"></div>
 <div><label>Ansprechpartner</label><input name="contactName" value="<?php p($customer?->getContactName() ?? ''); ?>"></div>
 <div><label>Telefon</label><input name="phone" inputmode="tel" autocomplete="tel" value="<?php p($customer?->getPhone() ?? ''); ?>"></div>
 <div><label>Mobilnummer</label><input name="mobile" inputmode="tel" autocomplete="tel-national" value="<?php p($customer?->getMobile() ?? ''); ?>"></div>
@@ -21,6 +26,7 @@ $isLinked = $customer && $customer->getNcContactId();
 <fieldset class="erp-address-fields">
 <legend>Adresse</legend>
 <div class="erp-form-grid">
+<div><label>Adresszusatz / c/o</label><input name="addressAddition" placeholder="z. B. c/o, Abteilung, Gebäudeteil" value="<?php p($customer?->getAddressAddition() ?? ''); ?>"></div>
 <div><label>Straße und Hausnummer</label><input name="street" autocomplete="street-address" value="<?php p($customer?->getStreet() ?? ''); ?>"></div>
 <div><label>Postleitzahl</label><input name="postalCode" autocomplete="postal-code" value="<?php p($customer?->getPostalCode() ?? ''); ?>"></div>
 <div><label>Ort</label><input name="city" autocomplete="address-level2" value="<?php p($customer?->getCity() ?? ''); ?>"></div>
@@ -31,7 +37,6 @@ $isLinked = $customer && $customer->getNcContactId();
 <h2>E-Rechnung & Abrechnung</h2>
 <p class="erp-muted">Optionale Rechnungsdaten des Kunden. Leitweg-ID und Käuferreferenzen werden später automatisch für XRechnungen verwendet.</p>
 <div class="erp-form-grid">
-<div><label>Kundentyp</label><select name="customerType"><?php $ct=$customer?->getCustomerType() ?: 'business'; ?><option value="private" <?= $ct==='private'?'selected':'' ?>>Privatkunde</option><option value="business" <?= $ct==='business'?'selected':'' ?>>Unternehmen</option><option value="public" <?= $ct==='public'?'selected':'' ?>>Öffentlicher Auftraggeber</option></select></div>
 <div><label>Bevorzugtes Rechnungsformat</label><select name="invoiceFormat"><?php $if=$customer?->getInvoiceFormat() ?: 'pdf'; ?><option value="pdf" <?= $if==='pdf'?'selected':'' ?>>PDF</option><option value="xrechnung" <?= $if==='xrechnung'?'selected':'' ?>>XRechnung</option><option value="zugferd" <?= $if==='zugferd'?'selected':'' ?>>ZUGFeRD</option></select></div>
 <div><label>Rechnungs-E-Mail</label><input type="email" name="invoiceEmail" value="<?php p($customer?->getInvoiceEmail() ?? ''); ?>"></div>
 <div><label>USt-IdNr.</label><input name="vatId" value="<?php p($customer?->getVatId() ?? ''); ?>"></div>
@@ -63,6 +68,14 @@ $isLinked = $customer && $customer->getNcContactId();
 </section>
 <?php endif; ?>
 
+<script>
+(function(){
+ const type=document.getElementById('customerType'), wrap=document.getElementById('customerCompanyNameWrap'), name=document.getElementById('customerCompanyName');
+ if(!type||!wrap||!name)return;
+ function sync(){const isPrivate=type.value==='private';wrap.hidden=isPrivate;name.required=!isPrivate;}
+ type.addEventListener('change',sync);sync();
+})();
+</script>
 <div class="erp-actions"><button class="button primary"><?php p($customer ? 'Änderungen speichern' : 'Kunde speichern und Ordner anlegen'); ?></button><?php if ($customer): ?><a class="button" href="<?php p($url->linkToRoute('reinhardterp.page.customerDetail',['id'=>$customer->getId()])); ?>">Zur Kundenakte</a><?php else: ?><a class="button" href="<?php p($url->linkToRoute('reinhardterp.page.customers')); ?>">Abbrechen</a><?php endif; ?></div>
 </form>
 </div></div>

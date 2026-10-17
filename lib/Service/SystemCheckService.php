@@ -269,7 +269,7 @@ final class SystemCheckService {
     private function detectCronMode(): ?string {
         try {
             if (class_exists('\\OC')) {
-                $config = \OC::$server->get(\OCP\IConfig::class);
+                $config = \OCP\Server::get(\OCP\IConfig::class);
                 $mode = (string)$config->getAppValue('core', 'backgroundjobs_mode', '');
                 return $mode !== '' ? $mode : null;
             }

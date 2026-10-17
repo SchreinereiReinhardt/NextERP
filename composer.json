@@ -1,5 +1,6 @@
 {
     "require": {
-        "nemiah/php-fints": "4.1.0"
+        "nemiah/php-fints": "4.1.0",
+        "horstoeko/zugferd": "^1.0"
     }
 }

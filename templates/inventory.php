@@ -1,7 +1,7 @@
 <?php
 require __DIR__.'/_nav.php';
 use OCP\IURLGenerator;
-$url=\OC::$server->get(IURLGenerator::class);
+$url=\OCP\Server::get(IURLGenerator::class);
 script('reinhardterp','inventory');
 $materials=$_['materials'];
 $total=count($materials);
@@ -19,6 +19,9 @@ $value=array_sum(array_map(fn($m)=>(float)($m['stock_quantity']??0)*(float)($m['
 <details class="erp-inventory-card erp-movement-history" open><summary>Buchungsjournal · letzte Lagerbewegungen</summary><div class="erp-table"><table><thead><tr><th>Zeitpunkt</th><th>Material</th><th>Bewegung</th><th>Menge</th><th>Kunde</th><th>Projekt</th><th>Notiz</th></tr></thead><tbody><?php foreach($_['movements'] as $m):$labels=['in'=>'Zugang','out'=>'Entnahme','return'=>'Rückgabe','adjustment'=>'Korrektur'];?><tr><td><?php p(date('d.m.Y H:i',strtotime($m['created_at'])));?></td><td><?php p(($m['article_no']??'').' · '.$m['material_name']);?></td><td><span class="erp-movement-type <?php p($m['movement_type']);?>"><?php p($labels[$m['movement_type']]??$m['movement_type']);?></span></td><td><?php p(number_format((float)$m['quantity'],3,',','.').' '.$m['unit']);?></td><td><?php p($m['customer_name']?:'—');?></td><td><?php p($m['project_no']?:'—');?></td><td><?php p($m['note']);?></td></tr><?php endforeach;?></tbody></table></div></details>
 </div>
 
+<?php if((string)($_GET['negativeStock']??'')==='1'):?>
+<div class="erp-info-banner" role="status"><strong>Hinweis:</strong> Die Buchung wurde gespeichert. Der Lagerbestand ist jetzt negativ<?php if(isset($_GET['stock'])):?> (<?php p(number_format((float)$_GET['stock'],3,',','.'));?>)<?php endif;?>. Bitte Wareneingang bzw. Bestand prüfen.</div>
+<?php endif;?>
 <div class="erp-material-summary">
 <button class="erp-stat inventory-filter active" data-filter=""><span>Artikel im Lager</span><strong><?php p($total);?></strong></button>
 <button class="erp-stat inventory-filter" data-filter="low"><span>Unter Mindestbestand</span><strong><?php p($low);?></strong></button>

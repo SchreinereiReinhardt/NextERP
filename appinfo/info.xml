@@ -14,7 +14,9 @@ Die App verbindet kaufmännische und operative Abläufe in einer zentralen Anwen
 
 Funktionen:
 
-- Kundenverwaltung und CRM
+- Kundenverwaltung und CRM mit strukturierten Privat-, Firmen- und öffentlichen Kunden
+- Erweiterte Kundensuche sowie Löschen und Anonymisieren von Kundenstammdaten
+- CSV-Kundenimport mit automatischer Erkennung, manueller Feldzuordnung, Vorschau und Dublettenprüfung (Betrio Pro)
 - Projektverwaltung und digitale Projektakten
 - Angebote und Aufträge
 - Rechnungen
@@ -24,6 +26,7 @@ Funktionen:
 - offene und überfällige Forderungen
 - PDF-Rechnungen
 - XRechnung
+- ZUGFeRD / Factur-X im EN16931-Profil (Betrio Pro)
 - Rechnungsprotokoll und Festschreibung von Rechnungen
 - Verknüpfung Angebot → Auftrag → Rechnung
 - Rapporte mit Unterschrift und PDF
@@ -56,6 +59,8 @@ Zusätzlich steht mit „Betrio Mobile“ eine separate Android-App zur Verfügu
 
 Betrio läuft direkt innerhalb der eigenen Nextcloud-Installation. Kunden-, Projekt- und Unternehmensdaten müssen für den Betrieb von Betrio nicht in eine separate ERP-Cloud ausgelagert werden.
 
+Betrio wird als Community- und Pro-Modell angeboten. Die Community-Version bleibt kostenlos nutzbar. Eine gültige Betrio-Pro-Lizenz schaltet zusätzliche professionelle Funktionen frei. Die Pro-Lizenz kann direkt in Betrio aktiviert und verwaltet werden. Ein Wechsel der Edition oder das Ende einer Pro-Lizenz löscht keine vorhandenen Kunden, Projekte oder Belege.
+
 Die kaufmännischen Funktionen begleiten den Ablauf vom Angebot über Auftrag und Rechnung bis zum Zahlungseingang. Festgeschriebene Rechnungen und relevante Vorgänge werden über das Rechnungsprotokoll nachvollziehbar dokumentiert.
 
 Für den Datenaustausch mit der Buchhaltung steht ein DATEV-EXTF-Export zur Verfügung.
@@ -72,7 +77,9 @@ The app combines commercial and operational workflows in one central application
 
 Features:
 
-- Customer management and CRM
+- Customer management and CRM with structured private, business and public-sector customers
+- Extended customer search plus deletion and anonymization of customer master data
+- CSV customer import with automatic detection, manual field mapping, preview and duplicate checks (Betrio Pro)
 - Project management and digital project files
 - Quotations and orders
 - Invoices
@@ -82,6 +89,7 @@ Features:
 - Outstanding and overdue receivables
 - PDF invoices
 - XRechnung
+- ZUGFeRD / Factur-X using the EN16931 profile (Betrio Pro)
 - Invoice audit trail and invoice finalization
 - Quotation → order → invoice workflow
 - Work reports with signature and PDF
@@ -114,6 +122,8 @@ A separate Android app, “Betrio Mobile”, is also available.
 
 Betrio runs directly within your own Nextcloud installation. Customer, project and business data therefore do not need to be moved to a separate ERP cloud to operate Betrio.
 
+Betrio is offered in Community and Pro editions. The Community edition remains free to use. A valid Betrio Pro licence unlocks additional professional features. The Pro licence can be activated and managed directly in Betrio. Changing editions or ending a Pro licence does not delete existing customers, projects or documents.
+
 The commercial functions support the workflow from quotation and order through invoicing to payment receipt. Finalized invoices and relevant actions are documented through the invoice audit trail.
 
 A DATEV EXTF export is available for exchanging accounting data.
@@ -122,7 +132,7 @@ XRechnung is integrated and continues to be developed and validated.
 
 Betrio does not replace tax or legal advice. Accounting and export functions should be checked against the requirements of your business and, where appropriate, coordinated with your tax adviser before productive use.
   ]]></description>
-<version>2.10.22</version>
+<version>2.14.20</version>
   <licence>AGPL-3.0-or-later</licence>
 
   <author>André Reinhardt</author>

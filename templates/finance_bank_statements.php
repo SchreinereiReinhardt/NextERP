@@ -1,4 +1,4 @@
-<?php require __DIR__.'/_nav.php'; $url=\OC::$server->get(\OCP\IURLGenerator::class); ?>
+<?php require __DIR__.'/_nav.php'; $url=\OCP\Server::get(\OCP\IURLGenerator::class); ?>
 <div id="app-content"><div class="erp-page erp-finance-page">
 <div class="erp-head"><div><span class="erp-eyebrow">FINANZEN · BANKUMSÄTZE</span><h1>Bankumsätze</h1><p class="erp-sub">Kontoumsätze per CSV importieren und Zahlungseingänge vorhandenen Rechnungen zuordnen.</p></div></div>
 <?php if(!empty($_['message'])):?><div class="erp-notice success"><?php p($_['message']);?></div><?php endif;?>

@@ -7,6 +7,7 @@ use OCA\ReinhardtERP\Db\Customer;
 use OCA\ReinhardtERP\Db\CustomerMapper;
 use OCA\ReinhardtERP\Service\ActivityService;
 use OCA\ReinhardtERP\Service\FolderService;
+use OCA\ReinhardtERP\Service\EditionService;
 use OCA\ReinhardtERP\Service\NextcloudIntegrationService;
 use OCA\ReinhardtERP\Service\NumberService;
 use OCA\ReinhardtERP\Service\PermissionService;
@@ -14,6 +15,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\RedirectResponse;
+use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IRequest;
 use OCP\IURLGenerator;
@@ -31,6 +33,7 @@ final class IntegrationController extends Controller {
         private NumberService $numbers,
         private FolderService $folders,
         private IUserSession $users,
+        private EditionService $edition,
     ) {
         parent::__construct($appName, $request);
     }
@@ -58,6 +61,8 @@ final class IntegrationController extends Controller {
             'linkedContacts' => $linked,
             'contactsEnabled' => $this->integration->contactsEnabled(),
             'addressBooks' => $this->integration->writableAddressBooks(),
+            'csvProLocked' => !$this->edition->isPro(),
+            'betrioProUrl' => (string)($this->edition->status()['proUrl'] ?? 'https://kassel-net.de/betrio/'),
         ]);
     }
 
@@ -124,6 +129,76 @@ final class IntegrationController extends Controller {
         $message = sprintf('%d Kunden importiert, %d bereits vorhanden, %d fehlgeschlagen.', $created, $skipped, $failed);
         return new RedirectResponse($this->url->linkToRoute('reinhardterp.page.customers') . '?message=' . rawurlencode($message));
     }
+
+
+
+    #[NoAdminRequired]
+    public function analyzeCustomerCsv(string $mapping = '{}'): JSONResponse {
+        $this->permissions->assert('customers');
+        try {
+            $this->edition->assertLicensedPro('CSV-Kundenimport');
+            [$headers,$rows] = $this->readCustomerCsv();
+            $map = $this->decodeCsvMapping($mapping,$headers);
+            $existing = $this->customerDuplicateIndex();
+            $new=0;$duplicates=0;$invalid=0;$preview=[];
+            foreach ($rows as $i=>$row) {
+                $data=$this->mapCsvRow($headers,$row,$map);
+                $reason=$this->csvInvalidReason($data);
+                $dup=$reason===''?$this->csvDuplicateReason($data,$existing):'';
+                if($reason!=='')$invalid++;elseif($dup!=='')$duplicates++;else{$new++;$this->addCsvDuplicateKeys($existing,$data);}
+                if(count($preview)<12)$preview[]=['row'=>$i+2,'name'=>$this->csvDisplayName($data),'status'=>$reason!==''?'invalid':($dup!==''?'duplicate':'new'),'message'=>$reason!==''?$reason:($dup!==''?$dup:'Neu')];
+            }
+            return new JSONResponse(['ok'=>true,'headers'=>$headers,'total'=>count($rows),'new'=>$new,'duplicates'=>$duplicates,'invalid'=>$invalid,'preview'=>$preview]);
+        } catch (\InvalidArgumentException $e) { return new JSONResponse(['ok'=>false,'message'=>$e->getMessage()],400); }
+        catch (\Throwable $e) { return new JSONResponse(['ok'=>false,'message'=>'CSV konnte nicht geprüft werden.'],500); }
+    }
+
+    #[NoAdminRequired]
+    public function importCustomerCsv(string $mapping = '{}'): JSONResponse {
+        $this->permissions->assert('customers');
+        try {
+            $this->edition->assertLicensedPro('CSV-Kundenimport');
+            [$headers,$rows] = $this->readCustomerCsv();
+            $map=$this->decodeCsvMapping($mapping,$headers);$existing=$this->customerDuplicateIndex();
+            $created=0;$duplicates=0;$invalid=0;$errors=[];
+            foreach($rows as $i=>$row){
+                $data=$this->mapCsvRow($headers,$row,$map);$reason=$this->csvInvalidReason($data);
+                if($reason!==''){$invalid++;if(count($errors)<10)$errors[]='Zeile '.($i+2).': '.$reason;continue;}
+                $dup=$this->csvDuplicateReason($data,$existing);if($dup!==''){$duplicates++;continue;}
+                try{$customer=$this->createCsvCustomer($data);$created++;$this->addCsvDuplicateKeys($existing,$data);$this->activities->record('customer',$customer->getId(),'imported_from_csv','Kunde aus CSV importiert',$customer->getCustomerNo().' · '.$customer->getName(),$customer->getId(),null);}catch(\Throwable $e){$invalid++;if(count($errors)<10)$errors[]='Zeile '.($i+2).': '.$e->getMessage();}
+            }
+            return new JSONResponse(['ok'=>true,'created'=>$created,'duplicates'=>$duplicates,'invalid'=>$invalid,'errors'=>$errors,'message'=>sprintf('%d Kunden importiert, %d Dubletten übersprungen, %d fehlerhaft.',$created,$duplicates,$invalid)]);
+        } catch (\InvalidArgumentException $e) { return new JSONResponse(['ok'=>false,'message'=>$e->getMessage()],400); }
+        catch (\Throwable $e) { return new JSONResponse(['ok'=>false,'message'=>'CSV-Import fehlgeschlagen.'],500); }
+    }
+
+    /** @return array{0:array<int,string>,1:array<int,array<int,string>>} */
+    private function readCustomerCsv(): array {
+        $file=$this->request->getUploadedFile('csv');
+        if(!is_array($file)||($file['error']??UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_OK)throw new \InvalidArgumentException('Bitte eine CSV-Datei auswählen.');
+        if((int)($file['size']??0)>15*1024*1024)throw new \InvalidArgumentException('Die CSV-Datei darf maximal 15 MB groß sein.');
+        $raw=file_get_contents((string)$file['tmp_name']);if($raw===false||trim($raw)==='')throw new \InvalidArgumentException('Die CSV-Datei ist leer.');
+        if(str_starts_with($raw,"\xEF\xBB\xBF"))$raw=substr($raw,3);
+        if(!mb_check_encoding($raw,'UTF-8'))$raw=mb_convert_encoding($raw,'UTF-8','Windows-1252,ISO-8859-1');
+        $first=strtok($raw,"\r\n")?:'';$counts=[';'=>substr_count($first,';'),','=>substr_count($first,','),"\t"=>substr_count($first,"\t")];arsort($counts);$delimiter=(string)array_key_first($counts);if(($counts[$delimiter]??0)<1)throw new \InvalidArgumentException('CSV-Trennzeichen konnte nicht erkannt werden.');
+        $h=fopen('php://temp','r+');fwrite($h,$raw);rewind($h);$headers=fgetcsv($h,0,$delimiter);if(!is_array($headers)||count($headers)<2)throw new \InvalidArgumentException('CSV-Kopfzeile konnte nicht gelesen werden.');$headers=array_map(static fn($v)=>trim((string)$v),$headers);
+        $rows=[];while(($r=fgetcsv($h,0,$delimiter))!==false){if(count(array_filter($r,static fn($v)=>trim((string)$v)!==''))===0)continue;$rows[]=array_map(static fn($v)=>trim((string)$v),$r);if(count($rows)>10000)throw new \InvalidArgumentException('Maximal 10.000 Datensätze pro Import.');}fclose($h);return [$headers,$rows];
+    }
+    /** @return array<string,string> */
+    private function decodeCsvMapping(string $json,array $headers):array{$m=json_decode($json,true);if(!is_array($m))throw new \InvalidArgumentException('Spaltenzuordnung ist ungültig.');$allowed=array_keys($this->csvFields());$out=[];foreach($m as $header=>$field){$header=(string)$header;$field=(string)$field;if(in_array($header,$headers,true)&&in_array($field,$allowed,true))$out[$header]=$field;}if($out===[])throw new \InvalidArgumentException('Bitte mindestens eine CSV-Spalte zuordnen.');return $out;}
+    /** @return array<string,string> */
+    private function csvFields():array{return ['customer_no'=>'Kundennummer','customer_type'=>'Kundentyp','name'=>'Firma / Kundenname','salutation'=>'Anrede','title'=>'Titel','first_name'=>'Vorname','last_name'=>'Nachname','address_addition'=>'Adresszusatz / c/o','contact_name'=>'Ansprechpartner','street'=>'Straße','postal_code'=>'PLZ','city'=>'Ort','country'=>'Land','phone'=>'Telefon','mobile'=>'Mobil','email'=>'E-Mail','invoice_email'=>'Rechnungs-E-Mail','vat_id'=>'USt-IdNr.','tax_no'=>'Steuernummer','leitweg_id'=>'Leitweg-ID','supplier_no'=>'Lieferantennummer','buyer_reference'=>'Käuferreferenz','purchase_order_reference'=>'Bestellreferenz','cost_center'=>'Kostenstelle','invoice_format'=>'Rechnungsformat','datev_debtor_account'=>'DATEV-Debitorenkonto','notes'=>'Notizen'];}
+    /** @return array<string,string> */
+    private function mapCsvRow(array $headers,array $row,array $map):array{$d=[];foreach($headers as $i=>$h){if(isset($map[$h]))$d[$map[$h]]=trim((string)($row[$i]??''));}return $d;}
+    private function csvInvalidReason(array $d):string{$type=$this->normalizeCustomerType((string)($d['customer_type']??''),$d);$name=trim((string)($d['name']??''));$first=trim((string)($d['first_name']??''));$last=trim((string)($d['last_name']??''));if($type==='private'&&$name===''&&$first===''&&$last==='')return 'Name fehlt.';if($type!=='private'&&$name==='')return 'Firma / Kundenname fehlt.';$email=trim((string)($d['email']??''));if($email!==''&&!filter_var($email,FILTER_VALIDATE_EMAIL))return 'E-Mail ist ungültig.';$invoice=trim((string)($d['invoice_email']??''));if($invoice!==''&&!filter_var($invoice,FILTER_VALIDATE_EMAIL))return 'Rechnungs-E-Mail ist ungültig.';return '';}
+    private function csvDisplayName(array $d):string{$name=trim((string)($d['name']??''));if($name!=='')return $name;return trim(implode(' ',array_filter([(string)($d['title']??''),(string)($d['first_name']??''),(string)($d['last_name']??'')])));}
+    /** @return array<string,bool> */
+    private function customerDuplicateIndex():array{$idx=[];foreach($this->customers->findAllActive() as $c){foreach([(string)$c->getCustomerNo(),(string)$c->getEmail(),(string)$c->getInvoiceEmail(),(string)$c->getVatId()] as $v){$k=$this->duplicateKey($v);if($k!=='')$idx[$k]=true;}}return $idx;}
+    private function csvDuplicateReason(array $d,array $idx):string{foreach(['customer_no'=>'Kundennummer','email'=>'E-Mail','invoice_email'=>'Rechnungs-E-Mail','vat_id'=>'USt-IdNr.'] as $f=>$label){$k=$this->duplicateKey((string)($d[$f]??''));if($k!==''&&isset($idx[$k]))return $label.' bereits vorhanden.';}return '';}
+    private function addCsvDuplicateKeys(array &$idx,array $d):void{foreach(['customer_no','email','invoice_email','vat_id'] as $f){$k=$this->duplicateKey((string)($d[$f]??''));if($k!=='')$idx[$k]=true;}}
+    private function duplicateKey(string $v):string{$v=mb_strtolower(trim($v));return $v===''?'':$v;}
+    private function normalizeCustomerType(string $v,array $d=[]):string{$v=mb_strtolower(trim($v));if(in_array($v,['privat','privatkunde','private','person'],true))return 'private';if(in_array($v,['öffentlich','oeffentlich','public','behörde','behoerde'],true))return 'public';if(in_array($v,['firma','unternehmen','business','company'],true))return 'business';return trim((string)($d['name']??''))!==''?'business':'private';}
+    private function createCsvCustomer(array $d):Customer{$type=$this->normalizeCustomerType((string)($d['customer_type']??''),$d);$name=trim((string)($d['name']??''));if($name===''&&$type==='private')$name=$this->csvDisplayName($d);$number=trim((string)($d['customer_no']??''));if($number==='')$number=$this->numbers->next('customer');$now=new \DateTime();$c=new Customer();$c->setCustomerNo($number);$c->setName($name);$c->setCustomerType($type);$c->setSalutation($this->nullable((string)($d['salutation']??'')));$c->setTitle($this->nullable((string)($d['title']??'')));$c->setFirstName($this->nullable((string)($d['first_name']??'')));$c->setLastName($this->nullable((string)($d['last_name']??'')));$c->setAddressAddition($this->nullable((string)($d['address_addition']??'')));$c->setContactName($this->nullable((string)($d['contact_name']??'')));$c->setStreet($this->nullable((string)($d['street']??'')));$c->setPostalCode($this->nullable((string)($d['postal_code']??'')));$c->setCity($this->nullable((string)($d['city']??'')));$c->setCountry($this->nullable((string)($d['country']??'')));$c->setPhone($this->nullable((string)($d['phone']??'')));$c->setMobile($this->nullable((string)($d['mobile']??'')));$c->setEmail($this->nullable((string)($d['email']??'')));$c->setInvoiceEmail($this->nullable((string)($d['invoice_email']??'')));$c->setVatId($this->nullable((string)($d['vat_id']??'')));$c->setTaxNo($this->nullable((string)($d['tax_no']??'')));$c->setLeitwegId($this->nullable((string)($d['leitweg_id']??'')));$c->setSupplierNo($this->nullable((string)($d['supplier_no']??'')));$c->setBuyerReference($this->nullable((string)($d['buyer_reference']??'')));$c->setPurchaseOrderReference($this->nullable((string)($d['purchase_order_reference']??'')));$c->setCostCenter($this->nullable((string)($d['cost_center']??'')));$fmt=mb_strtolower(trim((string)($d['invoice_format']??'')));$c->setInvoiceFormat(in_array($fmt,['pdf','xrechnung','zugferd'],true)?$fmt:'pdf');$da=preg_replace('/[^0-9]/','',(string)($d['datev_debtor_account']??''));$c->setDatevDebtorAccount($da!==''?$da:null);$c->setNotes($this->nullable((string)($d['notes']??'')));$address=array_filter([trim((string)($d['street']??'')),trim(trim((string)($d['postal_code']??'')).' '.trim((string)($d['city']??''))),trim((string)($d['country']??''))]);$c->setAddress($address?implode("\n",$address):null);$c->setFolderPath($this->folders->ensureCustomerFolder($number,$name));$c->setCreatedAt($now);$c->setUpdatedAt($now);$c->setCreatedBy($this->users->getUser()?->getUID()??'system');$this->customers->insert($c);return $c;}
 
     #[NoAdminRequired]
     public function linkCustomerContact(int $customerId, string $addressBookKey, string $contactId): RedirectResponse {

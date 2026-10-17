@@ -1,0 +1,10 @@
+horstoeko\zugferd\entities\extended\ram\TradeDeliveryTermsType:
+    properties:
+        deliveryTypeCode:
+            -
+                NotNull:
+                    groups:
+                        - xsd_rules
+        relevantTradeLocation:
+            -
+                Valid: null

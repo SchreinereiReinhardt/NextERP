@@ -15,6 +15,7 @@ use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCP\IDBConnection;
 use OCP\IURLGenerator;
 use OCP\IUserSession;
 
@@ -30,6 +31,7 @@ final class CustomerController extends Controller {
         private PermissionService $permissions,
         private ActivityService $activities,
         private NextcloudIntegrationService $integration,
+        private IDBConnection $db,
     ) {
         parent::__construct($appName, $request);
     }
@@ -50,6 +52,11 @@ final class CustomerController extends Controller {
         ?string $address = null,
         ?string $notes = null,
         ?string $customerType = null,
+        ?string $salutation = null,
+        ?string $title = null,
+        ?string $firstName = null,
+        ?string $lastName = null,
+        ?string $addressAddition = null,
         ?string $invoiceEmail = null,
         ?string $vatId = null,
         ?string $taxNo = null,
@@ -65,12 +72,17 @@ final class CustomerController extends Controller {
     ): RedirectResponse {
         $this->permissions->assert('customers');
         $name = trim($name);
+        $type = in_array($customerType, ['private','business','public'], true) ? $customerType : 'business';
+        $isNew = $id === null;
+        if ($name === '' && $type === 'private') {
+            $parts = array_values(array_filter([trim((string)$title), trim((string)$firstName), trim((string)$lastName)], static fn(string $v): bool => $v !== ''));
+            $name = implode(' ', $parts);
+        }
         if ($name === '') {
-            throw new \InvalidArgumentException('Name ist Pflicht.');
+            throw new \InvalidArgumentException($type === 'private' ? 'Vorname oder Nachname ist Pflicht.' : 'Firma / Kundenname ist Pflicht.');
         }
 
         $now = new \DateTime();
-        $isNew = $id === null;
         $customer = $isNew ? new Customer() : $this->mapper->find((int)$id);
         $customer->setName($name);
         $number = $isNew ? $this->numbers->next('customer') : (string)$customer->getCustomerNo();
@@ -85,7 +97,12 @@ final class CustomerController extends Controller {
         $customer->setCountry($this->nullable($country));
         $customer->setAddress($this->composeAddress($street, $postalCode, $city, $country, $address));
         $customer->setNotes($this->nullable($notes));
-        $customer->setCustomerType(in_array($customerType, ['private','business','public'], true) ? $customerType : 'business');
+        $customer->setCustomerType($type);
+        $customer->setSalutation($this->nullable($salutation));
+        $customer->setTitle($this->nullable($title));
+        $customer->setFirstName($this->nullable($firstName));
+        $customer->setLastName($this->nullable($lastName));
+        $customer->setAddressAddition($this->nullable($addressAddition));
         $customer->setInvoiceEmail($this->nullable($invoiceEmail));
         $customer->setVatId($this->nullable($vatId));
         $customer->setTaxNo($this->nullable($taxNo));
@@ -198,6 +215,84 @@ final class CustomerController extends Controller {
         } catch (\Throwable $e) {
             return new JSONResponse(['ok' => false, 'message' => 'Kunde konnte nicht gespeichert werden.'], 500);
         }
+    }
+
+    #[NoAdminRequired]
+    public function anonymize(int $id): RedirectResponse {
+        $this->permissions->assert('customers');
+        if ($this->permissions->role() !== PermissionService::ADMIN) {
+            throw new \OCP\AppFramework\Http\ForbiddenException('Nur Administratoren dürfen Kundendaten anonymisieren.');
+        }
+        $customer = $this->mapper->find($id);
+        $number = trim((string)$customer->getCustomerNo());
+        $label = $number !== '' ? 'Anonymisierter Kunde '.$number : 'Anonymisierter Kunde #'.$id;
+        $customer->setName($label);
+        foreach (['ContactName','Phone','Mobile','Email','Address','Street','PostalCode','City','Country','Notes','Salutation','Title','FirstName','LastName','AddressAddition','InvoiceEmail','VatId','TaxNo','LeitwegId','SupplierNo','BuyerReference','PurchaseOrderReference','CostCenter','DatevDebtorAccount','NcAddressbookKey','NcContactId','NcContactUid','NcContactLabel'] as $field) {
+            $setter = 'set'.$field;
+            $customer->$setter(null);
+        }
+        $customer->setNcContactSyncedAt(null);
+        $customer->setCustomerType('private');
+        $customer->setInvoiceFormat('pdf');
+        $customer->setIsArchived(true);
+        $customer->setUpdatedAt(new \DateTime());
+        $this->mapper->update($customer);
+        foreach (['re_erp_customer_contacts','re_erp_customer_reminders'] as $table) {
+            $this->deleteCustomerRows($table, $id);
+        }
+        // Audit-Einträge bleiben erhalten, aber die bisherige Bezeichnung wird aus den Details entfernt.
+        $qb=$this->db->getQueryBuilder();
+        $qb->update('re_erp_activities')->set('details',$qb->createNamedParameter(null))->where($qb->expr()->eq('customer_id',$qb->createNamedParameter($id)))->executeStatement();
+        $this->activities->record('customer', $id, 'anonymized', 'Kundendaten anonymisiert', null, $id, null);
+        return new RedirectResponse($this->url->linkToRoute('reinhardterp.page.customers').'?message='.rawurlencode('Kundendaten wurden anonymisiert. Geschäftsvorgänge und aufbewahrungspflichtige Belege bleiben erhalten.'));
+    }
+
+    #[NoAdminRequired]
+    public function deleteCustomer(int $id): RedirectResponse {
+        $this->permissions->assert('customers');
+        if ($this->permissions->role() !== PermissionService::ADMIN) {
+            throw new \OCP\AppFramework\Http\ForbiddenException('Nur Administratoren dürfen Kunden endgültig löschen.');
+        }
+        $customer = $this->mapper->find($id);
+        $references = $this->customerReferences($id);
+        if ($references !== []) {
+            $parts=[]; foreach($references as $label=>$count){$parts[]=$label.': '.$count;}
+            $msg='Endgültiges Löschen nicht möglich. Zum Kunden bestehen Geschäftsvorgänge ('.implode(', ',$parts).'). Nutzen Sie stattdessen „Kundendaten anonymisieren“.';
+            return new RedirectResponse($this->url->linkToRoute('reinhardterp.page.customerDetail',['id'=>$id]).'?message='.rawurlencode($msg));
+        }
+        $folderPath=trim((string)($customer->getFolderPath()??''),'/');
+        foreach (['re_erp_customer_contacts','re_erp_customer_reminders','re_erp_activities'] as $table) {
+            $this->deleteCustomerRows($table, $id);
+        }
+        $this->mapper->delete($customer);
+        if($folderPath!=='') { try { $this->folders->deletePath($folderPath); } catch (\Throwable) {} }
+        return new RedirectResponse($this->url->linkToRoute('reinhardterp.page.customers').'?message='.rawurlencode('Kunde wurde endgültig gelöscht.'));
+    }
+
+    /** @return array<string,int> */
+    private function customerReferences(int $id): array {
+        $tables=[
+            're_erp_projects'=>'Projekte','re_erp_reports'=>'Rapporte','re_erp_offers'=>'Angebote',
+            're_erp_orders'=>'Aufträge','re_erp_delivery_notes'=>'Lieferscheine','re_erp_invoices'=>'Rechnungen',
+            're_erp_billing_batches'=>'Abrechnungsvorbereitungen','re_erp_communications'=>'Kommunikation',
+            're_erp_workday_entries'=>'Zeiterfassungen','re_erp_project_documents'=>'Projektdokumente',
+            're_erp_documents'=>'Dokumente','re_erp_team_events'=>'Termine','re_erp_stock_movements'=>'Lagerbewegungen',
+            're_erp_document_rules'=>'Dokumentenregeln',
+        ];
+        $out=[];
+        foreach($tables as $table=>$label){
+            try {
+                $qb=$this->db->getQueryBuilder();
+                $qb->selectAlias($qb->createFunction('COUNT(*)'),'cnt')->from($table)->where($qb->expr()->eq('customer_id',$qb->createNamedParameter($id)));
+                $result=$qb->executeQuery(); $row=$result->fetch(); $result->closeCursor();
+                $count=(int)($row['cnt']??0); if($count>0)$out[$label]=$count;
+            } catch (\Throwable) { /* optionale/ältere Tabellen dürfen fehlen */ }
+        }
+        return $out;
+    }
+
+    private function deleteCustomerRows(string $table,int $id): void {
+        try { $qb=$this->db->getQueryBuilder();$qb->delete($table)->where($qb->expr()->eq('customer_id',$qb->createNamedParameter($id)))->executeStatement(); } catch (\Throwable) {}
     }
 
     #[NoAdminRequired]

@@ -1,7 +1,7 @@
 <?php
 require __DIR__ . '/_nav.php';
 use OCP\IURLGenerator;
-$url=\OC::$server->get(IURLGenerator::class);
+$url=\OCP\Server::get(IURLGenerator::class);
 $users=$_['users']??[];$projects=$_['projects']??[];$rows=$_['rows']??[];$absences=$_['absences']??[];$edit=$_['editEvent']??null;
 $names=[];foreach($users as $u)$names[(string)$u['uid']]=(string)$u['displayName'];
 $projectNames=[];foreach($projects as $p)$projectNames[(int)$p['id']]=trim((string)($p['project_no']??'').' · '.(string)($p['title']??'').' · '.(string)($p['customer_name']??''));

@@ -1,7 +1,7 @@
 <?php
 style('reinhardterp','style');
 script('reinhardterp','customer_detail');
-$url = \OC::$server->get(\OCP\IURLGenerator::class);
+$url = \OCP\Server::get(\OCP\IURLGenerator::class);
 $customerPath = trim((string)($customer->getFolderPath() ?? ''), '/');
 $filesBase = $url->linkToRoute('files.view.index');
 $folderUrl = static fn(string $path): string => $filesBase.'?dir='.rawurlencode('/'.trim($path, '/'));
@@ -35,7 +35,7 @@ $statusOrder=['Anfrage'=>12,'Angebot'=>25,'Auftrag'=>38,'Fertigung'=>50,'Montage
 <div class="erp-card"><div class="erp-section-head"><div><h2>Aktuelle Projekte</h2><p class="erp-muted">Direkter Blick auf die laufenden Arbeiten.</p></div><button type="button" class="button" data-open-customer-tab="projects">Alle Projekte</button></div>
 <?php if(empty($projects)): ?><p class="erp-muted">Noch keine Projekte vorhanden.</p><?php else: ?><div class="erp-compact-links"><?php foreach(array_slice($projects,0,3) as $project): ?><a href="<?=p($url->linkToRoute('reinhardterp.page.projectDetail',['id'=>$project['id']]))?>"><span><strong><?=p($project['title'])?></strong><small><?=p($project['project_no'])?></small></span><b><?=p($project['status'])?></b></a><?php endforeach; ?></div><?php endif; ?>
 </div>
-<div class="erp-card"><div class="erp-section-head"><div><h2>Kontakt</h2><p class="erp-muted">Wichtigste Kundendaten auf einen Blick.</p></div><button type="button" class="button" data-open-customer-tab="more">Details</button></div><dl class="erp-overview-contact"><div><dt>Ansprechpartner</dt><dd><?=p($customer->getContactName()??'—')?></dd></div><div><dt>Telefon</dt><dd><?php if($customer->getPhone()):?><a href="tel:<?=p($customer->getPhone())?>"><?=p($customer->getPhone())?></a><?php else:?>—<?php endif;?></dd></div><div><dt>E-Mail</dt><dd><?php if($customer->getEmail()):?><a href="mailto:<?=p($customer->getEmail())?>"><?=p($customer->getEmail())?></a><?php else:?>—<?php endif;?></dd></div></dl></div>
+<div class="erp-card"><div class="erp-section-head"><div><h2>Kontakt</h2><p class="erp-muted">Wichtigste Kundendaten auf einen Blick.</p></div><button type="button" class="button" data-open-customer-tab="more">Details</button></div><dl class="erp-overview-contact"><div><dt>Kundentyp</dt><dd><?=p(match($customer->getCustomerType()?:'business'){'private'=>'Privatkunde','public'=>'Öffentlicher Auftraggeber',default=>'Unternehmen'})?></dd></div><div><dt>Anrede / Name</dt><dd><?=p(trim(implode(' ',array_filter([$customer->getSalutation(),$customer->getTitle(),$customer->getFirstName(),$customer->getLastName()])))?:'—')?></dd></div><div><dt>Adresszusatz</dt><dd><?=p($customer->getAddressAddition()??'—')?></dd></div><div><dt>Ansprechpartner</dt><dd><?=p($customer->getContactName()??'—')?></dd></div><div><dt>Telefon</dt><dd><?php if($customer->getPhone()):?><a href="tel:<?=p($customer->getPhone())?>"><?=p($customer->getPhone())?></a><?php else:?>—<?php endif;?></dd></div><div><dt>E-Mail</dt><dd><?php if($customer->getEmail()):?><a href="mailto:<?=p($customer->getEmail())?>"><?=p($customer->getEmail())?></a><?php else:?>—<?php endif;?></dd></div></dl></div>
 <div class="erp-card"><div class="erp-section-head"><div><h2>Nächste Wiedervorlage</h2><p class="erp-muted">Rückruf oder nächster Schritt.</p></div><button type="button" class="button" data-open-customer-tab="reminders">Öffnen</button></div><?php $openReminders=array_values(array_filter($reminders,static fn($r)=>empty($r['is_done']))); ?><?php if(empty($openReminders)):?><p class="erp-muted">Keine offene Wiedervorlage.</p><?php else:$r=$openReminders[0];?><strong><?=p($r['title'])?></strong><p class="erp-muted">Fällig am <?=p(date('d.m.Y',strtotime($r['due_date'])))?></p><?php endif;?></div>
 <div class="erp-card"><div class="erp-section-head"><div><h2>Letzte Dokumente</h2><p class="erp-muted">Zuletzt erfasste Dateien.</p></div><button type="button" class="button" data-open-customer-tab="documents">Dokumente</button></div><?php if(empty($documents)):?><p class="erp-muted">Noch keine Dokumente.</p><?php else:?><div class="erp-compact-links"><?php foreach(array_slice($documents,0,3) as $doc):?><a target="_blank" rel="noopener noreferrer" href="<?=p($fileUrl($doc['path']))?>"><span><strong><?=p($doc['name'])?></strong><small><?=p(date('d.m.Y',(int)$doc['mtime']))?></small></span></a><?php endforeach;?></div><?php endif;?></div>
 </section>
@@ -95,6 +95,20 @@ $statusOrder=['Anfrage'=>12,'Angebot'=>25,'Auftrag'=>38,'Fertigung'=>50,'Montage
 <details class="erp-inline-create"><summary>+ Wiedervorlage anlegen</summary><form method="post" action="<?=p($url->linkToRoute('reinhardterp.customerWorkspace.addReminder',['customerId'=>$customer->getId()]))?>"><input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>"><input name="title" required><input type="date" name="dueDate" value="<?=p(date('Y-m-d'))?>" required><textarea name="notes" rows="2"></textarea><button class="button primary">Speichern</button></form></details></section>
 
 <section class="erp-card erp-customer-panel" data-customer-panel="reports"><h2>Rapporte</h2><?php if(empty($reports)):?><p class="erp-muted">Noch keine Rapporte.</p><?php else:?><div class="erp-compact-links"><?php foreach(array_slice($reports,0,8) as $report):?><a href="<?=p($url->linkToRoute('reinhardterp.module.reportDetail',['id'=>$report['id']]))?>"><span><strong><?=p($report['report_no'])?></strong><small><?=p($report['project_no'].' · '.$report['report_date'])?></small></span><b><?=p($report['status'])?></b></a><?php endforeach;?></div><?php endif;?></section>
+<section class="erp-card erp-customer-panel" data-customer-panel="more">
+<h2>Datenschutz &amp; Löschen</h2>
+<p class="erp-muted">Personenbezogene Stammdaten können anonymisiert werden. Geschäftsvorgänge und aufbewahrungspflichtige Belege bleiben dabei erhalten.</p>
+<form method="post" action="<?=p($url->linkToRoute('reinhardterp.customer.anonymize',['id'=>$customer->getId()]))?>" onsubmit="return confirm('Kundendaten wirklich ANONYMISIEREN? Personenbezogene Stammdaten werden unwiderruflich entfernt. Geschäftsvorgänge und Belege bleiben erhalten.');">
+<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
+<button class="button" type="submit">Kundendaten anonymisieren</button>
+</form>
+<hr>
+<p class="erp-muted">Endgültiges Löschen ist nur möglich, wenn keine Projekte, Angebote, Aufträge, Rechnungen, Rapporte oder sonstigen Geschäftsvorgänge mit dem Kunden verknüpft sind.</p>
+<form method="post" action="<?=p($url->linkToRoute('reinhardterp.customer.deleteCustomer',['id'=>$customer->getId()]))?>" onsubmit="return confirm('Kunden wirklich ENDGÜLTIG löschen? Wenn keine Geschäftsvorgänge bestehen, werden der Kundenstamm und sein Kundenordner unwiderruflich gelöscht.');">
+<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
+<button class="button" type="submit">Kunde endgültig löschen</button>
+</form>
+</section>
 </aside>
 </div>
 </main></div></div>

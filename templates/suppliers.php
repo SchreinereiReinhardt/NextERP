@@ -1,6 +1,6 @@
 <?php
 require __DIR__.'/_nav.php';
-$url=\OC::$server->get(\OCP\IURLGenerator::class);
+$url=\OCP\Server::get(\OCP\IURLGenerator::class);
 $s=$_['selected']??[];$view=$_['view']??'overview';$rows=$_['rows']??[];
 $materials=$_['supplierMaterials']??[];$documents=$_['supplierDocuments']??[];
 $activeCount=count(array_filter($rows,fn($x)=>(int)($x['active']??1)===1));

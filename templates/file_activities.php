@@ -1,5 +1,5 @@
 <?php
-$url=\OC::$server->get(\OCP\IURLGenerator::class);$activities=$_['activities']??[];
+$url=\OCP\Server::get(\OCP\IURLGenerator::class);$activities=$_['activities']??[];
 $labels=['file_created'=>'Neu','file_changed'=>'Geändert','file_moved'=>'Verschoben','file_deleted'=>'Gelöscht'];
 ?>
 <div id="app-content"><div id="app-content-wrapper"><?php print_unescaped($this->inc('_nav'));?><main class="erp-main erp-file-activity-page">

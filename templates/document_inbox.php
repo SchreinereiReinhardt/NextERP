@@ -1,6 +1,6 @@
 <?php
 require __DIR__.'/_nav.php';
-$url=\OC::$server->get(\OCP\IURLGenerator::class);
+$url=\OCP\Server::get(\OCP\IURLGenerator::class);
 \OCP\Util::addScript('reinhardterp','finance');
 $filesBase=$url->linkToRoute('files.view.index');
 $types=['unassigned'=>'Nicht erkannt','incoming_invoice'=>'Eingangsrechnung','outgoing_invoice'=>'Ausgangsrechnung','delivery_note'=>'Lieferschein','credit_note'=>'Gutschrift','bank_statement'=>'Kontoauszug','cash'=>'Kassenbeleg','tax'=>'Steuerunterlage','accounting_other'=>'Sonstiger Buchhaltungsbeleg','offer'=>'Angebot','order'=>'Auftragsbestätigung','report'=>'Rapport','drawing'=>'Zeichnung / Plan','other'=>'Sonstiges'];

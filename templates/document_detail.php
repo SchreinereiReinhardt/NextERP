@@ -125,6 +125,7 @@ $recommendedCostCategory = (string)($_['recommendedCostCategory'] ?? 'material')
         <div><label>Netto</label><input id="documentNet" type="number" step="0.01" name="netAmount" value="<?php p($prefillNet); ?>"></div>
         <div><label>USt.</label><input id="documentVat" type="number" step="0.01" name="vatAmount" value="<?php p($prefillVat); ?>"></div>
         <div><label>Brutto</label><input id="documentGross" type="number" step="0.01" name="grossAmount" value="<?php p($prefillGross); ?>"></div>
+        <div id="documentDatevVatRow"><label>DATEV-Steuersatz</label><select name="datevVatRate"><option value="19">19 % Vorsteuer</option><option value="7">7 % Vorsteuer</option><option value="0">0 % / steuerfrei</option></select><small class="erp-muted">Für Eingangsrechnungen mit einem Steuersatz. Mischbelege bitte nicht ungeprüft exportieren.</small></div><div id="documentDatevAccountRow"><label>DATEV-Aufwandskonto</label><input name="datevExpenseAccount" inputmode="numeric" placeholder="optional – sonst Kostenart-Standard"><small class="erp-muted">Optionales Sachkonto für genau diesen Beleg.</small></div>
         <div><label>Währung</label><input name="currency" value="EUR" maxlength="3"></div>
         <div class="erp-span-2"><label>Bemerkung</label><textarea name="notes" rows="4"></textarea></div>
     </div>

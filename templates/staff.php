@@ -1,7 +1,7 @@
 <?php
 require __DIR__.'/_nav.php';
 use OCP\IURLGenerator;
-$url = \OC::$server->get(IURLGenerator::class);
+$url = \OCP\Server::get(IURLGenerator::class);
 $days=['mondayHours'=>'Mo','tuesdayHours'=>'Di','wednesdayHours'=>'Mi','thursdayHours'=>'Do','fridayHours'=>'Fr','saturdayHours'=>'Sa','sundayHours'=>'So'];
 ?>
 <div id="app-content"><div class="erp-page erp-staff-compact">

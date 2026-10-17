@@ -130,6 +130,7 @@ final class PdfService {
 
 
  public function createCommercialDocument(string $type,array $doc,?array $customer,?array $project,array $items,?array $logo=null,array $company=[]):string{
+  $currency=strtoupper(trim((string)($doc['currency']??'EUR')));if(!preg_match('/^[A-Z]{3}$/',$currency))$currency='EUR';
   require_once __DIR__.'/../tfpdf/tfpdf.php';
   $pdf=new \tFPDF('P','mm','A4');$pdf->AliasNbPages();$pdf->SetMargins(15,12,15);$pdf->SetAutoPageBreak(true,38);$pdf->AddPage();
   $label=match($type){'offer'=>$this->tr('Angebot','Quote'),'order'=>$this->tr('Auftrag','Order'),'delivery'=>$this->tr('Lieferschein','Delivery note'),'advance'=>$this->tr('Abschlagsrechnung','Advance invoice'),'final'=>$this->tr('Schlussrechnung','Final invoice'),'credit'=>$this->tr('Gutschrift','Credit note'),default=>$this->tr('Rechnung','Invoice')};
@@ -155,11 +156,16 @@ final class PdfService {
   // Recipient address: fixed DIN 5008 Form B position. Never let preceding
   // content move this block vertically; it must remain visible in the envelope window.
   $pdf->SetXY(20,51);$pdf->SetFont('Helvetica','',9.5);$pdf->SetTextColor(20,20,20);
-  $name=(string)($customer['name']??'');if($name!==''){$pdf->SetX(20);$pdf->Cell(85,4.7,$this->text($name),0,1);}
-  $address=$this->plain((string)($customer['address']??''));
-  if($address!==''){$pdf->SetX(20);$pdf->MultiCell(85,4.7,$this->text($address));}
-  else{
-   foreach([(string)($customer['street']??''),trim((string)($customer['zip']??'').' '.(string)($customer['city']??''))] as $row)if(trim($row)!==''){$pdf->SetX(20);$pdf->Cell(85,4.7,$this->text($row),0,1);}
+  $hasStructuredIdentity=trim((string)($customer['salutation']??''))!==''||trim((string)($customer['title']??''))!==''||trim((string)($customer['first_name']??''))!==''||trim((string)($customer['last_name']??''))!==''||trim((string)($customer['address_addition']??''))!=='';
+  if($hasStructuredIdentity){
+   foreach(CustomerAddressService::recipientLines($customer) as $row){$pdf->SetX(20);$pdf->Cell(85,4.7,$this->text($row),0,1);}
+  }else{
+   // Preserve the exact legacy address behaviour for all existing customers.
+   $name=(string)($customer['name']??'');if($name!==''){$pdf->SetX(20);$pdf->Cell(85,4.7,$this->text($name),0,1);}
+   $address=$this->plain((string)($customer['address']??''));
+   if($address!==''){$pdf->SetX(20);$pdf->MultiCell(85,4.7,$this->text($address));}
+   else{foreach([(string)($customer['street']??''),trim((string)($customer['zip']??'').' '.(string)($customer['city']??''))] as $row)if(trim($row)!==''){$pdf->SetX(20);$pdf->Cell(85,4.7,$this->text($row),0,1);}
+   }
   }
 
   // Document content starts below the complete 45 mm address field.
@@ -223,8 +229,8 @@ final class PdfService {
      $pdf->SetXY($descX,$y);foreach($chunk as $chunkLine){$pdf->SetX($descX);$pdf->Cell($descW,$lineH,$this->text($chunkLine),0,1,'L');}
      // Prices belong to the final description chunk only.
      if($offset+$take >= $totalLines){
-      $pdf->SetXY(139,$y);$pdf->Cell(27,$h,$this->text(number_format((float)($item['unit_price']??0),2,',','.').' EUR'),0,0,'R');
-      $pdf->Cell(29,$h,$this->text(number_format($line,2,',','.').' EUR'),0,1,'R');
+      $pdf->SetXY(139,$y);$pdf->Cell(27,$h,$this->text(number_format((float)($item['unit_price']??0),2,',','.').' '.$currency),0,0,'R');
+      $pdf->Cell(29,$h,$this->text(number_format($line,2,',','.').' '.$currency),0,1,'R');
      }
     }
     $pdf->SetY(max($pdf->GetY(),$y+$h));$offset+=$take;$firstChunk=false;
@@ -240,17 +246,17 @@ final class PdfService {
   $storedNet=(float)($doc['net_amount']??$net);$gross=(float)($doc['gross_amount']??$storedNet);$vat=(float)($doc['vat_rate']??19);$tax=$gross-$storedNet;
   if($pdf->GetY()+28>258){$this->commercialContinuationPage($pdf,$type,$company,$logo,false);}
   $pdf->Ln(4);$x=122;$w1=42;$w2=31;
-  $pdf->SetFont('Helvetica','',9);$pdf->SetX($x);$pdf->Cell($w1,5,$this->text($this->tr('Nettosumme','Net total')),0,0);$pdf->Cell($w2,5,$this->text(number_format($storedNet,2,',','.').' EUR'),0,1,'R');
-  $taxMode=(string)($doc['tax_mode']??'standard19');if($taxMode==='small_business'||$taxMode==='reverse_charge_13b'){$pdf->SetX($x);$pdf->Cell($w1,5,$this->text($this->tr('Umsatzsteuer','VAT')),0,0);$pdf->Cell($w2,5,$this->text('0,00 EUR'),0,1,'R');}else{$pdf->SetX($x);$pdf->Cell($w1,5,$this->text('Mehrwertsteuer '.number_format($vat,0,',','.').'%'),0,0);$pdf->Cell($w2,5,$this->text(number_format($tax,2,',','.').' EUR'),0,1,'R');$pdf->SetX($x);$pdf->SetFont('Helvetica','',6.8);$pdf->SetTextColor(90,90,90);$pdf->Cell($w1+$w2,3.8,$this->text('auf '.number_format($storedNet,2,',','.').' EUR netto'),0,1,'R');$pdf->SetTextColor(25,25,25);$pdf->SetFont('Helvetica','',9);}
-  $pdf->SetFont('Helvetica','B',10.5);$pdf->SetX($x);$pdf->Cell($w1,7,$this->text($this->tr('Gesamtbetrag','Total amount')),0,0);$pdf->Cell($w2,7,$this->text(number_format($gross,2,',','.').' EUR'),0,1,'R');
+  $pdf->SetFont('Helvetica','',9);$pdf->SetX($x);$pdf->Cell($w1,5,$this->text($this->tr('Nettosumme','Net total')),0,0);$pdf->Cell($w2,5,$this->text(number_format($storedNet,2,',','.').' '.$currency),0,1,'R');
+  $taxMode=(string)($doc['tax_mode']??'standard19');if($taxMode==='small_business'||$taxMode==='reverse_charge_13b'){$pdf->SetX($x);$pdf->Cell($w1,5,$this->text($this->tr('Umsatzsteuer','VAT')),0,0);$pdf->Cell($w2,5,$this->text('0,00 '.$currency),0,1,'R');}else{$pdf->SetX($x);$pdf->Cell($w1,5,$this->text('Mehrwertsteuer '.number_format($vat,0,',','.').'%'),0,0);$pdf->Cell($w2,5,$this->text(number_format($tax,2,',','.').' '.$currency),0,1,'R');$pdf->SetX($x);$pdf->SetFont('Helvetica','',6.8);$pdf->SetTextColor(90,90,90);$pdf->Cell($w1+$w2,3.8,$this->text('auf '.number_format($storedNet,2,',','.').' '.$currency.' netto'),0,1,'R');$pdf->SetTextColor(25,25,25);$pdf->SetFont('Helvetica','',9);}
+  $pdf->SetFont('Helvetica','B',10.5);$pdf->SetX($x);$pdf->Cell($w1,7,$this->text($this->tr('Gesamtbetrag','Total amount')),0,0);$pdf->Cell($w2,7,$this->text(number_format($gross,2,',','.').' '.$currency),0,1,'R');
 
   if($type==='final'&&(float)($doc['advance_gross_amount']??0)>0){
    $advance=(float)$doc['advance_gross_amount'];$remaining=$gross-$advance;$pdf->SetFont('Helvetica','',9);
-   $pdf->SetX($x);$pdf->Cell($w1,5,$this->text($this->tr('abzgl. Abschlaege','less advance invoices')),0,0);$pdf->Cell($w2,5,$this->text('- '.number_format($advance,2,',','.').' EUR'),0,1,'R');
-   $pdf->SetFont('Helvetica','B',10.5);$pdf->SetX($x);$pdf->Cell($w1,7,$this->text($this->tr('Zahlbetrag','Amount due')),0,0);$pdf->Cell($w2,7,$this->text(number_format($remaining,2,',','.').' EUR'),0,1,'R');
+   $pdf->SetX($x);$pdf->Cell($w1,5,$this->text($this->tr('abzgl. Abschlaege','less advance invoices')),0,0);$pdf->Cell($w2,5,$this->text('- '.number_format($advance,2,',','.').' '.$currency),0,1,'R');
+   $pdf->SetFont('Helvetica','B',10.5);$pdf->SetX($x);$pdf->Cell($w1,7,$this->text($this->tr('Zahlbetrag','Amount due')),0,0);$pdf->Cell($w2,7,$this->text(number_format($remaining,2,',','.').' '.$currency),0,1,'R');
   }
 
-  if(!empty($doc['labor_cost_gross'])){$laborGross=abs((float)$doc['labor_cost_gross']);$laborVat=(float)($doc['vat_rate']??0);$laborNet=$laborVat!=0?round($laborGross/(1+$laborVat/100),2):$laborGross;$laborTax=round($laborGross-$laborNet,2);$pdf->Ln(5);$pdf->SetFont('Helvetica','B',8.7);$pdf->MultiCell(0,4.7,$this->text('Arbeitskostenanteil nach § 35a EStG: '.number_format($laborGross,2,',','.').' EUR inkl. MwSt.'));$pdf->SetFont('Helvetica','',8.2);if($laborVat>0){$pdf->MultiCell(0,4.4,$this->text('Enthalten: '.number_format($laborNet,2,',','.').' EUR netto + '.number_format($laborTax,2,',','.').' EUR MwSt. ('.number_format($laborVat,0,',','.').' %).'));}$pdf->MultiCell(0,4.4,$this->text('Der Betrag ist im Rechnungsbetrag enthalten und wird nicht zusaetzlich berechnet.'));}
+  if(!empty($doc['labor_cost_gross'])){$laborGross=abs((float)$doc['labor_cost_gross']);$laborVat=(float)($doc['vat_rate']??0);$laborNet=$laborVat!=0?round($laborGross/(1+$laborVat/100),2):$laborGross;$laborTax=round($laborGross-$laborNet,2);$pdf->Ln(5);$pdf->SetFont('Helvetica','B',8.7);$pdf->MultiCell(0,4.7,$this->text('Arbeitskostenanteil nach § 35a EStG: '.number_format($laborGross,2,',','.').' '.$currency.' inkl. MwSt.'));$pdf->SetFont('Helvetica','',8.2);if($laborVat>0){$pdf->MultiCell(0,4.4,$this->text('Enthalten: '.number_format($laborNet,2,',','.').' '.$currency.' netto + '.number_format($laborTax,2,',','.').' '.$currency.' MwSt. ('.number_format($laborVat,0,',','.').' %).'));}$pdf->MultiCell(0,4.4,$this->text('Der Betrag ist im Rechnungsbetrag enthalten und wird nicht zusaetzlich berechnet.'));}
   $taxNote=$this->plain((string)($doc['tax_note']??''));if($taxNote!==''){$pdf->Ln(6);$pdf->SetFont('Helvetica','B',8.7);$pdf->MultiCell(0,4.7,$this->text($taxNote));}$notes=$this->plain((string)($doc['notes']??''));if($notes!==''){$pdf->Ln(6);$pdf->SetFont('Helvetica','',8.7);$pdf->MultiCell(0,4.7,$this->text($notes));}
   if($type==='offer'){
    $outro=trim((string)($doc['outro_text']??''));if($outro==='')$outro=trim((string)($company['default_offer_outro']??''));if($outro==='')$outro='Wir hoffen, dass unser Angebot Ihnen zusagt und verbleiben mit freundlichen Gruessen';
@@ -267,14 +273,14 @@ final class PdfService {
     $sumNet+=(float)($a['net_total']??0);$sumVat+=(float)($a['vat_total']??0);$sumGross+=(float)($a['gross_total']??0);
     $name=(string)($a['invoice_no']??('Entwurf #'.($a['id']??'')));
     $pdf->Cell(110,5,$this->text($name.' · '.($a['invoice_date']??'')),0,0);
-    $pdf->Cell(0,5,$this->text('- '.number_format((float)($a['gross_total']??0),2,',','.').' EUR'),0,1,'R');
+    $pdf->Cell(0,5,$this->text('- '.number_format((float)($a['gross_total']??0),2,',','.').' '.$currency),0,1,'R');
    }
    $pdf->SetFont('Helvetica','B',9);
    $pdf->Cell(110,6,$this->text($this->tr('Summe Abschlaege','Advance invoices total')),0,0);
-   $pdf->Cell(0,6,$this->text('- '.number_format($sumGross,2,',','.').' EUR'),0,1,'R');
+   $pdf->Cell(0,6,$this->text('- '.number_format($sumGross,2,',','.').' '.$currency),0,1,'R');
    $remaining=(float)($doc['gross_total']??0)-$sumGross;
    $pdf->Cell(110,7,$this->text($this->tr('Verbleibender Rechnungsbetrag','Remaining amount due')),0,0);
-   $pdf->Cell(0,7,$this->text(number_format($remaining,2,',','.').' EUR'),0,1,'R');
+   $pdf->Cell(0,7,$this->text(number_format($remaining,2,',','.').' '.$currency),0,1,'R');
   }
   if($type!=='offer'){
    $outro=trim((string)($doc['outro_text']??''));

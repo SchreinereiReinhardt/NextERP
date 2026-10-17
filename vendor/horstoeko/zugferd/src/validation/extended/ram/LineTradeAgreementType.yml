@@ -1,0 +1,32 @@
+horstoeko\zugferd\entities\extended\ram\LineTradeAgreementType:
+    properties:
+        applicableTradeDeliveryTerms:
+            -
+                Valid: null
+        sellerOrderReferencedDocument:
+            -
+                Valid: null
+        buyerOrderReferencedDocument:
+            -
+                Valid: null
+        quotationReferencedDocument:
+            -
+                Valid: null
+        contractReferencedDocument:
+            -
+                Valid: null
+        additionalReferencedDocument:
+            -
+                Valid: null
+        grossPriceProductTradePrice:
+            -
+                Valid: null
+        netPriceProductTradePrice:
+            -
+                Valid: null
+        itemSellerTradeParty:
+            -
+                Valid: null
+        ultimateCustomerOrderReferencedDocument:
+            -
+                Valid: null

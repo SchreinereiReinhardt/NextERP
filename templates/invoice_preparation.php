@@ -1,4 +1,4 @@
-<?php require __DIR__.'/_nav.php'; use OCP\IURLGenerator; $url=\OC::$server->get(IURLGenerator::class); $f=$_['filters']; ?>
+<?php require __DIR__.'/_nav.php'; use OCP\IURLGenerator; $url=\OCP\Server::get(IURLGenerator::class); $f=$_['filters']; ?>
 <div id="app-content"><div class="erp-page">
 <div class="erp-head"><div><h1 class="erp-help-target" data-betrio-help="billing-preparation">Abrechnung vorbereiten</h1><p class="erp-sub">Vorgemerkte Arbeitszeiten bündeln und als wieder aufrufbare Abrechnungsliste speichern. Hier wird noch keine Rechnung erzeugt.</p></div><div class="erp-actions"><a class="button" target="_blank" href="<?php p($url->linkToRoute('reinhardterp.module.invoicePreparation',['pdf'=>1,'customerId'=>$f['customerId']??0,'projectId'=>$f['projectId']??0]));?>">PDF erstellen</a><a class="button" href="<?php p($url->linkToRoute('reinhardterp.module.timeEvaluation',['billingStatus'=>'reserved']));?>">Vorgemerkte Zeiten prüfen</a></div></div>
 <?php if(!empty($_['message'])):?><div class="erp-notice erp-notice-<?php p($_['messageType']);?>"><?php p($_['message']);?></div><?php endif;?>

@@ -12,6 +12,7 @@ final class DocumentOfferImportService {
         private NumberService $numbers,
         private FolderService $folders,
         private IUserSession $session,
+        private EditionService $edition,
     ) {
     }
 
@@ -33,6 +34,8 @@ final class DocumentOfferImportService {
         if ($existingOfferId > 0) {
             return ['offer_id' => $existingOfferId, 'project_id' => $this->nullableInt($document['project_id'] ?? null)];
         }
+
+        $this->edition->assertCanCreateOffer();
 
         $customerId = (int)($data['customer_id'] ?? $document['customer_id'] ?? 0);
         if ($customerId <= 0 || !$this->one('re_erp_customers', $customerId)) {
@@ -157,6 +160,7 @@ final class DocumentOfferImportService {
     }
 
     private function createProject(int $customerId, string $title): int {
+        $this->edition->assertCanCreateProject();
         $title = trim($title);
         if ($title === '') {
             throw new \InvalidArgumentException('Bitte einen Projektnamen eingeben oder ein vorhandenes Projekt auswählen.');

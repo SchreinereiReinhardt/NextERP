@@ -128,7 +128,7 @@ final class PageController extends Controller {
   foreach($rows as $row){if(!str_starts_with((string)($row['action']??''),'file_'))continue;$pid=(int)($row['project_id']??0);if($pid<1)continue;try{$project=$this->queryProject($pid);$this->permissions->assertProjectAccess($pid);}catch(\Throwable){continue;}$row['project_no']=$project['project_no']??'';$row['project_title']=$project['title']??'';$items[]=$row;}
   return new TemplateResponse($this->appName,'file_activities',['activities'=>$items]);
  }
- #[NoAdminRequired,NoCSRFRequired] public function projectForm(?int $id=null,?int $customerId=null):TemplateResponse{$this->permissions->assertProjectManager();$project=$id?$this->projects->find($id):null;return new TemplateResponse($this->appName,'project_form',['project'=>$project,'customers'=>$this->customers->findAllActive(),'selectedCustomerId'=>$project?->getCustomerId()??$customerId,'projectPhases'=>$this->projectPhases->all(true)]);}
+ #[NoAdminRequired,NoCSRFRequired] public function projectForm(?int $id=null,?int $customerId=null):TemplateResponse{$this->permissions->assertProjectManager();$project=$id?$this->projects->find($id):null;return new TemplateResponse($this->appName,'project_form',['project'=>$project,'customers'=>$this->customers->findAllActive(),'selectedCustomerId'=>$project?->getCustomerId()??$customerId,'projectPhases'=>$this->projectPhases->all(true),'error'=>(string)$this->request->getParam('error','')]);}
  #[NoAdminRequired,NoCSRFRequired] public function projectEvaluationPdf(int $id):DataDownloadResponse{
   $this->permissions->assertProjectAccess($id);$p=$this->queryProject($id);$times=$this->queryTimes($id);$reports=$this->queryReportsByProject($id);$costs=$this->projectCosts($id,$p,$times);$perf=$this->projectPerformance($id,$p,$times,$reports,$this->queryProjectSuppliers($id));$money=static fn($v):string=>number_format((float)$v,2,',','.').' €';$rows=[['Auftrags-/Projektwert netto',$money($perf['projectValue']??$costs['projectValue']??0)],['Soll-Kosten',$money($perf['plannedCosts']??0)],['Ist-Kosten',$money($perf['actualCosts']??0)],['Arbeitswert',$money($costs['laborValue']??0)],['Materialwert',$money($costs['materialValue']??0)],['Ist-Stunden',number_format((float)($costs['hours']??0),2,',','.').' h'],['Rest / Deckung netto',$money($costs['remaining']??0)],['Abrechnungsfortschritt',number_format((float)($perf['billingProgress']??0),0,',','.').' %']];$pdf=$this->pdf->createEvaluation('Projekt-Nachkalkulation',trim((string)($p['project_no']??'').' '.(string)($p['title']??'')),[],['Kennzahl','Wert'],$rows,[150,90]);return new DataDownloadResponse($pdf,'Betrio_Nachkalkulation_'.preg_replace('/[^A-Za-z0-9._-]+/','_',((string)($p['project_no']??$id))).'.pdf','application/pdf');
  }
@@ -196,7 +196,7 @@ final class PageController extends Controller {
   $text=trim((string)$text);
   if($text==='')throw new \InvalidArgumentException('Bitte einen Checklistenpunkt eingeben.');
   if(mb_strlen($text)>1000)$text=mb_substr($text,0,1000);
-  $now=date('Y-m-d H:i:s');
+  $now=(new \DateTimeImmutable('now',new \DateTimeZone('Europe/Berlin')))->format('Y-m-d H:i:s');
   $qb=$this->db->getQueryBuilder();
   $qb->insert('re_erp_checklist')->values([
    'project_id'=>$qb->createNamedParameter($id),
@@ -222,8 +222,8 @@ final class PageController extends Controller {
   $u=$this->db->getQueryBuilder();
   $u->update('re_erp_checklist')
    ->set('done',$u->createNamedParameter($done))
-   ->set('updated_at',$u->createNamedParameter(date('Y-m-d H:i:s')))
-   ->set('completed_at',$u->createNamedParameter($done===1?date('Y-m-d H:i:s'):null))
+   ->set('updated_at',$u->createNamedParameter((new \DateTimeImmutable('now',new \DateTimeZone('Europe/Berlin')))->format('Y-m-d H:i:s')))
+   ->set('completed_at',$u->createNamedParameter($done===1?(new \DateTimeImmutable('now',new \DateTimeZone('Europe/Berlin')))->format('Y-m-d H:i:s'):null))
    ->where($u->expr()->eq('id',$u->createNamedParameter($itemId)))
    ->andWhere($u->expr()->eq('project_id',$u->createNamedParameter($id)))
    ->executeStatement();

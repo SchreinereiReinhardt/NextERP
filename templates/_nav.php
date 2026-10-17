@@ -3,8 +3,8 @@ use OCP\Util;
 use OCP\IURLGenerator;
 use OCA\ReinhardtERP\Service\PermissionService;
 
-$url = \OC::$server->get(IURLGenerator::class);
-$permissions = \OC::$server->get(PermissionService::class);
+$url = \OCP\Server::get(IURLGenerator::class);
+$permissions = \OCP\Server::get(PermissionService::class);
 Util::addStyle('reinhardterp', 'style');
 Util::addScript('reinhardterp', 'navigation');
 Util::addScript('reinhardterp', 'command_palette');
@@ -93,6 +93,7 @@ $groups = [
         'label' => 'Verwaltung', 'icon' => 'settings', 'key' => 'admin',
         'items' => [
             ['Mobile', 'reinhardterp.business.mobileAdmin', 'settings', '/mobile-admin'],
+            ['Lizenz / Pro', 'reinhardterp.license.index', 'settings', '/license-pro'],
             ['Integration', 'reinhardterp.integration.index', 'settings', '/integration'],
             ['Benutzer & Rechte', 'reinhardterp.module.users', 'users_view', '/users'],
             ['Einstellungen', 'reinhardterp.module.settings', 'settings', '/settings'],
@@ -189,8 +190,8 @@ $quickCreate = [
 
 <?php
 $erpReleaseNotes=require __DIR__.'/../config/release_notes.php';
-$erpConfig=\OC::$server->get(\OCP\IConfig::class);
-$erpUser=\OC::$server->get(\OCP\IUserSession::class)->getUser();
+$erpConfig=\OCP\Server::get(\OCP\IConfig::class);
+$erpUser=\OCP\Server::get(\OCP\IUserSession::class)->getUser();
 $erpCurrentVersion=$erpConfig->getAppValue('reinhardterp','installed_version','');
 $erpSeenVersion=$erpUser?$erpConfig->getUserValue($erpUser->getUID(),'reinhardterp','whats_new_seen',''):'';
 $erpCurrentNote=$erpReleaseNotes[$erpCurrentVersion]??null;
