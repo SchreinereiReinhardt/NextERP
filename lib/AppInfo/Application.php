@@ -5,6 +5,8 @@ namespace OCA\ReinhardtERP\AppInfo;
 
 use OCP\Util;
 use OCA\ReinhardtERP\BackgroundJob\DocumentInboxScanJob;
+use OCA\ReinhardtERP\BackgroundJob\BetrioBackupJob;
+use OCA\ReinhardtERP\BackgroundJob\LicenseCheckJob;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
@@ -46,6 +48,8 @@ final class Application extends App implements IBootstrap {
   Util::addScript('reinhardterp','i18n');
         $context->injectFn(static function (IJobList $jobs): void {
             $jobs->add(DocumentInboxScanJob::class);
+            $jobs->add(BetrioBackupJob::class);
+            $jobs->add(LicenseCheckJob::class);
         });
 
     }

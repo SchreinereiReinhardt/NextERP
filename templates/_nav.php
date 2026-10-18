@@ -97,6 +97,7 @@ $groups = [
             ['Integration', 'reinhardterp.integration.index', 'settings', '/integration'],
             ['Benutzer & Rechte', 'reinhardterp.module.users', 'users_view', '/users'],
             ['Einstellungen', 'reinhardterp.module.settings', 'settings', '/settings'],
+            ['Backup & Restore', 'reinhardterp.backup.index', 'settings', '/backup'],
             ['Systemprüfung', 'reinhardterp.systemCheck.index', 'settings', '/system-check'],
             ['Datenschutz', 'reinhardterp.business.privacy', 'document', '/privacy'],
             ['Über Betrio & Release', 'reinhardterp.business.aboutRelease', 'settings', '/about-release'],

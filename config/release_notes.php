@@ -1,5 +1,66 @@
 <?php
 return [
+    '2.15.20' => [
+        'title' => 'Backup & Wiederherstellung verbessert',
+        'intro' => 'Mit diesem Update wurde die Datensicherung und Wiederherstellung weiter verbessert.',
+        'items' => [
+            'Backup und Wiederherstellung wurden weiter optimiert.',
+            'Kleinere Fehler bei der Datensicherung und Wiederherstellung wurden behoben.',
+            'Weitere kleinere Fehlerbehebungen und Verbesserungen sorgen für einen stabileren Betrieb.',
+        ],
+    ],
+    '2.15.5' => [
+        'title' => 'Lizenzdatum korrigiert',
+        'items' => [
+            'Das vertragliche Ablaufdatum der Pro-Lizenz wird ohne Zeitzonenverschiebung angezeigt.',
+            'Die Restlaufzeit bleibt auf Basis des vom Lizenzserver gelieferten Ablaufdatums unverändert.',
+        ],
+    ],
+    '2.15.4' => [
+        'title' => 'Lizenzstatus erweitert',
+        'items' => [
+            'Ablaufdatum und Restlaufzeit der Betrio-Pro-Lizenz werden direkt unter Lizenz / Pro angezeigt.',
+            'Betrio prüft eine aktive Pro-Lizenz automatisch einmal täglich über den Nextcloud-Cron.',
+            'Ist der Lizenzserver nicht erreichbar, bleibt der zuletzt bestätigte Editionsstatus unverändert.',
+            'Ein vom Lizenzserver ausdrücklich gemeldeter Ablauf oder eine Sperre wird beim Editionsstatus berücksichtigt.',
+        ],
+    ],
+    '2.15.3' => [
+        'title' => 'Backup-Wiederherstellung abgesichert',
+        'items' => [
+            'Backup-Vorschau vor jeder Wiederherstellung',
+            'Prüfung von Format, Tabellen, Datensatzanzahl und Betrio-Version',
+            'Restore erst nach zweiter ausdrücklicher Bestätigung',
+            'Separates Sicherheitsbackup unmittelbar vor dem Restore',
+        ],
+    ],
+    '2.15.0' => [
+        'title' => 'Backup & Wiederherstellung',
+        'intro' => 'Betrio kann seine eigenen Daten jetzt direkt über Nextcloud sichern und wiederherstellen.',
+        'items' => [
+            'Manuelle Datenbank-Backups können erstellt, heruntergeladen und gelöscht werden.',
+            'Backups lassen sich nach einer Prüfung wiederherstellen.',
+            'Vor jeder Wiederherstellung erstellt Betrio automatisch ein Sicherheitsbackup des aktuellen Zustands.',
+            'Automatische Backups können täglich oder wöchentlich ausgeführt und mit 7, 14 oder 30 Sicherungen aufbewahrt werden.',
+            'Backup und Restore verwenden die Nextcloud-Datenbankschnittstelle und benötigen kein mysqldump.',
+        ],
+    ],
+    '2.14.21' => [
+        'title' => 'Betrio Community & Pro',
+        'intro' => 'Betrio 2.14 bündelt das neue Community-/Pro-Modell und erweitert elektronische Rechnungen, Kundenverwaltung und Import.',
+        'items' => [
+            'Community bleibt kostenlos nutzbar; zusätzliche professionelle Funktionen werden mit einer gültigen Betrio-Pro-Lizenz freigeschaltet.',
+            'ZUGFeRD / Factur-X: hybride PDF/A-3-Rechnungen mit eingebetteten EN16931-Rechnungsdaten als Betrio-Pro-Funktion.',
+            'XRechnung für strukturierte elektronische Rechnungen erweitert und validiert.',
+            'CSV-Kundenimport in Betrio Pro mit automatischer Spaltenerkennung, manueller Feldzuordnung, Vorschau und Dublettenprüfung.',
+            'Kundenstammdaten für Privatkunden, Unternehmen und öffentliche Auftraggeber um Anrede, Titel, Vorname, Nachname, Firma, Ansprechpartner und Adresszusatz erweitert.',
+            'Kundensuche über Firma, Vorname, Nachname, Ansprechpartner und Kundennummer verbessert.',
+            'Kunden können abhängig von vorhandenen Geschäftsvorgängen gelöscht oder personenbezogene Stammdaten anonymisiert werden.',
+            'Dokumentwährungen werden als ISO-4217-Währung am jeweiligen Vorgang geführt; es erfolgt keine automatische Währungsumrechnung.',
+            'Betrio-Pro-Lizenzen können direkt in Betrio aktiviert und verwaltet werden; die Vertrags- und Kündigungsverwaltung ist direkt erreichbar.',
+            'Ein Wechsel der Edition oder das Ende einer Pro-Lizenz löscht keine vorhandenen Kunden, Projekte oder Belege.',
+        ],
+    ],
     '2.14.20' => [
         'title' => 'Betrio Community & Pro',
         'intro' => 'Betrio 2.14 bündelt das neue Community-/Pro-Modell und erweitert elektronische Rechnungen, Kundenverwaltung und Import.',

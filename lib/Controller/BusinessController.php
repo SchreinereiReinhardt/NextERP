@@ -19,11 +19,12 @@ use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IDBConnection;
 use OCP\IConfig;
 use OCP\IRequest;
+use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\IUserSession;
 use OCP\Util;
 final class BusinessController extends Controller {
- public function __construct(string $appName,IRequest $request,private IDBConnection $db,private IURLGenerator $url,private IUserSession $session,private PermissionService $permissions,private NumberService $numbers,private IConfig $config,private FolderService $folders,private PdfService $pdf,private XRechnungService $xrechnung,private ZugferdService $zugferd,private MailService $mail,private EditionService $edition){parent::__construct($appName,$request);}
+ public function __construct(string $appName,IRequest $request,private IDBConnection $db,private IURLGenerator $url,private IUserSession $session,private PermissionService $permissions,private NumberService $numbers,private IConfig $config,private FolderService $folders,private PdfService $pdf,private XRechnungService $xrechnung,private ZugferdService $zugferd,private MailService $mail,private EditionService $edition,private IL10N $l10n){parent::__construct($appName,$request);}
  #[NoAdminRequired,NoCSRFRequired] public function crm():TemplateResponse{$this->permissions->assert('crm');$view=(string)$this->request->getParam('view','overview');if(!in_array($view,['overview','new','followups','history'],true)){$view='overview';}return $this->page('crm',['view'=>$view,'communications'=>$this->communications(),'customers'=>$this->rows('re_erp_customers','name'),'projects'=>$this->rows('re_erp_projects','project_no'),'dueFollowUps'=>$this->dueFollowUps(),'urlGenerator'=>$this->url]);}
  #[NoAdminRequired] public function saveCommunication(int $customerId,string $type,string $subject,?string $details=null,?int $projectId=null,?string $contactAt=null,?string $followUpAt=null):RedirectResponse{$this->permissions->assert('crm');if(trim($subject)==='')throw new \InvalidArgumentException('Betreff fehlt.');$this->insert('re_erp_communications',['customer_id'=>$customerId,'project_id'=>$projectId&&$projectId>0?$projectId:null,'type'=>$type,'subject'=>trim($subject),'details'=>$details,'contact_at'=>$this->dt($contactAt)??date('Y-m-d H:i:s'),'follow_up_at'=>$this->dt($followUpAt),'created_by'=>$this->uid(),'created_at'=>date('Y-m-d H:i:s')]);return $this->go('reinhardterp.business.crm');}
  #[NoAdminRequired,NoCSRFRequired] public function salesOverview():TemplateResponse{
@@ -487,7 +488,9 @@ final class BusinessController extends Controller {
   return $this->page('mobile_admin',['urlGenerator'=>$this->url]);
  }
  #[NoAdminRequired,NoCSRFRequired] public function documentation():TemplateResponse{
-  return $this->page('documentation',['urlGenerator'=>$this->url]);
+  $language=strtolower((string)$this->l10n->getLanguageCode());
+  $template=str_starts_with($language,'de')?'documentation':'documentation_en';
+  return $this->page($template,['urlGenerator'=>$this->url]);
  }
  #[NoAdminRequired,NoCSRFRequired] public function whatsNew():TemplateResponse{
   $this->permissions->assert('help');

@@ -17,5 +17,6 @@ final class LicenseController extends Controller{
  #[NoCSRFRequired]
  public function index():TemplateResponse{$this->permissions->assert('settings');return new TemplateResponse($this->appName,'license_pro',['status'=>$this->edition->status(),'message'=>(string)$this->request->getParam('message',''),'error'=>(string)$this->request->getParam('error',''),'urlGenerator'=>$this->url]);}
  #[NoAdminRequired] public function activate(string $licenseKey=''):RedirectResponse{$this->permissions->assert('settings');try{$this->licenses->activate($licenseKey);return $this->go('message','Betrio Pro Lizenz wurde bestätigt.');}catch(\Throwable $e){return $this->go('error',$e->getMessage());}}
+ #[NoAdminRequired] public function check():RedirectResponse{$this->permissions->assert('settings');try{$this->licenses->restoreStoredPro();return $this->go('message','Lizenzstatus wurde erfolgreich abgefragt.');}catch(\Throwable $e){return $this->go('error',$e->getMessage());}}
  private function go(string $key,string $value):RedirectResponse{return new RedirectResponse($this->url->linkToRoute('reinhardterp.license.index').'?'.$key.'='.rawurlencode($value));}
 }

@@ -35,7 +35,10 @@ final class EditionService {
  public function isPro():bool{return $this->edition()===self::PRO;}
  public function isLegacy():bool{return $this->edition()===self::LEGACY;}
  public function limit(string $key):?int{return self::LIMITS[$key]??null;}
- public function status():array{return ['edition'=>$this->edition(),'proInstalled'=>$this->isPro(),'limits'=>self::LIMITS,'legacyLimits'=>self::LEGACY_LIMITS,'proUrl'=>self::PRO_URL,'licenseKey'=>$this->maskedKey(),'licenseCheckedAt'=>$this->config->getAppValue('reinhardterp','license_checked_at',''),'licenseMessage'=>$this->config->getAppValue('reinhardterp','license_message','')];}
+ public function status():array{
+  $expires=$this->config->getAppValue('reinhardterp','license_expires_at','');$remaining=null;if($expires!==''){try{$end=new \DateTimeImmutable($expires);$today=new \DateTimeImmutable('today');$remaining=max(0,(int)$today->diff($end)->format('%r%a'));}catch(\Throwable){}}
+  return ['edition'=>$this->edition(),'proInstalled'=>$this->isPro(),'limits'=>self::LIMITS,'legacyLimits'=>self::LEGACY_LIMITS,'proUrl'=>self::PRO_URL,'licenseKey'=>$this->maskedKey(),'licenseCheckedAt'=>$this->config->getAppValue('reinhardterp','license_checked_at',''),'licenseMessage'=>$this->config->getAppValue('reinhardterp','license_message',''),'licenseExpiresAt'=>$expires,'licenseRemainingDays'=>$remaining,'licenseRemoteStatus'=>$this->config->getAppValue('reinhardterp','license_remote_status','')];
+ }
  public function assertCanCreateProject():void{if($this->isLegacy()){$this->assertLegacyProjectSlot();return;}$this->assertCount('active_projects',$this->countWhere('re_erp_projects','is_archived',0),'aktive Projekte');}
  public function assertCanRestoreProject(int $projectId):void{if($this->isLegacy()){$cutoff=$this->legacyProjectCutoffId();if($projectId>$cutoff)$this->assertLegacyProjectSlot();return;}$this->assertCanCreateProject();}
  public function assertCanCreateOffer():void{if($this->isLegacy())$this->assertLegacyAllowance('offers','re_erp_offers','neue Angebote');}
@@ -54,7 +57,12 @@ final class EditionService {
  public function assertLicensedPro(string $feature):void{if(!$this->isPro())throw new \InvalidArgumentException($feature.' ist eine Betrio Pro-Funktion. Bitte aktivieren Sie Betrio Pro, um diese Funktion zu verwenden.');}
  public function storeLicense(string $key,array $response):void{
   $edition=(string)($response['edition']??'');if(($response['valid']??false)!==true||$edition!==self::PRO)throw new \InvalidArgumentException('Der Kassel-NET-Lizenzserver hat keine gültige Betrio-Pro-Lizenz bestätigt.');
-  $this->config->setAppValue('reinhardterp','license_key',trim($key));$this->config->setAppValue('reinhardterp','edition',self::PRO);$this->config->setAppValue('reinhardterp','license_checked_at',date('c'));$this->config->setAppValue('reinhardterp','license_message',(string)($response['message']??'Betrio Pro aktiviert'));
+  $current=$this->edition();if($current!==self::PRO)$this->config->setAppValue('reinhardterp','license_fallback_edition',$current);
+  $this->config->setAppValue('reinhardterp','license_key',trim($key));$this->config->setAppValue('reinhardterp','edition',self::PRO);$this->config->setAppValue('reinhardterp','license_checked_at',date('c'));$this->config->setAppValue('reinhardterp','license_message',(string)($response['message']??'Betrio Pro aktiviert'));$this->config->setAppValue('reinhardterp','license_remote_status',(string)($response['status']??'active'));$this->config->setAppValue('reinhardterp','license_expires_at',trim((string)($response['expires_at']??'')));
+ }
+ public function storeRejectedLicenseStatus(string $status,string $expiresAt=''):void{
+  $this->config->setAppValue('reinhardterp','license_remote_status',$status);if($expiresAt!=='')$this->config->setAppValue('reinhardterp','license_expires_at',$expiresAt);
+  if(in_array($status,['expired','blocked','invalid','bound_to_other_installation'],true)){$fallback=$this->config->getAppValue('reinhardterp','license_fallback_edition',self::COMMUNITY);if(!in_array($fallback,[self::COMMUNITY,self::LEGACY],true))$fallback=self::COMMUNITY;$this->config->setAppValue('reinhardterp','edition',$fallback);}
  }
  public function markLicenseCheck(string $message):void{$this->config->setAppValue('reinhardterp','license_checked_at',date('c'));$this->config->setAppValue('reinhardterp','license_message',$message);}
  public function licenseKey():string{return trim($this->config->getAppValue('reinhardterp','license_key',''));}

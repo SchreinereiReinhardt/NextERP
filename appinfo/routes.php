@@ -283,8 +283,16 @@ return ['routes'=>[
  ['name'=>'mobile#upload','url'=>'/api/mobile/v1/upload','verb'=>'POST'],
  ['name'=>'mobile#scan','url'=>'/api/mobile/v1/scan','verb'=>'POST'],
  ['name'=>'mobile#sync','url'=>'/api/mobile/v1/sync','verb'=>'POST'],
+ ['name'=>'backup#index','url'=>'/backup','verb'=>'GET'],
+ ['name'=>'backup#create','url'=>'/api/backup/create','verb'=>'POST'],
+ ['name'=>'backup#download','url'=>'/backup/{name}/download','verb'=>'GET'],
+ ['name'=>'backup#delete','url'=>'/api/backup/{name}/delete','verb'=>'POST'],
+ ['name'=>'backup#inspect','url'=>'/api/backup/inspect','verb'=>'POST'],
+ ['name'=>'backup#restore','url'=>'/api/backup/restore','verb'=>'POST'],
+ ['name'=>'backup#settings','url'=>'/api/backup/settings','verb'=>'POST'],
  ['name'=>'license#index','url'=>'/license-pro','verb'=>'GET'],
  ['name'=>'license#activate','url'=>'/api/license-pro/activate','verb'=>'POST'],
+ ['name'=>'license#check','url'=>'/api/license-pro/check','verb'=>'POST'],
 ], 'ocs'=>[
  ['name'=>'mobileOcs#sessionLogin','url'=>'/api/mobile/v1/session-login','verb'=>'POST'],
 ]];
